@@ -202,6 +202,27 @@ MessageSend.prototype = {
     }
   },
 
+  notifyListenerOnTransportSecurityError(msgId, status, secInfo, location) {
+    if (!this._sendListener) {
+      return;
+    }
+    try {
+      this._sendListener.onTransportSecurityError(
+        msgId,
+        status,
+        secInfo,
+        location
+      );
+    } catch (e) {
+      // Ignore the return value of OnTransportSecurityError.
+      console.warn(
+        `OnTransportSecurityError failed with 0x${e.result.toString(16)}\n${
+          e.stack
+        }`
+      );
+    }
+  },
+
   sendDeliveryCallback(url, isNewsDelivery, exitCode) {
     let newExitCode = exitCode;
     switch (exitCode) {
@@ -222,6 +243,23 @@ MessageSend.prototype = {
         newExitCode = MsgUtils.NS_ERROR_SMTP_SEND_FAILED_TIMEOUT;
         break;
       default:
+        try {
+          // If it's an NSS error, tell the listener.
+          let nssErrorsService = Cc[
+            "@mozilla.org/nss_errors_service;1"
+          ].getService(Ci.nsINSSErrorsService);
+          nssErrorsService.getErrorClass(exitCode);
+          // If we get this far, it's an NSS error.
+          let u = url.QueryInterface(Ci.nsIMsgMailNewsUrl);
+          this.notifyListenerOnTransportSecurityError(
+            null,
+            exitCode,
+            u.failedSecInfo,
+            u.asciiHostPort
+          );
+        } catch (e) {
+          // It's not an NSS error.
+        }
         break;
     }
     this.notifyListenerOnStopSending(null, newExitCode, null, null);
