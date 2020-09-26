@@ -483,3 +483,13 @@ html|button.crypto-button {
 #encryptedHdrIcon[encrypted="notok"] {
   list-style-image: url("chrome://messenger/skin/icons/message-encrypted-notok.svg");
 }
+
+#openpgpImportButton {
+  list-style-image: url("chrome://messenger/skin/icons/encryption-key.svg");
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+#openpgpImportButton .button-icon {
+  margin-inline-end: 2px;
+}
