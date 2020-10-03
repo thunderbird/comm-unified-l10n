@@ -44,7 +44,7 @@ function showImapSignatureUnknown() {
 }
 
 function showMessageReadSecurityInfo() {
-  if (MailConstants.MOZ_OPENPGP && BondOpenPGP.allDependenciesLoaded()) {
+  if (MailConstants.MOZ_OPENPGP && BondOpenPGP.isEnabled()) {
     let box = document.getElementById("cryptoBox");
     let tech = box.getAttribute("tech");
     if (tech && tech === "OpenPGP") {

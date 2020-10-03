@@ -1771,7 +1771,7 @@ function setSecuritySettings(menu_id) {
 
   if (
     MailConstants.MOZ_OPENPGP &&
-    BondOpenPGP.allDependenciesLoaded() &&
+    BondOpenPGP.isEnabled() &&
     gSelectedTechnologyIsPGP
   ) {
     if (!isPgpConfigured()) {
@@ -1809,7 +1809,7 @@ function setSecuritySettings(menu_id) {
     let sep = document.getElementById("myPublicKeySeparator" + menu_id);
     let box = document.getElementById("menu_securityMyPublicKey" + menu_id);
 
-    if (!BondOpenPGP.allDependenciesLoaded()) {
+    if (!BondOpenPGP.isEnabled()) {
       pgpItem.setAttribute("checked", false);
       smimeItem.setAttribute("checked", true);
       pgpItem.disabled = true;
@@ -1839,7 +1839,7 @@ function showMessageComposeSecurityStatus() {
 
   if (
     MailConstants.MOZ_OPENPGP &&
-    BondOpenPGP.allDependenciesLoaded() &&
+    BondOpenPGP.isEnabled() &&
     gSelectedTechnologyIsPGP
   ) {
     window.openDialog(
@@ -3749,7 +3749,7 @@ function adjustSignEncryptAfterIdentityChanged(prevId, newId) {
     isSmimeSigningConfigured() || isSmimeEncryptionConfigured();
 
   let configuredOpenPGP = false;
-  if (MailConstants.MOZ_OPENPGP && BondOpenPGP.allDependenciesLoaded()) {
+  if (MailConstants.MOZ_OPENPGP && BondOpenPGP.isEnabled()) {
     configuredOpenPGP = isPgpConfigured();
   }
 
@@ -3965,7 +3965,7 @@ function ComposeLoad() {
       addressInputOnBeforeHandleKeyDown(event);
   }
 
-  if (!MailConstants.MOZ_OPENPGP || !BondOpenPGP.allDependenciesLoaded()) {
+  if (!MailConstants.MOZ_OPENPGP || !BondOpenPGP.isEnabled()) {
     for (let item of document.querySelectorAll(".openpgp-item")) {
       item.hidden = true;
     }
@@ -4046,7 +4046,7 @@ function setEncSigStatusUI() {
     .getElementById("encryption-status")
     .classList.toggle("encrypting-msg", gSendEncrypted);
 
-  if (MailConstants.MOZ_OPENPGP && BondOpenPGP.allDependenciesLoaded()) {
+  if (MailConstants.MOZ_OPENPGP && BondOpenPGP.isEnabled()) {
     let techStatus = top.document.getElementById("encryption-tech");
     if (gSelectedTechnologyIsPGP) {
       techStatus.value = "OpenPGP";
