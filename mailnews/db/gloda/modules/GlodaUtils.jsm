@@ -86,22 +86,4 @@ var GlodaUtils = {
     let hex = Object.keys(hash).map(i => toHexString(hash.charCodeAt(i)));
     return hex.join("");
   },
-
-  getCardForEmail(aAddress) {
-    // search through all of our local address books looking for a match.
-    let cardForEmailAddress;
-    for (let addrbook of MailServices.ab.directories) {
-      if (cardForEmailAddress) {
-        break;
-      }
-      try {
-        cardForEmailAddress = addrbook.cardForEmailAddress(aAddress);
-        if (cardForEmailAddress) {
-          return cardForEmailAddress;
-        }
-      } catch (ex) {}
-    }
-
-    return null;
-  },
 };
