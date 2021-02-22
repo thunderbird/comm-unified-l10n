@@ -7,6 +7,5 @@ if test `uname -s` != Linux; then
 fi
 
 ac_add_options --enable-update-channel="${MOZ_UPDATE_CHANNEL}"
-ac_add_options --enable-profiling
 
 . "$topsrcdir/comm/mail/config/mozconfigs/common"
