@@ -984,7 +984,7 @@ function switchToTabHavingURI(aURI, aOpenNew, aOpenParams = {}) {
   }
 
   if (aOpenNew) {
-    openContentTab(aURI, "tab", aOpenParams.linkHandler);
+    tabmail.openTab("contentTab", { ...aOpenParams, url: aURI });
   }
 
   return false;
