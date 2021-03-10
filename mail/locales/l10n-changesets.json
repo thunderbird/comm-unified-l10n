@@ -41,7 +41,7 @@
             "win32",
             "win64"
         ],
-        "revision": "f9a17c1712478b7362d16445c695046bae22a79a"
+        "revision": "e19f2b756cef5aed09cd883a29a46392ed3f5a66"
     },
     "bg": {
         "pin": false,
@@ -151,7 +151,7 @@
             "win32",
             "win64"
         ],
-        "revision": "5d689b611f59bfda8c373903777585f92d27fb9f"
+        "revision": "fdba98d832286e5151877799adfd93a955d4a435"
     },
     "en-CA": {
         "pin": false,
@@ -184,7 +184,7 @@
             "win32",
             "win64"
         ],
-        "revision": "16f5f953c1c6301ca12a7505829a65776a9fcf2c"
+        "revision": "4f75f1153715b457f2ac2fc946d4d82c4438e9f0"
     },
     "es-ES": {
         "pin": false,
@@ -239,7 +239,7 @@
             "win32",
             "win64"
         ],
-        "revision": "ae19aa2ad3f17d59ea8acc98c64c9340eea9c20a"
+        "revision": "87f43fb0952d01d56af79798f6bca3518c934116"
     },
     "fy-NL": {
         "pin": false,
@@ -371,7 +371,7 @@
             "win32",
             "win64"
         ],
-        "revision": "decc170ffff21a73e281a0be031a114d4a3bf8ee"
+        "revision": "d37129574b69b0a9497ed6ae877d3e4f584c88f8"
     },
     "ja": {
         "pin": false,
@@ -381,14 +381,14 @@
             "win32",
             "win64"
         ],
-        "revision": "8b2d4c53c6b267b4a61d65c5119749963bb88331"
+        "revision": "67f7a4861e8487425aadd0928b151bebe65f0a8a"
     },
     "ja-JP-mac": {
         "pin": false,
         "platforms": [
             "macosx64"
         ],
-        "revision": "e07a3652757af041e58d5ac068ff3bef489c70cf"
+        "revision": "c1bb80c8b5c9a74ff5bd9287938c40f5bb60322b"
     },
     "ka": {
         "pin": false,
@@ -421,7 +421,7 @@
             "win32",
             "win64"
         ],
-        "revision": "e8974c64a7fcc096a0281d54183af264e476e7a6"
+        "revision": "4137ebc1448c5231bbcab964fcaea4208e6f0a68"
     },
     "ko": {
         "pin": false,
@@ -487,7 +487,7 @@
             "win32",
             "win64"
         ],
-        "revision": "d09674c4e093d2885c5d941a9ecce176ca5c81b9"
+        "revision": "92f81b6135e3eda784e137180f8648e3e0c3a67a"
     },
     "pa-IN": {
         "pin": false,
