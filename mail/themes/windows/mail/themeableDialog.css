@@ -29,6 +29,13 @@ menulist[is="menulist-editable"][editable="true"]::part(text-input) {
   padding: 2px 4px;
 }
 
+menulist menupopup menu,
+menulist menupopup menuitem,
+button menupopup menu,
+button menupopup menuitem {
+  padding-block: 2px;
+}
+
 menu > menupopup > menuitem,
 menu > menupopup > menu {
   padding-inline: 5px;
