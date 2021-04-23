@@ -2974,11 +2974,7 @@ function manageAttachmentNotification(aForce = false) {
     "label",
     getComposeBundle().getString("disableAttachmentReminderButton")
   );
-  disableAttachmentReminder.addEventListener("click", () => {
-    gDisableAttachmentReminder = true;
-    toggleAttachmentReminder(false);
-  });
-  disableAttachmentReminder.addEventListener("keypress", () => {
+  disableAttachmentReminder.addEventListener("command", () => {
     gDisableAttachmentReminder = true;
     toggleAttachmentReminder(false);
   });
