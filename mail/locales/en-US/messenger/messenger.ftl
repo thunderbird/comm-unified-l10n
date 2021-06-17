@@ -14,9 +14,13 @@ about-rights-notification-text = { -brand-short-name } is free and open source s
 
 ## Toolbar
 
-addons-and-themes-button =
+addons-and-themes-toolbarbutton =
     .label = Add-ons and Themes
-    .tooltip = Manage your add-ons
+    .tooltiptext = Manage your add-ons
+
+quick-filter-toolbarbutton =
+    .label = Quick Filter
+    .tooltiptext = Filter messages
 
 redirect-msg-button =
     .label = Redirect
