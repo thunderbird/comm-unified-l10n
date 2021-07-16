@@ -35,8 +35,11 @@ XPCOMUtils.defineLazyPreferenceGetter(
   100
 );
 
+const ADDRESS_BOOK_WINDOW_URI =
+  "chrome://messenger/content/addressbook/addressbook.xhtml";
 const COMPOSE_WINDOW_URI =
   "chrome://messenger/content/messengercompose/messengercompose.xhtml";
+const MESSAGE_WINDOW_URI = "chrome://messenger/content/messageWindow.xhtml";
 const MESSAGE_PROTOCOLS = ["imap", "mailbox", "news", "nntp", "snews"];
 
 const NOTIFICATION_COLLAPSE_TIME = 200;
@@ -783,20 +786,23 @@ windowTracker = new WindowTracker();
 Object.assign(global, { tabTracker, windowTracker });
 
 /**
- * Extension-specific wrapper around a Thunderbird tab.
+ * Extension-specific wrapper around a Thunderbird tab. Note that for actual
+ * tabs in the main window, some of these methods are overridden by the
+ * TabmailTab subclass.
  */
 class Tab extends TabBase {
-  /** Returns true if this tab is a 3-pane tab. */
-  get isMailTab() {
-    return false;
-  }
-
-  /** Returns true if this tab is a compose window "tab". */
-  get isComposeTab() {
-    return (
-      this.nativeTab.location &&
-      this.nativeTab.location.href == COMPOSE_WINDOW_URI
-    );
+  /** What sort of tab is this? */
+  get type() {
+    switch (this.nativeTab.location?.href) {
+      case ADDRESS_BOOK_WINDOW_URI:
+        return "addressBook";
+      case COMPOSE_WINDOW_URI:
+        return "messageCompose";
+      case MESSAGE_WINDOW_URI:
+        return "messageDisplay";
+      default:
+        return null;
+    }
   }
 
   /** Overrides the matches function to enable querying for tab types. */
@@ -809,7 +815,8 @@ class Tab extends TabBase {
   /** Adds the mailTab property and removes some useless properties from a tab object. */
   convert(fallback) {
     let result = super.convert(fallback);
-    result.mailTab = this.isMailTab;
+    result.type = this.type;
+    result.mailTab = result.type == "mail";
 
     // These properties are not useful to Thunderbird extensions and are not returned.
     for (let key of [
@@ -840,7 +847,7 @@ class Tab extends TabBase {
 
   /** Returns the XUL browser for the tab. */
   get browser() {
-    if (this.isComposeTab) {
+    if (this.type == "messageCompose") {
       return this.nativeTab.GetCurrentEditorElement();
     }
     if (this.nativeTab.getBrowser) {
@@ -850,7 +857,7 @@ class Tab extends TabBase {
   }
 
   get innerWindowID() {
-    if (this.isComposeTab) {
+    if (this.type == "messageCompose") {
       return this.browser.contentWindow.windowUtils.currentInnerWindowID;
     }
     return super.innerWindowID;
@@ -873,7 +880,7 @@ class Tab extends TabBase {
 
   /** Returns the current URL of this tab, without permission checks. */
   get _url() {
-    if (this.isComposeTab) {
+    if (this.type == "messageCompose") {
       return undefined;
     }
     return this.browser?.currentURI?.spec;
@@ -1009,6 +1016,47 @@ class TabmailTab extends Tab {
     super(extension, nativeTab, id);
   }
 
+  /** What sort of tab is this? */
+  get type() {
+    switch (this.nativeTab.mode.name) {
+      case "folder":
+      case "glodaList":
+        return "mail";
+      case "message":
+        return "messageDisplay";
+      case "contentTab": {
+        let currentURI = this.nativeTab.browser.currentURI;
+        if (currentURI?.schemeIs("about")) {
+          switch (currentURI.filePath) {
+            case "addressbook":
+              return "addressBook";
+            case "blank":
+              return "content";
+            default:
+              return "special";
+          }
+        }
+        if (currentURI?.schemeIs("chrome")) {
+          return "special";
+        }
+        return "content";
+      }
+      case "calendar":
+      case "calendarEvent":
+      case "calendarTask":
+      case "tasks":
+      case "chat":
+        return this.nativeTab.mode.name;
+      case "accountProvisionerTab":
+      case "glodaFacet":
+      case "preferencesTab":
+        return "special";
+      default:
+        // We should not get here, unless a new type is registered with tabmail.
+        return null;
+    }
+  }
+
   /** Returns the XUL browser for the tab. */
   get browser() {
     return getTabBrowser(this.nativeTab);
@@ -1022,11 +1070,6 @@ class TabmailTab extends Tab {
   /** Returns the tabmail element for the tab. */
   get tabmail() {
     return getTabTabmail(this.nativeTab);
-  }
-
-  /** Returns true if this tab is a 3-pane tab. */
-  get isMailTab() {
-    return ["folder", "glodaList"].includes(this.nativeTab.mode.name);
   }
 
   /** Returns the tab index. */
@@ -1290,10 +1333,8 @@ class TabmailWindow extends Window {
     let { tabManager } = this.extension;
 
     for (let nativeTabInfo of this.tabmail.tabInfo) {
-      if (getTabBrowser(nativeTabInfo)) {
-        // Only tabs that have a browser element
-        yield tabManager.getWrapper(nativeTabInfo);
-      }
+      // Only tabs that have a browser element.
+      yield tabManager.getWrapper(nativeTabInfo);
     }
   }
 
@@ -1712,7 +1753,7 @@ var messageTracker = new (class extends EventEmitter {
     // nsIMsgFolderListener
     MailServices.mfn.addListener(
       this,
-        MailServices.mfn.msgsJunkStatusChanged |
+      MailServices.mfn.msgsJunkStatusChanged |
         MailServices.mfn.msgsDeleted |
         MailServices.mfn.msgsMoveCopyCompleted |
         MailServices.mfn.msgKeyChanged
@@ -1877,7 +1918,7 @@ var messageTracker = new (class extends EventEmitter {
       folder,
       newMsgKeys.map(key => msgDb.GetMsgHdrForKey(key))
     );
-    }
+  }
 
   // nsIMsgFolderListener
 
