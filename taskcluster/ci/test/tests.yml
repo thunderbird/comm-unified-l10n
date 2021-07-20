@@ -16,8 +16,19 @@ xpcshell:
     description: "xpcshell test run"
     suite: xpcshell
     treeherder-symbol: X(X)
-    run-on-projects: built-projects
+    run-on-projects:
+        by-variant:
+            noqr: built-projects
+            default:
+                by-test-platform:
+                    windows.*shippable-qr/opt: []
+                    (linux|macos).*shippable/opt: built-projects
+                    default: []
     built-projects-only: true
+    variants:
+        by-test-platform:
+            windows.*shippable-qr/opt: ["noqr"]
+            default: []
     tier:
         by-test-platform:
             .*-asan.*: 2
@@ -84,10 +95,21 @@ mochitest-thunderbird:
         category: mochitest
         name: mochitest-browser-chrome-thunderbird
     treeherder-symbol: M(bct)
-    run-on-projects: built-projects
+    run-on-projects:
+        by-variant:
+            noqr: built-projects
+            default:
+                by-test-platform:
+                    windows.*shippable-qr/opt: []
+                    (linux|macos).*shippable/opt: built-projects
+                    default: []
     built-projects-only: true
     test-manifest-loader: null  # don't load tests in the taskgraph
     loopback-video: true
+    variants:
+        by-test-platform:
+            windows.*shippable-qr/opt: ["noqr"]
+            default: []
     max-run-time:
         by-test-platform:
             linux.*64-tsan/opt: 9000

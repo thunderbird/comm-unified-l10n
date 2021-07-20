@@ -52,7 +52,9 @@ treeherder:
 
         # Tests
         'X': 'Xpcshell tests'
+        'X-noqr': 'Xpcshell tests (no webrender)'
         'M': 'Mochitests'
+        'M-noqr': 'Mochitests (no webrender)'
 
         'Searchfox': 'Searchfox builds'
 
