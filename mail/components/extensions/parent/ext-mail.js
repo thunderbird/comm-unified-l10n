@@ -39,6 +39,8 @@ const COMPOSE_WINDOW_URI =
   "chrome://messenger/content/messengercompose/messengercompose.xhtml";
 const MESSAGE_PROTOCOLS = ["imap", "mailbox", "news", "nntp", "snews"];
 
+const NOTIFICATION_COLLAPSE_TIME = 200;
+
 (function() {
   // Monkey-patch all processes to add the "messenger" alias in all contexts.
   Services.ppmm.loadProcessScript(
