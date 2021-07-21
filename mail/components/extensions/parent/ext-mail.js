@@ -789,7 +789,7 @@ class Tab extends TabBase {
   /** Returns true if this tab is a 3-pane tab. */
   get isMailTab() {
     return false;
-  }
+    }
 
   /** Returns true if this tab is a compose window "tab". */
   get isComposeTab() {
@@ -799,10 +799,11 @@ class Tab extends TabBase {
     );
   }
 
-  /** Overrides the matches function to enable querying for 3-pane tabs. */
+  /** Overrides the matches function to enable querying for tab types. */
   matches(queryInfo, context) {
     let result = super.matches(queryInfo, context);
-    return result && (!queryInfo.mailTab || this.isMailTab);
+    let type = queryInfo.mailTab ? "mail" : queryInfo.type;
+    return result && (!type || this.type == type);
   }
 
   /** Adds the mailTab property and removes some useless properties from a tab object. */
@@ -1291,9 +1292,9 @@ class TabmailWindow extends Window {
     for (let nativeTabInfo of this.tabmail.tabInfo) {
       if (getTabBrowser(nativeTabInfo)) {
         // Only tabs that have a browser element
-        yield tabManager.getWrapper(nativeTabInfo);
-      }
+      yield tabManager.getWrapper(nativeTabInfo);
     }
+  }
   }
 
   /** Retrieves the active tab in this window */
@@ -1711,7 +1712,7 @@ var messageTracker = new (class extends EventEmitter {
     MailServices.mfn.addListener(
       this,
       MailServices.mfn.msgsClassified |
-        MailServices.mfn.msgsJunkStatusChanged |
+      MailServices.mfn.msgsJunkStatusChanged |
         MailServices.mfn.msgsDeleted |
         MailServices.mfn.msgsMoveCopyCompleted |
         MailServices.mfn.msgKeyChanged
@@ -1834,8 +1835,8 @@ var messageTracker = new (class extends EventEmitter {
     );
     if (newMessages.length > 0) {
       this.emit("messages-received", newMessages[0].folder, newMessages);
+      }
     }
-  }
 
   msgsJunkStatusChanged(messages) {
     for (let msgHdr of messages) {
