@@ -184,7 +184,7 @@
             "win32",
             "win64"
         ],
-        "revision": "477e090009344199834e7036a981c95501940741"
+        "revision": "a4b551ecb8444229589a44526ea7583b4385a130"
     },
     "es-ES": {
         "pin": false,
@@ -217,7 +217,7 @@
             "win32",
             "win64"
         ],
-        "revision": "ae0e79af63c186eaf18d5a3ddacb6bbfa85d54d4"
+        "revision": "cbcc2d3be17098bd364ab8942aede44f977fd4b5"
     },
     "fi": {
         "pin": false,
@@ -228,7 +228,7 @@
             "win32",
             "win64"
         ],
-        "revision": "613ae5822bbfdcb567d83e83a2bd2ddb33ad4aa5"
+        "revision": "370f543df8bbcef75092cd8c0af209c35946777b"
     },
     "fr": {
         "pin": false,
@@ -283,7 +283,7 @@
             "win32",
             "win64"
         ],
-        "revision": "6ef7e7bbef07c9575b212c81186bbda783e944aa"
+        "revision": "e8cdb2258454befe0c412a9de78b194d056fdcfd"
     },
     "he": {
         "pin": false,
@@ -327,7 +327,7 @@
             "win32",
             "win64"
         ],
-        "revision": "50f9038e781e5d588012adaa1505666c62710599"
+        "revision": "54f32f5fe78157f4a2c1c041dccec3baf99b11dd"
     },
     "hy-AM": {
         "pin": false,
@@ -371,7 +371,7 @@
             "win32",
             "win64"
         ],
-        "revision": "69b22dc41b23a6365a0d074becb76e81c8c6ed50"
+        "revision": "e52bf9117651930bca4bce52d1e36752ae2af905"
     },
     "ja": {
         "pin": false,
@@ -487,7 +487,7 @@
             "win32",
             "win64"
         ],
-        "revision": "0c7969ba8dca1b0101c70ca0386276c566687135"
+        "revision": "876003293b5c625b24e10a80a7af5e4035dfc1bc"
     },
     "nn-NO": {
         "pin": false,
@@ -498,7 +498,7 @@
             "win32",
             "win64"
         ],
-        "revision": "621bac5eb0055e4d3e5a9b74dd49296f4596cce6"
+        "revision": "61aac59d98e0cb52b2f83b5021f7edfef2867287"
     },
     "pa-IN": {
         "pin": false,
@@ -520,7 +520,7 @@
             "win32",
             "win64"
         ],
-        "revision": "2f7304c75f7e0437898fe92834fa54351cf6b939"
+        "revision": "df425fbb9da020c05cd6b56c78cb561d5b9574e8"
     },
     "pt-BR": {
         "pin": false,
@@ -663,7 +663,7 @@
             "win32",
             "win64"
         ],
-        "revision": "4c1c15fe6a1d8a8681cedddb8160d6cc8f6df541"
+        "revision": "1f060c5d8327e9063479ec74ce44fe54f3eca6bf"
     },
     "uz": {
         "pin": false,
@@ -707,6 +707,6 @@
             "win32",
             "win64"
         ],
-        "revision": "9c5f308940c27755f946c09d4110e2524647c314"
+        "revision": "f2bc476ba961b1843277c9dc2fe7ab070725121e"
     }
 }
