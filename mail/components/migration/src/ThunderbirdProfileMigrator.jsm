@@ -22,27 +22,8 @@ XPCOMUtils.defineLazyGetter(
 const MAIL_IDENTITY = "mail.identity.";
 const MAIL_SERVER = "mail.server.";
 const MAIL_ACCOUNT = "mail.account.";
-const IM_ACCOUNT = "messenger.account.";
 const SMTP_SERVER = "mail.smtpserver.";
 const ADDRESS_BOOK = "ldap_2.servers.";
-
-// Prefs (branches) that we do not want to copy directly.
-const IGNORE_PREFS = [
-  "app.update.",
-  "browser.",
-  "calendar.", // calendars need special handling
-  "devtools.",
-  "extensions.",
-  "mail.accountmanager.",
-  "mail.cloud_files.accounts.",
-  "mail.newsrc_root",
-  "mail.root.",
-  "mail.smtpservers",
-  "messenger.accounts",
-  "print.",
-  "services.",
-  "toolkit.telemetry.",
-];
 
 /**
  * A pref is represented as [type, name, value].
@@ -53,9 +34,6 @@ const IGNORE_PREFS = [
  *
  * A map from source identity key to target identity key.
  * @typedef {Map<string, string>} IdentityKeyMap
- *
- * A map from source IM account key to target IM account key.
- * @typedef {Map<string, string>} IMAccountKeyMap
  *
  * A map from source incoming server key to target incoming server key.
  * @typedef {Map<string, string>} IncomingServerKeyMap
@@ -116,8 +94,7 @@ class ThunderbirdProfileMigrator {
       Ci.nsIMailProfileMigrator.ACCOUNT_SETTINGS |
       Ci.nsIMailProfileMigrator.MAILDATA |
       Ci.nsIMailProfileMigrator.NEWSDATA |
-      Ci.nsIMailProfileMigrator.ADDRESSBOOK_DATA |
-      Ci.nsIMailProfileMigrator.SETTINGS
+      Ci.nsIMailProfileMigrator.ADDRESSBOOK_DATA
     );
   }
 
@@ -146,13 +123,10 @@ class ThunderbirdProfileMigrator {
       [MAIL_IDENTITY, []],
       [MAIL_SERVER, []],
       [MAIL_ACCOUNT, []],
-      [IM_ACCOUNT, []],
       [SMTP_SERVER, []],
       [ADDRESS_BOOK, []],
     ]);
     let defaultAccount;
-    let defaultSmtpServer;
-    let otherPrefs = [];
 
     let sourcePrefsFile = this._sourceProfileDir.clone();
     sourcePrefsFile.append("prefs.js");
@@ -164,20 +138,10 @@ class ThunderbirdProfileMigrator {
           branchPrefs.push([type, name.slice(branchName.length), value]);
           return;
         }
+        if (name == "mail.accountmanager.defaultaccount") {
+          defaultAccount = value;
+        }
       }
-      if (name == "mail.accountmanager.defaultaccount") {
-        defaultAccount = value;
-        return;
-      }
-      if (name == "mail.smtp.defaultserver") {
-        defaultSmtpServer = value;
-        return;
-      }
-      if (IGNORE_PREFS.some(ignore => name.startsWith(ignore))) {
-        return;
-      }
-      // Collect all the other prefs.
-      otherPrefs.push([type, name, value]);
     };
 
     Services.prefs.parsePrefsFromBuffer(sourcePrefsBuffer, {
@@ -196,21 +160,15 @@ class ThunderbirdProfileMigrator {
     );
     // Import SMTP servers first, the importing order is important.
     let smtpServerKeyMap = this._importSmtpServers(
-      branchPrefsMap.get(SMTP_SERVER),
-      defaultSmtpServer
+      branchPrefsMap.get(SMTP_SERVER)
     );
     // mail.identity.idN.smtpServer depends on transformed smtp server key.
     let identityKeyMap = this._importIdentities(
       branchPrefsMap.get(MAIL_IDENTITY),
       smtpServerKeyMap
     );
-    let imAccountKeyMap = await this._importIMAccounts(
-      branchPrefsMap.get(IM_ACCOUNT)
-    );
-    // mail.server.serverN.imAccount depends on transformed im account key.
     let incomingServerKeyMap = await this._importIncomingServers(
-      branchPrefsMap.get(MAIL_SERVER),
-      imAccountKeyMap
+      branchPrefsMap.get(MAIL_SERVER)
     );
     // mail.account.accountN.{identities, server} depends on previous steps.
     this._importAccounts(
@@ -246,28 +204,14 @@ class ThunderbirdProfileMigrator {
       "Migration:ItemAfterMigrate",
       Ci.nsIMailProfileMigrator.ADDRESS_BOOK
     );
-    Services.obs.notifyObservers(
-      null,
-      "Migration:ItemBeforeMigrate",
-      Ci.nsIMailProfileMigrator.SETTINGS
-    );
-    this._importPasswords();
-    this._importOtherPrefs(otherPrefs);
-    Services.obs.notifyObservers(
-      null,
-      "Migration:ItemAfterMigrate",
-      Ci.nsIMailProfileMigrator.SETTINGS
-    );
   }
 
   /**
    * Import SMTP servers.
    * @param {PrefItem[]} prefs - All source prefs in the SMTP_SERVER branch.
-   * @param {string} sourceDefaultServer - The value of mail.smtp.defaultserver
-   *   in the source profile.
    * @returns {smtpServerKeyMap} A map from source server key to new server key.
    */
-  _importSmtpServers(prefs, sourceDefaultServer) {
+  _importSmtpServers(prefs) {
     let smtpServerKeyMap = new Map();
     let branch = Services.prefs.getBranch(SMTP_SERVER);
     for (let [type, name, value] of prefs) {
@@ -282,18 +226,6 @@ class ThunderbirdProfileMigrator {
 
       let newName = `${newServerKey}${name.slice(key.length)}`;
       branch[`set${type}Pref`](newName, value);
-    }
-
-    // Set defaultserver if it doesn't already exist.
-    let defaultServer = Services.prefs.getCharPref(
-      "mail.smtp.defaultserver",
-      ""
-    );
-    if (sourceDefaultServer && !defaultServer) {
-      Services.prefs.setCharPref(
-        "mail.smtp.defaultserver",
-        smtpServerKeyMap.get(sourceDefaultServer)
-      );
     }
     return smtpServerKeyMap;
   }
@@ -330,63 +262,12 @@ class ThunderbirdProfileMigrator {
   }
 
   /**
-   * Import IM accounts.
-   * @param {Array<[string, string, number|string|boolean]>} prefs - All source
-   *   prefs in the IM_ACCOUNT branch.
-   * @returns {IMAccountKeyMap} A map from the source account key to new account
-   *   key.
-   */
-  async _importIMAccounts(prefs) {
-    let imAccountKeyMap = new Map();
-    let branch = Services.prefs.getBranch(IM_ACCOUNT);
-
-    let lastKey = 1;
-    async function _getUniqueAccountKey() {
-      // Since updating prefs.js is batched, getUniqueAccountKey may return the
-      // previous key.
-      let key = `account${lastKey++}`;
-      if (Services.prefs.getCharPref(`messenger.account.${key}.name`, "")) {
-        return new Promise(resolve =>
-          // As a workaround, delay 500ms and try again.
-          setTimeout(() => resolve(_getUniqueAccountKey()), 500)
-        );
-      }
-      return key;
-    }
-
-    for (let [type, name, value] of prefs) {
-      let key = name.split(".")[0];
-      let newAccountKey = imAccountKeyMap.get(key);
-      if (!newAccountKey) {
-        // For every account, create a new one to avoid conflicts.
-        newAccountKey = await _getUniqueAccountKey();
-        imAccountKeyMap.set(key, newAccountKey);
-      }
-
-      let newName = `${newAccountKey}${name.slice(key.length)}`;
-      branch[`set${type}Pref`](newName, value);
-    }
-
-    // Append newly create accounts to messenger.accounts.
-    let accounts = Services.prefs.getCharPref("messenger.accounts", "");
-    if (accounts && imAccountKeyMap.size) {
-      accounts += ",";
-    }
-    accounts += [...imAccountKeyMap.values()].join(",");
-    Services.prefs.setCharPref("messenger.accounts", accounts);
-
-    return imAccountKeyMap;
-  }
-
-  /**
    * Import incoming servers.
    * @param {PrefItem[]} prefs - All source prefs in the MAIL_SERVER branch.
-   * @param {IMAccountKeyMap} imAccountKeyMap - A map from the source account
-   *   key to new account key.
    * @returns {IncomingServerKeyMap} A map from the source server key to new
    *   server key.
    */
-  async _importIncomingServers(prefs, imAccountKeyMap) {
+  async _importIncomingServers(prefs) {
     let incomingServerKeyMap = new Map();
     let branch = Services.prefs.getBranch(MAIL_SERVER);
 
@@ -417,11 +298,7 @@ class ThunderbirdProfileMigrator {
       }
 
       let newName = `${newServerKey}${name.slice(key.length)}`;
-      let newValue = value;
-      if (newName.endsWith(".imAccount")) {
-        newValue = imAccountKeyMap.get(value);
-      }
-      branch[`set${type}Pref`](newName, newValue || value);
+      branch[`set${type}Pref`](newName, value);
     }
     return incomingServerKeyMap;
   }
@@ -431,7 +308,7 @@ class ThunderbirdProfileMigrator {
    * @param {PrefKeyMap} incomingServerKeyMap - A map from the source server key
    *   to new server key.
    */
-  _copyMailFolders(incomingServerKeyMap) {
+  async _copyMailFolders(incomingServerKeyMap) {
     for (let key of incomingServerKeyMap.values()) {
       let branch = Services.prefs.getBranch(`${MAIL_SERVER}${key}.`);
       let type = branch.getCharPref("type");
@@ -544,7 +421,8 @@ class ThunderbirdProfileMigrator {
 
   /**
    * Import address books.
-   * @param {PrefItem[]} prefs - All source prefs in the ADDRESS_BOOK branch.
+   * @param {Array<[string, string, number|string|boolean]>} prefs - All source
+   *   prefs in the ADDRESS_BOOK branch.
    */
   _importAddressBooks(prefs) {
     let keyMap = new Map();
@@ -620,7 +498,7 @@ class ThunderbirdProfileMigrator {
     }
 
     if (!targetFile.exists()) {
-      sourceFile.copyTo(targetFile.parent, "");
+      sourceFile.copyTo(targetFile.parent);
       return;
     }
 
@@ -640,40 +518,5 @@ class ThunderbirdProfileMigrator {
     }
 
     MailServices.ab.deleteAddressBook(tmpDirectory.URI);
-  }
-
-  /**
-   * Import logins.json and key4.db.
-   */
-  _importPasswords() {
-    let sourceLoginsJson = this._sourceProfileDir.clone();
-    sourceLoginsJson.append("logins.json");
-    let sourceKeyDb = this._sourceProfileDir.clone();
-    sourceKeyDb.append("key4.db");
-    let targetLoginsJson = Services.dirsvc.get("ProfD", Ci.nsIFile);
-    targetLoginsJson.append("logins.json");
-
-    if (
-      sourceLoginsJson.exists() &&
-      sourceKeyDb.exists() &&
-      !targetLoginsJson.exists()
-    ) {
-      // Only copy if logins.json doesn't exist in the current profile.
-      sourceLoginsJson.copyTo(targetLoginsJson.parent, "");
-      sourceKeyDb.copyTo(targetLoginsJson.parent, "");
-    }
-  }
-
-  /**
-   * Import a pref from source only when this pref has no user value in the
-   * current profile.
-   * @param {PrefItem[]} prefs - All source prefs to try to import.
-   */
-  _importOtherPrefs(prefs) {
-    for (let [type, name, value] of prefs) {
-      if (!Services.prefs.prefHasUserValue(name)) {
-        Services.prefs[`set${type}Pref`](name, value);
-      }
-    }
   }
 }
