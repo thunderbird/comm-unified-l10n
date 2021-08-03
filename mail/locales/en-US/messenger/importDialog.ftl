@@ -7,5 +7,3 @@ thunderbird-import-name = Thunderbird
 
 # Description of the import module
 thunderbird-import-description = Import mail from a Thunderbird profile directory.
-
-import-select-profile-dir = Select a profile directory
