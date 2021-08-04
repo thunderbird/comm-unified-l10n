@@ -74,7 +74,7 @@
             "win32",
             "win64"
         ],
-        "revision": "4066f1cf7820a6ee969f192a04cf177d04b39444"
+        "revision": "70aab55c2a2e812ce6cff029287b5ac15716d7d4"
     },
     "cak": {
         "pin": false,
@@ -421,7 +421,7 @@
             "win32",
             "win64"
         ],
-        "revision": "095fd90b5bcae16ed00cd75a5875258b56a6b330"
+        "revision": "adda9e8969b8c51305b5ea346681575349a6c7e1"
     },
     "ko": {
         "pin": false,
