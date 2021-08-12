@@ -140,9 +140,12 @@ var gSendEncryptedInitial = false;
 var gOptionalEncryption = false; // Only encrypt if possible. Ignored if !gSendEncrypted.
 var gOptionalEncryptionInitial = false;
 
+var gEncryptSubject = false;
+
 var gUserTouchedSendEncrypted = false;
 var gUserTouchedSendSigned = false;
 var gUserTouchedAttachMyPubKey = false;
+var gUserTouchedEncryptSubject = false;
 
 var gIsRelatedToEncryptedOriginal = false;
 var gIsRelatedToSignedOriginal = false;
@@ -1684,12 +1687,21 @@ function setGlobalEncryptMessage(mode) {
     }
   }
 
+  if (!gUserTouchedEncryptSubject) {
+    gEncryptSubject = gCurrentIdentity.getBoolAttribute("protectSubject");
+  }
+
   setEncSigStatusUI();
 }
 
 function toggleAttachMyPublicKey() {
   gAttachMyPublicPGPKey = !gAttachMyPublicPGPKey;
   gUserTouchedAttachMyPubKey = true;
+}
+
+function toggleEncryptSubject() {
+  gEncryptSubject = !gEncryptSubject;
+  gUserTouchedEncryptSubject = true;
 }
 
 function setSecuritySettings(menu_id) {
@@ -1750,17 +1762,23 @@ function setSecuritySettings(menu_id) {
     smimeItem.disabled =
       !isSmimeSigningConfigured() && !isSmimeEncryptionConfigured();
 
-    let sep = document.getElementById("myPublicKeySeparator" + menu_id);
+    let sep = document.getElementById("sepOpenPGP" + menu_id);
+    let men = document.getElementById("menu_OpenPGPOptions" + menu_id);
     let box = document.getElementById("menu_securityMyPublicKey" + menu_id);
+    let box2 = document.getElementById("menu_securityEncryptSubject" + menu_id);
 
     if (!BondOpenPGP.isEnabled()) {
       pgpItem.setAttribute("checked", false);
       smimeItem.setAttribute("checked", true);
       pgpItem.disabled = true;
       sep.setAttribute("hidden", true);
+      men.setAttribute("hidden", true);
       box.setAttribute("hidden", true);
       box.setAttribute("checked", false);
       box.disabled = true;
+      box2.setAttribute("hidden", true);
+      box2.setAttribute("checked", false);
+      box2.disabled = true;
     } else {
       pgpItem.setAttribute("checked", gSelectedTechnologyIsPGP);
       smimeItem.setAttribute("checked", !gSelectedTechnologyIsPGP);
@@ -1768,11 +1786,15 @@ function setSecuritySettings(menu_id) {
       pgpItem.disabled = !isPgpConfigured();
 
       sep.setAttribute("hidden", !gSelectedTechnologyIsPGP);
+      men.setAttribute("hidden", !gSelectedTechnologyIsPGP);
       box.setAttribute("hidden", !gSelectedTechnologyIsPGP);
       box.setAttribute("checked", gAttachMyPublicPGPKey);
+      box2.setAttribute("hidden", !gSelectedTechnologyIsPGP);
+      box2.setAttribute("checked", gEncryptSubject);
 
       if (gSelectedTechnologyIsPGP) {
         box.disabled = disableEnc;
+        box2.disabled = disableEnc;
       }
     }
   }
@@ -3879,6 +3901,12 @@ function adjustSignEncryptAfterIdentityChanged(prevIdentity) {
     gSelectedTechnologyIsPGP = true;
   }
 
+  if (gSelectedTechnologyIsPGP) {
+    if (!gUserTouchedEncryptSubject) {
+      gEncryptSubject = gCurrentIdentity.getBoolAttribute("protectSubject");
+    }
+  }
+
   // Not yet implemented
   gOptionalEncryption = false;
   gOptionalEncryptionInitial = gOptionalEncryption;
@@ -3898,6 +3926,10 @@ function adjustSignEncryptAfterIdentityChanged(prevIdentity) {
     // automatic changes after this line
     if (gSendSigned && gSelectedTechnologyIsPGP) {
       gAttachMyPublicPGPKey = gCurrentIdentity.getBoolAttribute("attachPgpKey");
+    }
+
+    if (gSelectedTechnologyIsPGP) {
+      gEncryptSubject = gCurrentIdentity.getBoolAttribute("protectSubject");
     }
   } else {
     // When switching the Sender identity, use the more secure setting
@@ -3954,6 +3986,10 @@ function adjustSignEncryptAfterIdentityChanged(prevIdentity) {
 
   if (gAttachMyPublicPGPKey && !configuredOpenPGP) {
     gAttachMyPublicPGPKey = false;
+  }
+
+  if (gEncryptSubject && !configuredOpenPGP) {
+    gEncryptSubject = false;
   }
 
   // A draft/template message may be stored encrypted, even if the user hasn't
@@ -4333,6 +4369,10 @@ function onSecurityChoice(value) {
 
     case "mykey":
       toggleAttachMyPublicKey();
+      break;
+
+    case "encsub":
+      toggleEncryptSubject();
       break;
 
     case "OpenPGP":
