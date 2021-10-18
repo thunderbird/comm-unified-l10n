@@ -2775,9 +2775,9 @@ nsresult nsMsgCompose::QuoteOriginalMessage()  // New template
 
   mQuoteStreamListener->SetComposeObj(this);
 
-  rv = mQuote->QuoteMessage(
-      mOriginalMsgURI.get(), mWhatHolder != 1, mQuoteStreamListener,
-      mCharsetOverride, !bAutoQuote, originalMsgHdr);
+  rv = mQuote->QuoteMessage(mOriginalMsgURI.get(), mWhatHolder != 1,
+                            mQuoteStreamListener, mCharsetOverride, !bAutoQuote,
+                            originalMsgHdr);
   return rv;
 }
 
