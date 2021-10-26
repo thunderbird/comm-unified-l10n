@@ -24,8 +24,6 @@ class nsIPrompt;
 #define ORIG_URI_PROPERTY "origURIs"
 #define QUEUED_DISPOSITION_PROPERTY "queuedDisposition"
 
-extern mozilla::LazyLogModule Compose;
-
 class nsMsgCompUtils : public nsIMsgCompUtils {
  public:
   NS_DECL_ISUPPORTS

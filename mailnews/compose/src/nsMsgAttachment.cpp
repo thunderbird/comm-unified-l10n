@@ -6,7 +6,6 @@
 #include "nsMsgAttachment.h"
 #include "nsIFile.h"
 #include "nsNetUtil.h"
-#include "nsMsgCompUtils.h"
 
 NS_IMPL_ISUPPORTS(nsMsgAttachment, nsIMsgAttachment)
 
@@ -17,7 +16,7 @@ nsMsgAttachment::nsMsgAttachment() {
 }
 
 nsMsgAttachment::~nsMsgAttachment() {
-  MOZ_LOG(Compose, mozilla::LogLevel::Debug, ("~nsMsgAttachment()"));
+  if (mTemporary && !mSendViaCloud) (void)DeleteAttachment();
 }
 
 /* attribute wstring name; */
