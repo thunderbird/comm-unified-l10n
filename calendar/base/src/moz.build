@@ -23,7 +23,6 @@ EXTRA_JS_MODULES += [
     "CalIcsParser.jsm",
     "CalIcsSerializer.jsm",
     "CalItipItem.jsm",
-    "CalMetronome.jsm",
     "CalMimeConverter.jsm",
     "CalProtocolHandler.jsm",
     "CalRecurrenceDate.jsm",
