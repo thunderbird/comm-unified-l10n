@@ -511,6 +511,7 @@ CalStorageCalendar.prototype = {
       // already waiting and we don't want to break that by throwing away the caches. If it IS
       // complete, we'll continue immediately.
       await this.mRecItemCachePromise;
+      await new Promise(resolve => ChromeUtils.idleDispatch(resolve));
       this.mRecItemCachePromise = null;
     }
 
