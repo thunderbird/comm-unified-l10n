@@ -2140,6 +2140,8 @@ AttachmentInfo.prototype = {
       // If we know what to do, do it.
 
       let { name, url } = this;
+      name = DownloadPaths.sanitize(name);
+
       async function saveToFile(path) {
         let buffer = await new Promise(function(resolve, reject) {
           NetUtil.asyncFetch(
@@ -2161,7 +2163,7 @@ AttachmentInfo.prototype = {
         await IOUtils.write(path, new Uint8Array(buffer));
       }
 
-      async function saveAndOpen(mimeInfo) {
+      let saveAndOpen = async mimeInfo => {
         let tempFile = Services.dirsvc.get("TmpD", Ci.nsIFile);
         tempFile.append(name);
         tempFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o755);
@@ -2172,8 +2174,8 @@ AttachmentInfo.prototype = {
           .deleteTemporaryFileOnExit(tempFile);
 
         await saveToFile(tempFile.path);
-        mimeInfo.launchWithFile(tempFile);
-      }
+        this._openTemporaryFile(mimeInfo, tempFile);
+      };
 
       if (!mimeInfo.alwaysAskBeforeHandling) {
         switch (mimeInfo.preferredAction) {
@@ -2244,6 +2246,16 @@ AttachmentInfo.prototype = {
         null
       );
     }
+  },
+
+  /**
+   * Unless overridden by a test, opens a saved attachment when called by `open`.
+   *
+   * @param {nsIMIMEInfo} mimeInfo
+   * @param {nsIFile} tempFile
+   */
+  _openTemporaryFile(mimeInfo, tempFile) {
+    mimeInfo.launchWithFile(tempFile);
   },
 
   /**
