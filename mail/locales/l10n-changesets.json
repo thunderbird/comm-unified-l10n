@@ -52,7 +52,7 @@
             "win32",
             "win64"
         ],
-        "revision": "19ee7b31e0becafa054013a3c8c09844638f244c"
+        "revision": "36c2b720e031299cc64ca36b8ad73405afbf15e7"
     },
     "br": {
         "pin": false,
@@ -206,7 +206,7 @@
             "win32",
             "win64"
         ],
-        "revision": "4b6ece5fbcf611be867b60451edd3a457efe79c4"
+        "revision": "c3825f9531033ea6f3bdc0a7a98daa549ce72403"
     },
     "eu": {
         "pin": false,
@@ -239,7 +239,7 @@
             "win32",
             "win64"
         ],
-        "revision": "ad48bd10ebca446c6298fdb81e5d0dcaec3721bd"
+        "revision": "899a83578d2c1fd633975bec01e1e735de826f39"
     },
     "fy-NL": {
         "pin": false,
@@ -371,7 +371,7 @@
             "win32",
             "win64"
         ],
-        "revision": "4d6e05f7eafe5d50244422a784306f9e3993012b"
+        "revision": "e59a2a413a1af00febad4e383cda753067477c08"
     },
     "ja": {
         "pin": false,
@@ -381,14 +381,14 @@
             "win32",
             "win64"
         ],
-        "revision": "4d2d71b56c56a9de8b736639817919231ac4701a"
+        "revision": "21545bb4cd6d4b948ba05ade841e75574a19e6ca"
     },
     "ja-JP-mac": {
         "pin": false,
         "platforms": [
             "macosx64"
         ],
-        "revision": "244bc8d86afc5c035d60e4723422a28bcc54de75"
+        "revision": "c66ed5519ff2169c31664762d9eb48480ed6164f"
     },
     "ka": {
         "pin": false,
@@ -575,7 +575,7 @@
             "win32",
             "win64"
         ],
-        "revision": "a76e9849f0e93ba9f3752169018a76403c8b1c51"
+        "revision": "3a5269e8c04350ae8057783dd34aa08a616a4d16"
     },
     "sk": {
         "pin": false,
@@ -630,7 +630,7 @@
             "win32",
             "win64"
         ],
-        "revision": "5df303c573582f51eac498efc53c5b63ae542a67"
+        "revision": "0f752a278aba23248d5af6e5c74c1e5fa23f2740"
     },
     "th": {
         "pin": false,
@@ -696,7 +696,7 @@
             "win32",
             "win64"
         ],
-        "revision": "10fb3718249bc330a68b9eba144945fd2f55a1f7"
+        "revision": "8529917b2ba47facc0554e9a765a2835be9a59ea"
     },
     "zh-TW": {
         "pin": false,
