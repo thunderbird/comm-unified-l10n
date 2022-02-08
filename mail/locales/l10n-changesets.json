@@ -327,7 +327,7 @@
             "win32",
             "win64"
         ],
-        "revision": "36a782e89bebf970dd7fe67497bf34680c6953e8"
+        "revision": "277deab2088b38791ca96cef6ddb3450ba79576c"
     },
     "hy-AM": {
         "pin": false,
@@ -360,7 +360,7 @@
             "win32",
             "win64"
         ],
-        "revision": "a5dd94cde18055dbe178134e17e487ee49dad0a1"
+        "revision": "131bdce363d1c7cf0bf9753db84be7d841966056"
     },
     "it": {
         "pin": false,
