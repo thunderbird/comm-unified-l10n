@@ -239,7 +239,7 @@
             "win32",
             "win64"
         ],
-        "revision": "bf61dd44e1c6b5292077ca980a4dc0e2c6a17f06"
+        "revision": "93d4e8b3d00efc349a097915333d2816c752b8ad"
     },
     "fy-NL": {
         "pin": false,
@@ -597,7 +597,7 @@
             "win32",
             "win64"
         ],
-        "revision": "069ff36b0d1bf2e595f72770fadc39edaf938cc7"
+        "revision": "95ea80b465a6fde82bd4405e8a0db937960b0b65"
     },
     "sq": {
         "pin": false,
