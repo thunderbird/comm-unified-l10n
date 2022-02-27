@@ -151,7 +151,7 @@
             "win32",
             "win64"
         ],
-        "revision": "ad164e99fa1130ed382c5d58376fb7fc560ea82b"
+        "revision": "36278602ab4250b31a91431fe3a30ba16ebb119e"
     },
     "en-CA": {
         "pin": false,
@@ -399,7 +399,7 @@
             "win32",
             "win64"
         ],
-        "revision": "300bd68426f1a75e754e0aceee03b0cf257524a3"
+        "revision": "cf38241abced5a8b4b2f74f4ce209756355274b9"
     },
     "kab": {
         "pin": false,
