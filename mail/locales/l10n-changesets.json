@@ -217,7 +217,7 @@
             "win32",
             "win64"
         ],
-        "revision": "ed8fb7ed0677c4b36a5b50cfb07a1e968bb9a6d6"
+        "revision": "5af6ebee32e1a789096c17eca8001f24610a3467"
     },
     "fi": {
         "pin": false,
@@ -630,7 +630,7 @@
             "win32",
             "win64"
         ],
-        "revision": "00a61ed637c2488de5f984fe456a0e0b83a8ceb2"
+        "revision": "fea87be14fc1cb7e5a026b01aabb4c77eb17f809"
     },
     "th": {
         "pin": false,
@@ -641,7 +641,7 @@
             "win32",
             "win64"
         ],
-        "revision": "9851b1b2c1594f01f864b31022000a028e94676b"
+        "revision": "b836934f640b297b20642a57653bfce3f9bc2971"
     },
     "tr": {
         "pin": false,
@@ -696,7 +696,7 @@
             "win32",
             "win64"
         ],
-        "revision": "d36c69052aefd4e6c78e92fc509ea759ddba89e9"
+        "revision": "f7658be5b6d79930bea5abb25f963509ed596773"
     },
     "zh-TW": {
         "pin": false,
