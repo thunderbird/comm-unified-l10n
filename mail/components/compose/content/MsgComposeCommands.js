@@ -293,8 +293,10 @@ const inputObserver = {
 const keyObserver = {
   observe: (subject, topic, data) => {
     switch (topic) {
-      case "openpgp-acceptance-change":
       case "openpgp-key-change":
+        EnigmailKeyRing.clearCache();
+      // fall through
+      case "openpgp-acceptance-change":
         checkRecipientKeys();
         gKeyAssistant.onExternalKeyChange();
         break;
