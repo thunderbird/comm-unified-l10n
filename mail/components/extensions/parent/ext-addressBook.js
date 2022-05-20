@@ -167,6 +167,9 @@ class ExtSearchBook extends AddrBookDirectory {
   get position() {
     return 0;
   }
+  get childCardCount() {
+    return 0;
+  }
   useForAutocomplete(aIdentityKey) {
     // AddrBookDirectory defaults to true
     return false;
