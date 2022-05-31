@@ -48,7 +48,7 @@ function AddrBookCard() {
       console.error("Error creating vCard properties", error);
       // Return  an empty VCardProperties object if parsing failed
       // catastrophically.
-      return new VCardProperties();
+      return new VCardProperties("4.0");
     }
   });
 }
