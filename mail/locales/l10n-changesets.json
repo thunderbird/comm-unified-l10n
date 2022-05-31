@@ -96,7 +96,7 @@
             "win32",
             "win64"
         ],
-        "revision": "f7fd475433a34fbcfc808223f09c051670ec400b"
+        "revision": "e035bde27f02c9d744fee452bebfdce95c8e697e"
     },
     "cy": {
         "pin": false,
@@ -118,7 +118,7 @@
             "win32",
             "win64"
         ],
-        "revision": "571753a059dd7b2a3c5229f772c908478c3b40aa"
+        "revision": "d4d8cf7b78fde06f3374eec5b4a593b45d576f1d"
     },
     "de": {
         "pin": false,
