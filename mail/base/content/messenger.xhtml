@@ -277,6 +277,13 @@
               events="clipboard"
               oncommandupdate="goUpdatePasteMenuItems()"/>
   <commandset id="webSearchItems"/>
+  <commandset id="browserCommands">
+    <!-- Browsing back and forth inside the add-on manager and on ATN -->
+    <command id="Browser:Back"
+             oncommand="specialTabs.browserBack();"/>
+    <command id="Browser:Forward"
+             oncommand="specialTabs.browserForward();"/>
+  </commandset>
   <commandset id="attachmentCommands">
     <command id="cmd_openAllAttachments"
              oncommand="goDoCommand('cmd_openAllAttachments');"
