@@ -2089,8 +2089,6 @@ var detailsPane = {
     );
 
     this.form = document.getElementById("detailsPane");
-    this.displayName = document.getElementById("displayName");
-    this.preferDisplayName = document.getElementById("preferDisplayName");
     this.actions = document.getElementById("detailsActions");
     this.writeButton = document.getElementById("detailsWriteButton");
     this.eventButton = document.getElementById("detailsEventButton");
@@ -2117,7 +2115,6 @@ var detailsPane = {
       } else {
         this.dirtyFields.delete(event.target);
       }
-      this._togglePreferDisplayName();
 
       // If there are no dirty fields, clear the flag, otherwise set it.
       this.isDirty = this.dirtyFields.size > 0;
@@ -2549,13 +2546,12 @@ var detailsPane = {
     if (card && card.supportsVCard) {
       vCardEdit.vCardProperties = card.vCardProperties;
       // getProperty may return a "1" or "0" string, we want a boolean.
-      this.preferDisplayName.checked =
+      vCardEdit.preferDisplayName.checked =
         // eslint-disable-next-line mozilla/no-compare-against-boolean-literals
         card.getProperty("PreferDisplayName", true) == true;
     } else {
       document.querySelector("h1").textContent = "";
       document.querySelector("h2").textContent = "";
-      this.preferDisplayName.checked = true;
       this.photo.style.backgroundImage = null;
       delete this.photo._blob;
       delete this.photo._cropRect;
@@ -2563,7 +2559,6 @@ var detailsPane = {
       vCardEdit.vCardString = vCard ?? "";
     }
 
-    this._togglePreferDisplayName();
     this.deleteButton.hidden = !card;
 
     this.isEditing = true;
@@ -2611,7 +2606,7 @@ var detailsPane = {
     // cards will fail.
     vCardEdit.saveVCard();
     card.setProperty("_vCard", vCardEdit.vCardString);
-    card.setProperty("PreferDisplayName", this.preferDisplayName.checked);
+    card.setProperty("PreferDisplayName", vCardEdit.preferDisplayName.checked);
 
     // No photo or a new photo. Delete the old one.
     if (!this.photo.style.backgroundImage || this.photo._blob) {
@@ -2735,14 +2730,6 @@ var detailsPane = {
       cardsPane.cardsList.dispatchEvent(new CustomEvent("select"));
       cardsPane.cardsList.focus();
     }
-  },
-
-  _togglePreferDisplayName() {
-    this.preferDisplayName.parentNode.classList.toggle(
-      "disabled",
-      !this.displayName.value
-    );
-    this.preferDisplayName.disabled = !this.displayName.value;
   },
 
   _onClick(event) {
