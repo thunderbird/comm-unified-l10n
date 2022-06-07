@@ -930,6 +930,8 @@ class AbTreeListbox extends customElements.get("tree-listbox") {
       "addrbook-directory-created",
       "addrbook-directory-updated",
       "addrbook-directory-deleted",
+      "addrbook-directory-request-start",
+      "addrbook-directory-request-end",
       "addrbook-list-created",
       "addrbook-list-updated",
       "addrbook-list-deleted",
@@ -986,6 +988,12 @@ class AbTreeListbox extends customElements.get("tree-listbox") {
           }
           break;
         }
+        case "addrbook-directory-request-start":
+          this.getRowForUID(data).classList.add("requesting");
+          break;
+        case "addrbook-directory-request-end":
+          this.getRowForUID(data).classList.remove("requesting");
+          break;
         case "addrbook-list-created": {
           let row = this.getRowForUID(data);
           let childList = row.querySelector("ul");
