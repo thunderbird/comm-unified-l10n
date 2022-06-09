@@ -382,7 +382,7 @@
             "win32",
             "win64"
         ],
-        "revision": "3c5a5798bfe718a55222643a1b3618c59e04040d"
+        "revision": "af61d6bf43f8f481f2aa291f74530840ce06edcb"
     },
     "ja": {
         "pin": false,
@@ -542,7 +542,7 @@
             "win32",
             "win64"
         ],
-        "revision": "ef2c188ad6e295e5063651923cced9b2f7a7f659"
+        "revision": "76f8e893b63502d6edae7320c10e30ddee518286"
     },
     "pt-PT": {
         "pin": false,
