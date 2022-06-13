@@ -613,7 +613,7 @@ edit-directories-label =
     .accesskey = E
 
 email-picker-label =
-    .label = Automatically add outgoing e-mail addresses to my:
+    .label = Automatically add outgoing email addresses to my:
     .accesskey = A
 
 default-directory-label =
