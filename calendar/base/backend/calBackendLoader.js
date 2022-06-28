@@ -2,11 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const EXPORTED_SYMBOLS = ["CalBackendLoader"];
-
+var { ComponentUtils } = ChromeUtils.import("resource://gre/modules/ComponentUtils.jsm");
 var { Services } = ChromeUtils.import("resource://gre/modules/Services.jsm");
 
-function CalBackendLoader() {
+function calBackendLoader() {
+  this.wrappedJSObject = this;
   try {
     this.loadBackend();
   } catch (e) {
@@ -14,7 +14,8 @@ function CalBackendLoader() {
   }
 }
 
-CalBackendLoader.prototype = {
+calBackendLoader.prototype = {
+  classID: Components.ID("{0314c271-7168-40fa-802e-83c8c46a557e}"),
   QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
 
   loaded: false,
@@ -54,9 +55,9 @@ CalBackendLoader.prototype = {
       let { ICAL } = ChromeUtils.import("resource:///modules/calendar/Ical.jsm");
       ICAL.design.strict = false;
 
-      dump("[CalBackendLoader] Using Thunderbird's ical.js backend\n");
+      dump("[calBackendLoader] Using Thunderbird's ical.js backend\n");
     } else {
-      dump("[CalBackendLoader] Using Thunderbird's libical backend\n");
+      dump("[calBackendLoader] Using Thunderbird's libical backend\n");
     }
 
     this.loaded = true;
@@ -71,3 +72,5 @@ function lazyFactoryFor(backendScope, classID) {
     },
   };
 }
+
+this.NSGetFactory = ComponentUtils.generateNSGetFactory([calBackendLoader]);

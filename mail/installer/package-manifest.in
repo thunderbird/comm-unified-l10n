@@ -322,6 +322,8 @@
 @RESPATH@/components/nsUpdateService.manifest
 #endif
 @RESPATH@/components/ProcessSingleton.manifest
+@RESPATH@/components/HandlerService.manifest
+@RESPATH@/components/HandlerService.js
 
 [calendar]
 @RESPATH@/chrome/calendar@JAREXT@
@@ -331,6 +333,8 @@
 @RESPATH@/@PREF_DIR@/calendar.js
 
 # Files added to components directory via `EXTRA_COMPONENTS`.
+@RESPATH@/components/calBackendLoader.js
+@RESPATH@/components/calBackendLoader.manifest
 @RESPATH@/components/calICALJSComponents.js
 
 # Files added to components directory via `FINAL_TARGET_FILES.components`.
@@ -356,6 +360,11 @@
 #ifdef ENABLE_WEBDRIVER
 @RESPATH@/chrome/remote@JAREXT@
 @RESPATH@/chrome/remote.manifest
+#endif
+
+#if defined(MOZ_DEBUG) || defined(NIGHTLY_BUILD)
+@RESPATH@/components/testComponents.manifest
+@RESPATH@/components/startupRecorder.js
 #endif
 
 ; Phishing Protection
