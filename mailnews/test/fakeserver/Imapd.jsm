@@ -4,9 +4,9 @@
 // This file implements test IMAP servers
 
 var EXPORTED_SYMBOLS = [
-  "imapDaemon",
-  "imapMailbox",
-  "imapMessage",
+  "ImapDaemon",
+  "ImapMailbox",
+  "ImapMessage",
   "IMAP_RFC3501_handler",
   "configurations",
   "mixinExtension",
@@ -37,7 +37,7 @@ var EXPORTED_SYMBOLS = [
 // DAEMON
 // + Namespaces: parentless mailboxes whose names are the namespace name. The
 //     type of the namespace is specified by the type attribute.
-// + Mailboxes: imapMailbox objects with several properties. If a mailbox
+// + Mailboxes: ImapMailbox objects with several properties. If a mailbox
 // | |   property begins with a '_', then it should not be serialized because
 // | |   it can be discovered from other means; in particular, a '_' does not
 // | |   necessarily mean that it is a private property that should not be
@@ -66,23 +66,23 @@ var { AuthPLAIN, AuthLOGIN, AuthCRAM } = ChromeUtils.import(
   "resource://testing-common/mailnews/Auth.jsm"
 );
 
-function imapDaemon(flags, syncFunc) {
-  this._flags = flags;
+(??)class imapDaemon {
+(??)  constructor(flags, syncFunc) {
+(??)    this._flags = flags;
 
-  this.namespaces = [];
-  this.idResponse = "NIL";
-  this.root = new imapMailbox("", null, { type: IMAP_NAMESPACE_PERSONAL });
-  this.uidvalidity = Math.round(Date.now() / 1000);
-  this.inbox = new imapMailbox("INBOX", null, this.uidvalidity++);
-  this.root.addMailbox(this.inbox);
-  this.namespaces.push(this.root);
-  this.syncFunc = syncFunc;
-  // This can be used to cause the artificial failure of any given command.
-  this.commandToFail = "";
-  // This can be used to simulate timeouts on large copies
-  this.copySleep = 0;
-}
-imapDaemon.prototype = {
+(??)    this.namespaces = [];
+(??)    this.idResponse = "NIL";
+(??)    this.root = new imapMailbox("", null, { type: IMAP_NAMESPACE_PERSONAL });
+(??)    this.uidvalidity = Math.round(Date.now() / 1000);
+(??)    this.inbox = new imapMailbox("INBOX", null, this.uidvalidity++);
+(??)    this.root.addMailbox(this.inbox);
+(??)    this.namespaces.push(this.root);
+(??)    this.syncFunc = syncFunc;
+(??)    // This can be used to cause the artificial failure of any given command.
+(??)    this.commandToFail = "";
+(??)    // This can be used to simulate timeouts on large copies
+(??)    this.copySleep = 0;
+(??)  }
   synchronize(mailbox, update) {
     if (this.syncFunc) {
       this.syncFunc.call(null, this);
@@ -176,18 +176,18 @@ imapDaemon.prototype = {
         return false;
       }
     }
-    // If this is an imapMailbox...
+    // If this is an ImapMailbox...
     if (oldBox && oldBox._children) {
       // Only delete now so we don't screw ourselves up if creation fails
       this.deleteMailbox(oldBox);
       oldBox._parent = box == this.root ? null : box;
-      let newBox = new imapMailbox(subName, box, this.uidvalidity++);
+      let newBox = new ImapMailbox(subName, box, this.uidvalidity++);
       newBox._messages = oldBox._messages;
       box.addMailbox(newBox);
 
       // And if oldBox is an INBOX, we need to recreate that
       if (oldBox.name == "INBOX") {
-        this.inbox = new imapMailbox("INBOX", null, this.uidvalidity++);
+        this.inbox = new ImapMailbox("INBOX", null, this.uidvalidity++);
         this.root.addMailbox(this.inbox);
       }
       oldBox.name = subName;
@@ -195,7 +195,7 @@ imapDaemon.prototype = {
       // oldBox is a regular {} object, so it contains mailbox data but is not
       // a mailbox itself. Pass it into the constructor and let that deal with
       // it...
-      let childBox = new imapMailbox(
+      let childBox = new ImapMailbox(
         subName,
         box == this.root ? null : box,
         oldBox
@@ -208,7 +208,7 @@ imapDaemon.prototype = {
       var creatable = hasFlag(this._flags, IMAP_FLAG_NEEDS_DELIMITER)
         ? name[name.length - 1] == namespace.delimiter
         : true;
-      let childBox = new imapMailbox(subName, box == this.root ? null : box, {
+      let childBox = new ImapMailbox(subName, box == this.root ? null : box, {
         flags: creatable ? [] : ["\\NoInferiors"],
         uidvalidity: this.uidvalidity++,
       });
@@ -229,12 +229,13 @@ imapDaemon.prototype = {
   },
 };
 
-function imapMailbox(name, parent, state) {
-  this.name = name;
-  this._parent = parent;
-  this._children = [];
-  this._messages = [];
-  this._updates = [];
+(??)class imapMailbox {
+(??)  constructor(name, parent, state) {
+(??)    this.name = name;
+(??)    this._parent = parent;
+(??)    this._children = [];
+(??)    this._messages = [];
+(??)    this._updates = [];
 
   // Shorthand for uidvalidity
   if (typeof state == "number") {
@@ -401,7 +402,18 @@ function imapMessage(URI, uid, flags) {
   }
   this.recent = false;
 }
-imapMessage.prototype = {
+(??)
+(??)class imapMessage {
+(??)  constructor(URI, uid, flags) {
+(??)    this._URI = URI;
+(??)    this.uid = uid;
+(??)    this.size = 0;
+(??)    this.flags = [];
+(??)    for (let flag in flags) {
+(??)      this.flags.push(flag);
+(??)    }
+(??)    this.recent = false;
+(??)  }
   get channel() {
     return Services.io.newChannel(
       this._URI,
@@ -1374,7 +1386,7 @@ IMAP_RFC3501_handler.prototype = {
       date = Date.now();
       text = args[1];
     }
-    var msg = new imapMessage(
+    var msg = new ImapMessage(
       "data:text/plain," + encodeURI(text),
       mailbox.uidnext++,
       flags
@@ -1538,7 +1550,7 @@ IMAP_RFC3501_handler.prototype = {
     }
 
     for (var message of messages) {
-      let newMessage = new imapMessage(
+      let newMessage = new ImapMessage(
         message._URI,
         dest.uidnext++,
         message.flags
@@ -1742,7 +1754,7 @@ IMAP_RFC3501_handler.prototype = {
     // body), and an array of arguments if we have a subquery. If we made an
     // error here, it will pop until it gets to FETCH, which will just pop at a
     // BAD response, which is what should happen if the query is malformed.
-    // Now we dump it all off onto imapMessage to mess with.
+    // Now we dump it all off onto ImapMessage to mess with.
 
     // Start off the response
     let response = "BODY[" + parts[1] + "]";
@@ -2063,7 +2075,7 @@ var IMAP_MOVE_extension = {
     }
 
     for (var message of messages) {
-      let newMessage = new imapMessage(
+      let newMessage = new ImapMessage(
         message._URI,
         dest.uidnext++,
         message.flags
