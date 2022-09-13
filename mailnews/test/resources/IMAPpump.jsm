@@ -77,7 +77,7 @@ function setupIMAPPump(extensions) {
 
   // end copy from head_server.js
 
-  IMAPPump.daemon = new Imapd.ImapDaemon();
+  IMAPPump.daemon = new Imapd.imapDaemon();
   IMAPPump.server = makeServer(IMAPPump.daemon, extensions);
 
   IMAPPump.incomingServer = createLocalIMAPServer();

@@ -66,7 +66,7 @@ async function runFilterAction() {
     }
   }
   IMAPPump.mailbox.addMessage(
-    new ImapMessage(specForFileName(gMessage), IMAPPump.mailbox.uidnext++, [])
+    new imapMessage(specForFileName(gMessage), IMAPPump.mailbox.uidnext++, [])
   );
   let listener = new PromiseTestUtils.PromiseUrlListener();
   IMAPPump.inbox.updateFolderWithListener(null, listener);

@@ -75,9 +75,9 @@ function addMessagesToServer(aMessages, aMailbox) {
     message.spec = URI.spec;
   });
 
-  // Create the ImapMessages and store them on the mailbox.
+  // Create the imapMessages and store them on the mailbox.
   aMessages.forEach(function(message) {
-    aMailbox.addMessage(new ImapMessage(message.spec, aMailbox.uidnext++, []));
+    aMailbox.addMessage(new imapMessage(message.spec, aMailbox.uidnext++, []));
   });
 }
 

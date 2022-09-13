@@ -20,7 +20,7 @@ var { PromiseTestUtils } = ChromeUtils.import(
 var { VirtualFolderHelper } = ChromeUtils.import(
   "resource:///modules/VirtualFolderWrapper.jsm"
 );
-var { ImapMessage } = ChromeUtils.import(
+var { imapMessage } = ChromeUtils.import(
   "resource://testing-common/mailnews/Imapd.jsm"
 );
 var { IMAPPump, setupIMAPPump } = ChromeUtils.import(
@@ -726,7 +726,7 @@ class MessageInjection {
             let msgURI = Services.io.newURI(
               "data:text/plain;base64," + btoa(synMsg.toMessageString())
             );
-            let imapMsg = new ImapMessage(
+            let imapMsg = new imapMessage(
               msgURI.spec,
               fakeFolder.uidnext++,
               []

@@ -32,7 +32,7 @@ add_task(function setup() {
 add_task(async function addMessageToServer() {
   let URI = Services.io.newFileURI(gFile).QueryInterface(Ci.nsIFileURL);
   IMAPPump.mailbox.addMessage(
-    new ImapMessage(URI.spec, IMAPPump.mailbox.uidnext++, [])
+    new imapMessage(URI.spec, IMAPPump.mailbox.uidnext++, [])
   );
 
   let listener = new PromiseTestUtils.PromiseUrlListener();

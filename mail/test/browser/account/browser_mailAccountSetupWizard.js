@@ -61,8 +61,8 @@ var imapUser = {
 var IMAPServer = {
   open() {
     const {
-      ImapDaemon,
-      ImapMessage,
+      imapDaemon,
+      imapMessage,
       IMAP_RFC2195_extension,
       IMAP_RFC3501_handler,
       mixinExtension,
@@ -70,9 +70,9 @@ var IMAPServer = {
     const { nsMailServer } = ChromeUtils.import(
       "resource://testing-common/mailnews/Maild.jsm"
     );
-    IMAPServer.ImapMessage = ImapMessage;
+    IMAPServer.imapMessage = imapMessage;
 
-    this.daemon = new ImapDaemon();
+    this.daemon = new imapDaemon();
     this.server = new nsMailServer(daemon => {
       let handler = new IMAP_RFC3501_handler(daemon);
       mixinExtension(handler, IMAP_RFC2195_extension);

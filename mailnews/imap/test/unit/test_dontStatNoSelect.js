@@ -21,7 +21,7 @@ var { PromiseTestUtils } = ChromeUtils.import(
 );
 
 add_task(function setupTest() {
-  var daemon = new ImapDaemon();
+  var daemon = new imapDaemon();
   daemon.createMailbox("folder 1", { subscribed: true });
   let folder1Mailbox = daemon.getMailbox("folder 1");
   folder1Mailbox.flags.push("\\Noselect");
@@ -126,7 +126,7 @@ function addMessageToFolder(mbox) {
   let msgURI = Services.io.newURI(
     "data:text/plain;base64," + btoa(messages[0].toMessageString())
   );
-  let message = new ImapMessage(msgURI.spec, mbox.uidnext++);
+  let message = new imapMessage(msgURI.spec, mbox.uidnext++);
   mbox.addMessage(message);
 }
 

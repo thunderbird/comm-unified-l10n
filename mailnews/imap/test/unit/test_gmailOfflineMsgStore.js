@@ -71,7 +71,7 @@ add_task(async function setupTest() {
   fooBox = IMAPPump.daemon.getMailbox("foo");
 
   // Add message1 to inbox.
-  let message = new ImapMessage(
+  let message = new imapMessage(
     specForFileName(gMessage1),
     IMAPPump.mailbox.uidnext++,
     []
@@ -133,7 +133,7 @@ add_task(async function createAndUpdate() {
 
 add_task(function addToFoo() {
   // Adding our test message.
-  let message = new ImapMessage(
+  let message = new imapMessage(
     specForFileName(gMessage1),
     fooBox.uidnext++,
     []
@@ -144,7 +144,7 @@ add_task(function addToFoo() {
   message.xGmLabels = gXGmLabels12; // With labels excluding "foo".
   fooBox.addMessage(message);
   // Adding another message so that fooFolder behaves as LocalFolder while calculating it's size.
-  let message1 = new ImapMessage(
+  let message1 = new imapMessage(
     specForFileName(gMessage2),
     fooBox.uidnext++,
     []

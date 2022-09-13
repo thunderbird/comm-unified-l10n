@@ -31,7 +31,7 @@ add_task(async function setupTest() {
     false
   );
   // Load and update a message in the imap fake server.
-  let message = new ImapMessage(
+  let message = new imapMessage(
     specForFileName(gMessage),
     IMAPPump.mailbox.uidnext++,
     []

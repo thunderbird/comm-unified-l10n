@@ -18,7 +18,7 @@ var { PromiseTestUtils } = ChromeUtils.import(
 var { mailTestUtils } = ChromeUtils.import(
   "resource://testing-common/mailnews/MailTestUtils.jsm"
 );
-var { ImapMessage } = ChromeUtils.import(
+var { imapMessage } = ChromeUtils.import(
   "resource://testing-common/mailnews/Imapd.jsm"
 );
 var { IMAPPump, setupIMAPPump, teardownIMAPPump } = ChromeUtils.import(
@@ -44,7 +44,7 @@ registerCleanupFunction(function() {
  * Creates a SyntheticMessage and prepares it for loading it
  * into a fake IMAP inbox.
  *
- * @returns {[ImapMessage, SyntheticMessage]}
+ * @returns {[imapMessage, SyntheticMessage]}
  */
 async function createMessage() {
   let gMessageGenerator = new MessageGenerator();
@@ -54,18 +54,18 @@ async function createMessage() {
     "data:text/plain;base64," + btoa(synthMessage.toMessageString())
   );
   let imapInbox = IMAPPump.daemon.getMailbox("INBOX");
-  let ImapMessageFromSynthMsg = new ImapMessage(
+  let imapMessageFromSynthMsg = new imapMessage(
     msgURI.spec,
     imapInbox.uidnext++,
     []
   );
-  return [ImapMessageFromSynthMsg, synthMessage];
+  return [imapMessageFromSynthMsg, synthMessage];
 }
 
 /**
  * Adds a fake msg to a fake IMAP.
  *
- * @param {ImapMessage} fooMessage
+ * @param {imapMessage} fooMessage
  */
 async function addImapMessage(fooMessage) {
   IMAPPump.mailbox.addMessage(fooMessage);
@@ -89,7 +89,7 @@ async function saveAndLoad(fileEnding) {
     "Sanity check if the file ending is intact"
   );
 
-  // Get the ImapMessage.
+  // Get the imapMessage.
   let hdr = mailTestUtils.firstMsgHdr(IMAPPump.inbox);
   let uri = IMAPPump.inbox.getUriForMsg(hdr);
 

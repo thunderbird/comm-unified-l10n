@@ -31,7 +31,7 @@ async function setup() {
     .QueryInterface(Ci.nsIFileURL);
 
   IMAPPump.mailbox.addMessage(
-    new ImapMessage(msgfileuri.spec, IMAPPump.mailbox.uidnext++, [])
+    new imapMessage(msgfileuri.spec, IMAPPump.mailbox.uidnext++, [])
   );
   let promiseUrlListener = new PromiseTestUtils.PromiseUrlListener();
   IMAPPump.inbox.updateFolderWithListener(null, promiseUrlListener);
