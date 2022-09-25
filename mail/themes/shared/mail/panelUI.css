@@ -814,6 +814,10 @@ menulist[open="true"]:not([disabled="true"]) {
 
 /* App Menu items icons */
 
+#appmenu-quit {
+  list-style-image: var(--icon-quit);
+}
+
 /* New Account and Create */
 
 #appmenu_new {
