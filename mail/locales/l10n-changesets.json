@@ -41,7 +41,7 @@
             "win32",
             "win64"
         ],
-        "revision": "d31c84740db3d084256ee904d6dcf28dcc48f1d2"
+        "revision": "189dbd604a443b3b1c7c8cc6f982dbaa6dc647f0"
     },
     "bg": {
         "pin": false,
@@ -129,7 +129,7 @@
             "win32",
             "win64"
         ],
-        "revision": "4450d35ffdbd10e494baea5d66a92f966711aa24"
+        "revision": "57096d5d76f0ea59e3b9ed3138b262b7a1a71ee5"
     },
     "dsb": {
         "pin": false,
@@ -250,7 +250,7 @@
             "win32",
             "win64"
         ],
-        "revision": "3f97b9dd7106a7398cc8a1d19eddbc37bb7f18ab"
+        "revision": "615f37984650ffd708b59f9da5310bb76417eeea"
     },
     "fy-NL": {
         "pin": false,
@@ -338,7 +338,7 @@
             "win32",
             "win64"
         ],
-        "revision": "dfa21e5d3807b9ed7c3f3a7bc1f0c5b678281f76"
+        "revision": "cc9d148a6516eaf0b6617045367854d4d18c1ed1"
     },
     "hy-AM": {
         "pin": false,
@@ -382,7 +382,7 @@
             "win32",
             "win64"
         ],
-        "revision": "06e4c437dfcdf02cbb7d5640fc463aa9f3e5962c"
+        "revision": "e7738694c41423d4a1f6406265b92393befa33c8"
     },
     "ja": {
         "pin": false,
@@ -498,7 +498,7 @@
             "win32",
             "win64"
         ],
-        "revision": "0e98929c813e75e9a9fc9ce195c6e2c8c21505ab"
+        "revision": "000d524d8a305a64f0810ed736ee385f27911a17"
     },
     "nn-NO": {
         "pin": false,
@@ -696,7 +696,7 @@
             "win32",
             "win64"
         ],
-        "revision": "2c1b9ec74bbf2aefdde703a77ae4798cbdb55a25"
+        "revision": "bc189c584184894f10bbe6b9ee6c6baf0f4f4995"
     },
     "zh-CN": {
         "pin": false,
@@ -707,7 +707,7 @@
             "win32",
             "win64"
         ],
-        "revision": "4883f2421d2a487d435f132e71100847a6983d4e"
+        "revision": "a49644d6d63b6d7b730a0d9adfcc42be8e9d80df"
     },
     "zh-TW": {
         "pin": false,
@@ -718,6 +718,6 @@
             "win32",
             "win64"
         ],
-        "revision": "386fa050ea484add0c22f3953286dd7862f093f5"
+        "revision": "e8310bec20d3e4495b2ccfa8ab6ecadaf677e679"
     }
 }
