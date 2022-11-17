@@ -74,8 +74,8 @@ jobs:
           target-tasks-method: l10n_bump
       run-on-projects:
           - comm-beta
-      when: [{hour: 8, minute: 30}]
-      # when: []
+      # when: [{hour: 8, minute: 30}]
+      when: []
 
     - name: are-we-esmified-yet
       job:
