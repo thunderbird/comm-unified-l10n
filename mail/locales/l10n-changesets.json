@@ -1,5 +1,6 @@
 {
     "all": {
+        "pin": false,
         "platforms": [
             "linux",
             "linux64",
@@ -7,6 +8,6 @@
             "win32",
             "win64"
         ],
-        "revision": "default"
+        "revision": "0f6502b6b680b189ef87e4972833109ad9eb2804"
     }
 }
