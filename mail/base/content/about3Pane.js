@@ -2821,6 +2821,7 @@ var folderListener = {
     folderPane.removeFolder(parentFolder, childFolder);
     if (childFolder == gFolder) {
       gFolder = null;
+      gViewWrapper?.close();
     }
   },
   onMessageRemoved(parentFolder, msg) {
@@ -3431,7 +3432,7 @@ var sortController = {
 commandController.registerCallback(
   "cmd_sort",
   event => sortController.handleCommand(event),
-  () => !!gViewWrapper
+  () => !!gViewWrapper?.dbView
 );
 
 commandController.registerCallback(
@@ -3441,7 +3442,7 @@ commandController.registerCallback(
     gViewWrapper.dbView.doCommand(Ci.nsMsgViewCommandType.expandAll);
     threadPane.restoreSelection();
   },
-  () => !!gViewWrapper
+  () => !!gViewWrapper?.dbView
 );
 commandController.registerCallback(
   "cmd_collapseAllThreads",
@@ -3451,7 +3452,7 @@ commandController.registerCallback(
     // TODO: this reopens threads containing a selected message.
     threadPane.restoreSelection();
   },
-  () => !!gViewWrapper
+  () => !!gViewWrapper?.dbView
 );
 
 function SwitchView(command) {
@@ -3489,27 +3490,27 @@ function SwitchView(command) {
 commandController.registerCallback(
   "cmd_viewAllMsgs",
   () => SwitchView("cmd_viewAllMsgs"),
-  () => !!gViewWrapper
+  () => !!gViewWrapper?.dbView
 );
 commandController.registerCallback(
   "cmd_viewThreadsWithUnread",
   () => SwitchView("cmd_viewThreadsWithUnread"),
-  () => !!gViewWrapper
+  () => !!gViewWrapper?.dbView
 );
 commandController.registerCallback(
   "cmd_viewWatchedThreadsWithUnread",
   () => SwitchView("cmd_viewWatchedThreadsWithUnread"),
-  () => !!gViewWrapper
+  () => !!gViewWrapper?.dbView
 );
 commandController.registerCallback(
   "cmd_viewUnreadMsgs",
   () => SwitchView("cmd_viewUnreadMsgs"),
-  () => !!gViewWrapper
+  () => !!gViewWrapper?.dbView
 );
 commandController.registerCallback(
   "cmd_viewIgnoredThreads",
   () => SwitchView("cmd_viewIgnoredThreads"),
-  () => !!gViewWrapper
+  () => !!gViewWrapper?.dbView
 );
 
 commandController.registerCallback("cmd_goStartPage", () =>
