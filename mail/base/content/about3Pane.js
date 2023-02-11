@@ -3191,9 +3191,11 @@ var sortController = {
     switch (event.target.value) {
       case "ascending":
         this.sortAscending();
+        threadPane.restoreSortIndicator();
         break;
       case "descending":
         this.sortDescending();
+        threadPane.restoreSortIndicator();
         break;
       case "threaded":
         this.sortThreaded();
@@ -3207,6 +3209,7 @@ var sortController = {
       default:
         if (event.target.value in Ci.nsMsgViewSortType) {
           this.sortThreadPane(event.target.value);
+          threadPane.restoreSortIndicator();
         }
         break;
     }
