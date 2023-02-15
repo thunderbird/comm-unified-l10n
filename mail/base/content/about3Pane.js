@@ -1938,6 +1938,7 @@ var threadPane = {
       commandController.doCommand("cmd_delete", event);
     });
 
+    threadTree.addEventListener("dblclick", this);
     threadTree.addEventListener("keypress", this);
     threadTree.addEventListener("select", this);
     threadTree.addEventListener("dragstart", this);
@@ -1945,6 +1946,9 @@ var threadPane = {
 
   handleEvent(event) {
     switch (event.type) {
+      case "dblclick":
+        this._onDoubleClick(event);
+        break;
       case "keypress":
         this._onKeyPress(event);
         break;
@@ -1957,11 +1961,17 @@ var threadPane = {
     }
   },
 
-  _onKeyPress(event) {
-    if (event.key != "Enter") {
-      return;
-    }
+  _onDoubleClick(event) {
+    this._onItemActivate(event);
+  },
 
+  _onKeyPress(event) {
+    if (event.key == "Enter") {
+      this._onItemActivate(event);
+    }
+  },
+
+  _onItemActivate(event) {
     if (gFolder.isSpecialFolder(Ci.nsMsgFolderFlags.Drafts, true)) {
       commandController.doCommand("cmd_editDraftMsg", event);
     } else if (gFolder.isSpecialFolder(Ci.nsMsgFolderFlags.Templates, true)) {
