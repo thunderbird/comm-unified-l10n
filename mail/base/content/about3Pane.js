@@ -2821,7 +2821,7 @@ var folderListener = {
     folderPane.removeFolder(parentFolder, childFolder);
     if (childFolder == gFolder) {
       gFolder = null;
-      gViewWrapper?.close();
+      gViewWrapper?.close(true);
     }
   },
   onMessageRemoved(parentFolder, msg) {
