@@ -1132,6 +1132,11 @@ var folderPane = {
   _onSelect(event) {
     threadPane.saveSelection();
 
+    // Bail out if this is synthetic view, such as a gloda search.
+    if (gViewWrapper?.isSynthetic) {
+      return;
+    }
+
     clearWebPage();
     clearMessage();
     clearMessages();
