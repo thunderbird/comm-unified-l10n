@@ -1130,6 +1130,8 @@ var folderPane = {
   },
 
   _onSelect(event) {
+    threadPane.saveSelection();
+
     clearWebPage();
     clearMessage();
     clearMessages();
@@ -1216,6 +1218,7 @@ var folderPane = {
       });
 
       threadPane.restoreSortIndicator();
+      threadPane.restoreSelection();
     }
 
     window.dispatchEvent(
@@ -1978,11 +1981,14 @@ customElements.define("folder-tree-row", FolderTreeRow, { extends: "li" });
 
 var threadPane = {
   /**
-   * The map holding the current selection of the thread tree.
+   * Non-persistent storage of the last-selected items in each folder.
+   * Keys in this map are folder URIs. Values are objects containing an array
+   * of the selected messages and the current message. Messages are referenced
+   * by message key to account for possible changes in the folder.
    *
-   * @type {?Map}
+   * @type {Map<string, object>}
    */
-  _savedSelection: null,
+  _savedSelections: new Map(),
 
   columns: DEFAULT_COLUMNS.map(column => ({ ...column })),
 
@@ -2299,17 +2305,44 @@ var threadPane = {
    * Store the current thread tree selection.
    */
   saveSelection() {
-    this._savedSelection = threadTree.selectedIndices.map(gDBView.getKeyAt);
+    if (gFolder && gDBView) {
+      this._savedSelections.set(gFolder.URI, {
+        currentKey: gDBView.getKeyAt(threadTree.currentIndex),
+        selectedKeys: threadTree.selectedIndices.map(gDBView.getKeyAt),
+      });
+    }
+  },
+
+  /**
+   * Forget any saved selection of the given folder. This is useful if you're
+   * going to set the selection after switching to the folder.
+   *
+   * @param {string} folderURI
+   */
+  forgetSelection(folderURI) {
+    this._savedSelections.delete(folderURI);
   },
 
   /**
    * Restore the previously saved thread tree selection.
    */
   restoreSelection() {
-    threadTree.selectedIndices = this._savedSelection
+    if (!this._savedSelections.has(gFolder?.URI)) {
+      return;
+    }
+
+    let { currentKey, selectedKeys } = this._savedSelections.get(gFolder.URI);
+    threadTree.selectedIndices = selectedKeys
       .map(gDBView.findIndexFromKey)
       .filter(i => i != nsMsgViewIndex_None);
-    this._savedSelection = null;
+
+    let index = gDBView.findIndexFromKey(currentKey, false);
+    if (index != nsMsgViewIndex_None) {
+      // Do an instant scroll before setting the index to avoid animation.
+      threadTree.scrollToIndex(index, true);
+      threadTree.currentIndex = index;
+    }
+    this._savedSelections.delete(gFolder.URI);
   },
 
   /**
@@ -3358,7 +3391,9 @@ var sortController = {
       return;
     }
 
+    threadPane.saveSelection();
     gViewWrapper.sortAscending();
+    threadPane.restoreSelection();
   },
   sortDescending() {
     if (gViewWrapper.showGroupedBySort && gViewWrapper.isSingleFolder) {
@@ -3368,7 +3403,9 @@ var sortController = {
       return;
     }
 
+    threadPane.saveSelection();
     gViewWrapper.sortDescending();
+    threadPane.restoreSelection();
   },
   convertSortTypeToColumnID(sortKey) {
     let columnID;
