@@ -2034,6 +2034,9 @@ var threadPane = {
     this.treeTable.addEventListener("sort-changed", event => {
       this.onSortChanged(event.detail);
     });
+    this.treeTable.addEventListener("restore-columns", () => {
+      this.restoreDefaultColumns();
+    });
     this.treeTable.addEventListener("toggle-flag", event => {
       commandController.doCommand("cmd_markAsFlagged", event);
     });
