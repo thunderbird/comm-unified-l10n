@@ -1145,9 +1145,8 @@ var folderPane = {
       `link[rel="icon"]`
     ).href = FolderUtils.getFolderIcon(gFolder);
 
-    // Clean up any existing view wrapper.
+    // Clean up any existing view wrapper. This will invalidate the thread tree.
     gViewWrapper?.close();
-    threadTree.invalidate();
 
     if (gFolder.isServer) {
       document.title = gFolder.server.prettyName;
