@@ -1202,12 +1202,8 @@ var folderPane = {
           }
         },
         invalidateRange(startIndex, endIndex) {
-          if (this._inBatch) {
-            return;
-          }
-
-          for (let index = startIndex; index <= endIndex; index++) {
-            threadTree.invalidateRow(index);
+          if (!this._inBatch) {
+            threadTree.invalidateRange(startIndex, endIndex);
           }
         },
         rowCountChanged(index, count) {
