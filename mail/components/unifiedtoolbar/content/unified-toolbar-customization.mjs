@@ -86,9 +86,6 @@ class UnifiedToolbarCustomization extends HTMLElement {
     this.initialize();
     this.append(template);
     this.#updateResetToDefault();
-    this.addEventListener("keyup", this.#handleKeyboard);
-    this.addEventListener("keypress", this.#handleKeyboard);
-    this.addEventListener("keydown", this.#handleKeyboard);
   }
 
   #handleItemChange = event => {
@@ -133,15 +130,6 @@ class UnifiedToolbarCustomization extends HTMLElement {
     for (const pane of tabPanes) {
       pane.removeItem(event.detail.itemId);
     }
-  };
-
-  /**
-   * Ensure keyboard events are not propagated outside the customization dialog.
-   *
-   * @param {KeyboardEvent} event - The keyboard event.
-   */
-  #handleKeyboard = event => {
-    event.stopPropagation();
   };
 
   /**
@@ -287,33 +275,10 @@ class UnifiedToolbarCustomization extends HTMLElement {
         ?.select();
     }
 
-    document.getElementById("tabmail").globalOverlay = visible;
     document.documentElement.classList.toggle(
       "customizingUnifiedToolbar",
       visible
     );
-
-    // Make sure focus is where it belongs.
-    if (visible) {
-      if (
-        document.activeElement !== this &&
-        !this.contains(document.activeElement)
-      ) {
-        Services.focus.moveFocus(
-          window,
-          this,
-          Services.focus.MOVEFOCUS_FIRST,
-          0
-        );
-      }
-    } else {
-      Services.focus.moveFocus(
-        window,
-        document.body,
-        Services.focus.MOVEFOCUS_ROOT,
-        0
-      );
-    }
   }
 
   /**
