@@ -619,6 +619,7 @@ class TreeViewTableColumnPicker extends HTMLTableCellElement {
 
     items.append(document.createXULElement("menuseparator"));
     let restoreItem = document.createXULElement("menuitem");
+    restoreItem.id = "restoreColumnOrder";
     restoreItem.addEventListener("command", () => {
       this.dispatchEvent(
         new CustomEvent("restore-columns", {
