@@ -2971,11 +2971,13 @@ var messagePane = {
   },
 
   /**
-   * Ensure the web page browser is blank.
+   * Ensure the web page browser is blank, unless the start page is shown.
    */
   clearWebPage() {
-    webBrowser.hidden = true;
-    MailE10SUtils.loadAboutBlank(webBrowser);
+    if (!this._keepStartPageOpen) {
+      webBrowser.hidden = true;
+      MailE10SUtils.loadAboutBlank(webBrowser);
+    }
   },
 
   /**
@@ -2990,6 +2992,7 @@ var messagePane = {
       return;
     }
     if (!url || url == "about:blank") {
+      this._keepStartPageOpen = false;
       this.clearWebPage();
       return;
     }
@@ -3024,6 +3027,7 @@ var messagePane = {
       return;
     }
 
+    this._keepStartPageOpen = false;
     messagePane.clearWebPage();
     messagePane.clearMessages();
 
@@ -3055,6 +3059,7 @@ var messagePane = {
       return;
     }
 
+    this._keepStartPageOpen = false;
     messagePane.clearWebPage();
     messagePane.clearMessage();
 
@@ -3084,6 +3089,17 @@ var messagePane = {
 
     multiMessageBrowser.hidden = false;
     window.dispatchEvent(new CustomEvent("MsgsLoaded", { bubbles: true }));
+  },
+
+  /**
+   * Show the start page in the web page browser. The start page will remain
+   * shown until a message is displayed.
+   */
+  showStartPage() {
+    this._keepStartPageOpen = true;
+    messagePane.displayWebPage(
+      Services.urlFormatter.formatURLPref("mailnews.start_page.url")
+    );
   },
 };
 
@@ -3123,8 +3139,12 @@ function restoreState({
     threadPane.restoreColumns();
   }
 
-  if (first && Services.prefs.getBoolPref("mailnews.start_page.enabled")) {
-    commandController.doCommand("cmd_goStartPage");
+  if (
+    first &&
+    messagePaneVisible &&
+    Services.prefs.getBoolPref("mailnews.start_page.enabled")
+  ) {
+    messagePane.showStartPage();
   }
 }
 
@@ -3926,11 +3946,12 @@ commandController.registerCallback(
   () => !!gViewWrapper?.dbView
 );
 
-commandController.registerCallback("cmd_goStartPage", () =>
-  messagePane.displayWebPage(
-    Services.urlFormatter.formatURLPref("mailnews.start_page.url")
-  )
-);
+commandController.registerCallback("cmd_goStartPage", () => {
+  // This is a user-triggered command, they must want to see the page, so show
+  // the message pane if it's hidden.
+  paneLayout.messagePaneSplitter.expand();
+  messagePane.showStartPage();
+});
 commandController.registerCallback(
   "cmd_print",
   async () => {
