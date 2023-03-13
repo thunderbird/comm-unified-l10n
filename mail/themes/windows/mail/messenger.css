@@ -11,7 +11,7 @@
 @media not (-moz-windows-non-native-menus) {
   .menu-iconic > .menu-iconic-left,
   .menuitem-iconic > .menu-iconic-left {
-    display: flex;
+    display: -moz-box;
     padding-top: 0;
   }
 }
@@ -56,7 +56,7 @@
 
   .folderMenuItem > .menu-iconic-left,
   .menuitem-iconic > .menu-iconic-left {
-    display: flex;
+    display: -moz-box;
   }
 }
 
@@ -78,14 +78,14 @@
 }
 
 .titlebar-buttonbox-container {
-  align-items: stretch;
+  -moz-box-align: stretch;
 }
 
 @media (-moz-platform: windows-win7),
        (-moz-platform: windows-win8) {
   /* Preserve window control buttons position at the top of the button box. */
   .titlebar-buttonbox-container {
-    align-items: flex-start;
+    -moz-box-align: start;
   }
 }
 
@@ -107,12 +107,12 @@
 /* ::::: menubar ::::: */
 
 #menubar-items {
-  flex-direction: column; /* for flex hack */
+  -moz-box-orient: vertical; /* for flex hack */
   margin-bottom: 1px;
 }
 
 #menubar-items > menubar {
-  flex: 1; /* make menu items expand to fill toolbar height */
+  -moz-box-flex: 1; /* make menu items expand to fill toolbar height */
 }
 
 menubar > menu[disabled="true"]:-moz-lwtheme {
@@ -129,8 +129,8 @@ toolbarpaletteitem[place="toolbar"] > toolbarspacer {
 /* ::::: toolbarbutton menu-button ::::: */
 
 toolbarbutton[is="toolbarbutton-menu-button"] {
-  align-items: stretch;
-  flex-direction: row !important;
+  -moz-box-align: stretch;
+  -moz-box-orient: horizontal !important;
   padding: 0 !important;
 }
 

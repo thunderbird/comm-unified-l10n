@@ -150,7 +150,7 @@ toolbar[nowindowdrag="true"] {
 /* ::::: autocomplete icons ::::: */
 
 .ac-site-icon {
-  display: flex;
+  display: -moz-box;
   margin: 2px 5px;
 }
 
@@ -225,7 +225,7 @@ toolbarbutton.formatting-button {
 }
 
 #titlebar-title-label {
-  justify-content: center;
+  -moz-box-pack: center;
 }
 
 /* Styles for the default system dark theme */

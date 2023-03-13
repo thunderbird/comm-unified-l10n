@@ -168,11 +168,11 @@ toolbar[mode="text"] > #button-chat[unreadMessages="true"] {
 }
 
 toolbar[mode="text"] .button-appmenu .toolbarbutton-icon {
-  display: flex;
+  display: -moz-box;
 }
 
 #folder-location-container {
-  flex: 2 2;
+  -moz-box-flex: 2;
 }
 
 /* Force the folder location and mail view items to fit in the available width
@@ -181,7 +181,7 @@ toolbar[mode="text"] .button-appmenu .toolbarbutton-icon {
 #palette-box #folder-location-container,
 #palette-box #folderpane-mode-selector,
 #palette-box #viewPicker {
-  flex: 1;
+  -moz-box-flex: 1;
 }
 
 #palette-box #button-chat {

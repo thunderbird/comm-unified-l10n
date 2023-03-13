@@ -41,7 +41,7 @@
 }
 
 listcell > hbox {
-  justify-content: flex-end;
+  -moz-box-pack: end;
 }
 
 /* No '.filler' here, so add margin to make more room. */

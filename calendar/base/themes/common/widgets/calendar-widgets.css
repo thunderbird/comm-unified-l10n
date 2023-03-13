@@ -96,7 +96,7 @@ checkbox.treenode-checkbox.agenda-checkbox {
 
 checkbox.treenode-checkbox > .checkbox-check {
   appearance: none;
-  align-items: center;
+  -moz-box-align: center;
   border: none;
   width: 10px;
   height: 10px;
@@ -348,7 +348,7 @@ checkbox.treenode-checkbox > .checkbox-label-center-box > .checkbox-label-box > 
 }
 
 #calendar-list > richlistitem {
-  align-items: center;
+  -moz-box-align: center;
 }
 
 #sideButtonsBottom {

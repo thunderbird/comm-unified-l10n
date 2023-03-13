@@ -9,17 +9,17 @@ treecolpicker {
 }
 
 #recipientKeyIdCol {
-  flex: 3;
+  -moz-box-flex: 3;
 }
 
 #recipientStatusCol {
-  flex: 4;
+  -moz-box-flex: 4;
 }
 
 #recipientComposeKeyCol {
-  flex: 3;
+  -moz-box-flex: 3;
 }
 
 #statusComposeKeyCol {
-  flex: 2;
+  -moz-box-flex: 2;
 }

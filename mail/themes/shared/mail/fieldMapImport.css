@@ -7,15 +7,15 @@ treecolpicker {
 }
 
 #checkedHeader {
-  flex: 3 3;
+  -moz-box-flex: 3;
 }
 
 #fieldNameHeader {
-  flex: 7 7;
+  -moz-box-flex: 7;
 }
 
 #sampleDataHeader {
-  flex: 13 13;
+  -moz-box-flex: 13;
 }
 
 richlistitem > hbox > checkbox {

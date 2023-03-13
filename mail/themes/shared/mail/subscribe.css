@@ -15,7 +15,7 @@
 
 #nameColumn,
 #nameColumn2 {
-  flex: 10 10;
+  -moz-box-flex: 10;
 }
 
 /* ::::: Subscription Icons  :::::: */

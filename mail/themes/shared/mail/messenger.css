@@ -36,9 +36,9 @@ body {
 }
 
 body {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
+  display: -moz-box;
+  -moz-box-orient: vertical;
+  -moz-box-flex: 1;
 }
 
 p {
@@ -245,7 +245,7 @@ toolbar[customizing="true"][collapsed="true"] {
 /* toolbarbutton */
 
 .toolbarbutton-1 {
-  flex-direction: column;
+  -moz-box-orient: vertical;
   margin: 4px 1px;
   padding: 1px 5px !important;
   -moz-context-properties: fill, stroke, fill-opacity;
@@ -269,16 +269,16 @@ toolbar[customizing="true"][collapsed="true"] {
 }
 
 .toolbarbutton-menubutton-button {
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  -moz-box-orient: vertical;
 }
 
 toolbox[labelalign="end"] .toolbarbutton-1,
 toolbox[labelalign="end"] .toolbarbutton-menubutton-button,
 toolbox:not([mode="full"]) .toolbarbutton-1,
 toolbox:not([mode="full"]) .toolbarbutton-menubutton-button {
-  flex-direction: row;
+  -moz-box-orient: horizontal;
 }
 
 /* Replicate the xul.css rule for when toolbar button icons are html:img instead
@@ -415,7 +415,7 @@ toolbox[labelalign="end"] > toolbar[mode="full"] .toolbarbutton-1 .toolbarbutton
 .toolbarbutton-1[disabled="true"] >
 .toolbarbutton-menubutton-dropmarker::before {
   content: "";
-  display: flex;
+  display: -moz-box;
   width: 1px;
   height: 18px;
   background-image: linear-gradient(currentColor 0, currentColor 100%);
@@ -473,7 +473,7 @@ toolbar[brighttext] .toolbarbutton-1:not(:hover,:active,[open]) >
 }
 
 #palette-box .toolbarbutton-1 {
-  flex-direction: row;
+  -moz-box-orient: horizontal;
 }
 
 description.error {
@@ -977,7 +977,7 @@ statuspanel:not([label]) {
 
 .statuspanel-inner {
   height: 3em;
-  align-items: flex-end;
+  -moz-box-align: end;
 }
 
 .statuspanel-label {
@@ -1029,7 +1029,7 @@ label.statusbarpanel {
 }
 
 .statusbarpanel-progress {
-  align-items: center;
+  -moz-box-align: center;
 }
 
 #dialog\.progress,
@@ -1227,19 +1227,19 @@ html|span.ac-emphasize-text {
 
 .autocomplete-richlistitem[type$="-abook"]:not([ac-comment=""]) > .ac-url,
 .autocomplete-richlistitem[type$="-abook"]:not([ac-comment=""]) > .ac-separator {
-  display: flex;
+  display: -moz-box;
 }
 
 .autocomplete-richlistitem[type$="-abook"]:not([ac-comment=""]) > .ac-url {
-  order: 1;
+  -moz-box-ordinal-group: 1;
 }
 
 .autocomplete-richlistitem[type$="-abook"]:not([ac-comment=""]) > .ac-separator {
-  order: 2;
+  -moz-box-ordinal-group: 2;
 }
 
 .autocomplete-richlistitem[type$="-abook"]:not([ac-comment=""]) > .ac-title {
-  order: 3;
+  -moz-box-ordinal-group: 3;
 }
 
 .ac-url-text {
@@ -1286,11 +1286,11 @@ toolbar[customizing="true"] {
 
 toolbarpaletteitem[type="spacer"][place="toolbar"],
 toolbarpaletteitem[type="spring"][place="toolbar"] {
-  align-items: center;
+  -moz-box-align: center;
 }
 
 toolbarpaletteitem[type="spring"][place="toolbar"] {
-  flex: 1000 1000;
+  -moz-box-flex: 1000;
 }
 
 toolbarpaletteitem[type="spacer"][place="toolbar"] toolbarspacer,
@@ -1350,7 +1350,7 @@ panel[type="arrow"].panel-block-padding::part(content) {
 
 .browserContainer,
 .browserStack {
-  flex: 10000 10000;
+  -moz-box-flex: 10000;
 }
 
 .printPreviewStack {
@@ -1468,7 +1468,7 @@ printpreview-pagination:focus-within,
 .dialogBox {
   background-clip: content-box;
   box-shadow: 0 2px 14px 0 rgba(0, 0, 0, 0.2);
-  display: flex;
+  display: -moz-box;
   margin: 0;
   padding: 0;
   overflow-x: auto;

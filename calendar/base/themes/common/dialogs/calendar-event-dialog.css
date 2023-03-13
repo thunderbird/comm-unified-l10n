@@ -503,7 +503,7 @@ label.label {
  *-------------------------------------------------------------------*/
 
 .cal-statusbar-1 {
-  flex-direction: column;
+  -moz-box-orient: vertical;
   -moz-context-properties: fill;
   fill: currentColor;
 }

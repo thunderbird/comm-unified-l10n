@@ -29,7 +29,7 @@
 /* ::::: autocomplete icons ::::: */
 
 .autocomplete-richlistitem[type$="-abook"] > .ac-site-icon {
-  display: flex;
+  display: -moz-box;
   margin: 1px 5px;
 }
 

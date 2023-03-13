@@ -91,7 +91,7 @@ button.color-button .button-text {
 }
 
 #LastPickedButton {
-  align-items: center;
+  -moz-box-align: center;
 }
 
 #LastPickedColor {
@@ -100,7 +100,7 @@ button.color-button .button-text {
   border-radius: 50%;
   margin-inline-start: 2px;
   border: 1px solid var(--field-border-color);
-  order: 2;
+  -moz-box-ordinal-group: 2;
 }
 
 /* temporary -- we need a simple box-based list defined in XBL */
@@ -330,11 +330,11 @@ html|input[type="checkbox"] {
 #HTMLAttrCol,
 #CSSPropCol,
 #AttrCol {
-  flex: 35 35;
+  -moz-box-flex: 35;
 }
 
 #HTMLValCol,
 #CSSValCol,
 #HeaderCol {
-  flex: 65 65;
+  -moz-box-flex: 65;
 }

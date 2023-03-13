@@ -6,11 +6,11 @@
 @import url("chrome://messenger/skin/messageIcons.css");
 
 #threadTree {
-  flex: 1;
+  -moz-box-flex: 1;
 }
 
 #searchTerms {
-  flex: 3 3;
+  -moz-box-flex: 3;
   margin-top: 8px;
 }
 
@@ -27,13 +27,13 @@
 }
 
 #searchResults {
-  flex: 4 4;
+  -moz-box-flex: 4;
   padding: 0 6px 6px;
   text-shadow: none;
 }
 
 #searchableFolders {
-  flex: 2 2;
+  -moz-box-flex: 2;
 }
 
 #searchResultListBox {

@@ -93,7 +93,7 @@ body {
 }
 
 .downloadButton {
-  align-items: center;
+  -moz-box-align: center;
   background: transparent !important;
   min-width: 0;
   height: unset;
