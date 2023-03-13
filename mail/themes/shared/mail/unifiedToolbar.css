@@ -91,7 +91,6 @@ unified-toolbar-customization {
   background: var(--layout-background-0);
   color: var(--layout-color-1);
   flex: 1;
-  overflow: hidden;
 }
 
 #unifiedToolbarCustomizationContainer {
