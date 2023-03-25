@@ -1692,6 +1692,7 @@ var folderPane = {
           return;
         }
       }
+      event.dataTransfer.dropEffect = event.ctrlKey ? "copy" : "move";
     } else if (types.includes("text/x-moz-folder")) {
       // If cannot create subfolders then don't allow drop here.
       if (!targetFolder.canCreateSubfolders) {
@@ -1707,10 +1708,7 @@ var folderPane = {
         return;
       }
       // Don't copy within same server.
-      if (
-        sourceFolder.server == targetFolder.server &&
-        event.dataTransfer.dropEffect == "copy"
-      ) {
+      if (sourceFolder.server == targetFolder.server && event.ctrlKey) {
         return;
       }
       // Don't allow immediate child to be dropped onto its parent.
@@ -1737,11 +1735,23 @@ var folderPane = {
       ) {
         return;
       }
+      event.dataTransfer.dropEffect = event.ctrlKey ? "copy" : "move";
+    } else if (types.includes("application/x-moz-file")) {
+      if (targetFolder.isServer || !targetFolder.canFileMessages) {
+        return;
+      }
+      for (let i = 0; i < event.dataTransfer.mozItemCount; i++) {
+        let extFile = event.dataTransfer
+          .mozGetDataAt("application/x-moz-file", i)
+          .QueryInterface(Ci.nsIFile);
+        if (!extFile.isFile() || !/\.eml$/i.test(extFile.leafName)) {
+          return;
+        }
+      }
+      event.dataTransfer.dropEffect = "copy";
     } else {
       return;
     }
-
-    event.dataTransfer.dropEffect = event.ctrlKey ? "copy" : "move";
 
     this._clearDropTarget();
     row.classList.add("drop-target");
@@ -1811,6 +1821,24 @@ var folderPane = {
         null,
         top.msgWindow
       );
+    } else if (types.includes("application/x-moz-file")) {
+      for (let i = 0; i < event.dataTransfer.mozItemCount; i++) {
+        let extFile = event.dataTransfer
+          .mozGetDataAt("application/x-moz-file", i)
+          .QueryInterface(Ci.nsIFile);
+        if (extFile.isFile() && /\.eml$/i.test(extFile.leafName)) {
+          MailServices.copy.copyFileMessage(
+            extFile,
+            targetFolder,
+            null,
+            false,
+            1,
+            "",
+            null,
+            top.msgWindow
+          );
+        }
+      }
     }
 
     event.preventDefault();
@@ -2563,6 +2591,8 @@ var threadPane = {
     threadTree.addEventListener("keypress", this);
     threadTree.addEventListener("select", this);
     threadTree.addEventListener("dragstart", this);
+    threadTree.addEventListener("dragover", this);
+    threadTree.addEventListener("drop", this);
     threadTree.addEventListener("expanded", this);
     threadTree.addEventListener("collapsed", this);
   },
@@ -2584,6 +2614,12 @@ var threadPane = {
         break;
       case "dragstart":
         this._onDragStart(event);
+        break;
+      case "dragover":
+        this._onDragOver(event);
+        break;
+      case "drop":
+        this._onDrop(event);
         break;
       case "expanded":
       case "collapsed":
@@ -2743,6 +2779,49 @@ var threadPane = {
       event.clientX - bcr.x,
       event.clientY - bcr.y
     );
+  },
+
+  _onDragOver(event) {
+    // Must prevent default. Otherwise dropEffect gets cleared.
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "none";
+    let types = Array.from(event.dataTransfer.mozTypesAt(0));
+    let targetFolder = gFolder;
+    if (types.includes("application/x-moz-file")) {
+      if (targetFolder.isServer || !targetFolder.canFileMessages) {
+        return;
+      }
+      for (let i = 0; i < event.dataTransfer.mozItemCount; i++) {
+        let extFile = event.dataTransfer
+          .mozGetDataAt("application/x-moz-file", i)
+          .QueryInterface(Ci.nsIFile);
+        if (!extFile.isFile() || !/\.eml$/i.test(extFile.leafName)) {
+          return;
+        }
+      }
+      event.dataTransfer.dropEffect = "copy";
+    }
+  },
+
+  _onDrop(event) {
+    event.preventDefault();
+    for (let i = 0; i < event.dataTransfer.mozItemCount; i++) {
+      let extFile = event.dataTransfer
+        .mozGetDataAt("application/x-moz-file", i)
+        .QueryInterface(Ci.nsIFile);
+      if (extFile.isFile() && /\.eml$/i.test(extFile.leafName)) {
+        MailServices.copy.copyFileMessage(
+          extFile,
+          gFolder,
+          null,
+          false,
+          1,
+          "",
+          null,
+          top.msgWindow
+        );
+      }
+    }
   },
 
   _flavorDataProvider: {
