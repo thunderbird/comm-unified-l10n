@@ -2555,6 +2555,9 @@ var threadPane = {
     this.treeTable.addEventListener("shift-column", event => {
       this.onColumnShifted(event.detail);
     });
+    this.treeTable.addEventListener("reorder-columns", event => {
+      this.onColumnsReordered(event.detail);
+    });
     this.treeTable.addEventListener("column-resized", event => {
       this.treeTable.setColumnsWidths(XULSTORE_URL, event);
     });
@@ -2590,9 +2593,9 @@ var threadPane = {
     threadTree.addEventListener("dblclick", this);
     threadTree.addEventListener("keypress", this);
     threadTree.addEventListener("select", this);
-    threadTree.addEventListener("dragstart", this);
-    threadTree.addEventListener("dragover", this);
-    threadTree.addEventListener("drop", this);
+    threadTree.table.body.addEventListener("dragstart", this);
+    threadTree.table.body.addEventListener("dragover", this);
+    threadTree.table.body.addEventListener("drop", this);
     threadTree.addEventListener("expanded", this);
     threadTree.addEventListener("collapsed", this);
   },
@@ -3139,6 +3142,14 @@ var threadPane = {
     }
     // Restore the focus so we can continue shifting if needed.
     document.getElementById(`${column}Button`).focus();
+  },
+
+  onColumnsReordered(data) {
+    this.columns = data.columns;
+
+    this.persistColumnStates();
+    this.updateColumns(true);
+    threadTree.invalidate();
   },
 
   /**
