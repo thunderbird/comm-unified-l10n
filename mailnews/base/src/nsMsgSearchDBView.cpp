@@ -1162,7 +1162,7 @@ nsresult nsMsgSearchDBView::GetXFThreadFromMsgHdr(nsIMsgDBHdr* msgHdr,
   // just treat subject as an other ref.
   if (!*pThread && !gReferenceOnlyThreading) {
     nsCString subject;
-    msgHdr->GetSubject(getter_Copies(subject));
+    msgHdr->GetSubject(subject);
     // This is the raw rfc822 subject header, so this is OK.
     m_threadsTable.Get(subject, pThread);
   }
@@ -1214,7 +1214,7 @@ nsresult nsMsgSearchDBView::AddMsgToHashTables(nsIMsgDBHdr* msgHdr,
   m_hdrsTable.InsertOrUpdate(messageId, msgHdr);
   if (!gReferenceOnlyThreading) {
     nsCString subject;
-    msgHdr->GetSubject(getter_Copies(subject));
+    msgHdr->GetSubject(subject);
     // if we're threading by subject, just treat subject as an other ref.
     AddRefToHash(subject, thread);
   }
@@ -1250,7 +1250,7 @@ nsresult nsMsgSearchDBView::RemoveMsgFromHashTables(nsIMsgDBHdr* msgHdr) {
   RemoveRefFromHash(messageId);
   if (!gReferenceOnlyThreading) {
     nsCString subject;
-    msgHdr->GetSubject(getter_Copies(subject));
+    msgHdr->GetSubject(subject);
     // If we're threading by subject, just treat subject as an other ref.
     RemoveRefFromHash(subject);
   }
