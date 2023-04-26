@@ -1757,10 +1757,8 @@ var RNP = {
       }
     }
 
-    if (expireSeconds != 0) {
-      if (RNPLib.rnp_op_generate_set_expiration(genOp, expireSeconds)) {
-        throw new Error("rnp_op_generate_set_expiration primary failed");
-      }
+    if (RNPLib.rnp_op_generate_set_expiration(genOp, expireSeconds)) {
+      throw new Error("rnp_op_generate_set_expiration primary failed");
     }
 
     if (RNPLib.rnp_op_generate_execute(genOp)) {
@@ -1806,10 +1804,8 @@ var RNP = {
       }
     }
 
-    if (expireSeconds != 0) {
-      if (RNPLib.rnp_op_generate_set_expiration(genOp, expireSeconds)) {
-        throw new Error("rnp_op_generate_set_expiration sub failed");
-      }
+    if (RNPLib.rnp_op_generate_set_expiration(genOp, expireSeconds)) {
+      throw new Error("rnp_op_generate_set_expiration sub failed");
     }
 
     let unlocked = false;
