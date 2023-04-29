@@ -184,6 +184,7 @@ appUpdater.prototype = {
       case AppUpdater.STATUS.NO_UPDATER:
       default:
         this.selectPanel("noUpdater");
+        document.getElementById("updateBox").style.maxHeight = "0";
         break;
     }
   },
