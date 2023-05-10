@@ -1434,6 +1434,9 @@ function CanDetachAttachments() {
       currentHeaderData["content-type"].headerValue
     );
   }
+  if (canDetach) {
+    canDetach = Enigmail.hdrView.enigCanDetachAttachments();
+  }
 
   return canDetach;
 }
