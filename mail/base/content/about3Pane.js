@@ -1829,6 +1829,7 @@ var folderPane = {
       let mode = target.closest("[data-mode]").dataset.mode;
       FolderTreeProperties.setIsExpanded(target.uri, mode, false);
     }
+    target.updateUnreadMessageCount();
     target.updateTotalMessageCount();
   },
 
@@ -1837,6 +1838,7 @@ var folderPane = {
       let mode = target.closest("[data-mode]").dataset.mode;
       FolderTreeProperties.setIsExpanded(target.uri, mode, true);
     }
+    target.updateUnreadMessageCount();
     target.updateTotalMessageCount();
   },
 
@@ -2784,16 +2786,21 @@ class FolderTreeRow extends HTMLLIElement {
     this._serverName = folder.server.prettyName;
     this._folderName = folder.abbreviatedName;
     this._setName();
-    this.unreadCount = folder.getNumUnread(false);
-    this.totalCount = folder.getTotalMessages(
-      this.classList.contains("collapsed")
-    );
+    const isCollapsed = this.classList.contains("collapsed");
+    this.unreadCount = folder.getNumUnread(isCollapsed);
+    this.totalCount = folder.getTotalMessages(isCollapsed);
     this.folderSortOrder = folder.sortOrder;
     if (folder.noSelect) {
       this.classList.add("noselect-folder");
     } else {
       this.setAttribute("draggable", "true");
     }
+  }
+
+  updateUnreadMessageCount() {
+    this.unreadCount = MailServices.folderLookup
+      .getFolderForURL(this.uri)
+      .getNumUnread(this.classList.contains("collapsed"));
   }
 
   updateTotalMessageCount() {
