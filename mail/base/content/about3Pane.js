@@ -120,8 +120,8 @@ window.addEventListener("DOMContentLoaded", async event => {
   folderTree.dispatchEvent(new CustomEvent("select"));
 
   // Attach the progress listener for the webBrowser. For the messageBrowser this
-  // happens in the "aboutMessageLoaded" event mailWindow.js. For the webBrowser,
-  // we can do it here directly.
+  // happens in the "aboutMessageLoaded" event from aboutMessage.js.
+  // For the webBrowser, we can do it here directly.
   top.contentProgress.addProgressListenerToBrowser(webBrowser);
 });
 
@@ -4253,7 +4253,7 @@ var messagePane = {
   async init() {
     webBrowser = document.getElementById("webBrowser");
     // Attach the progress listener for the webBrowser. For the messageBrowser this
-    // happens in the "aboutMessageLoaded" event mailWindow.js.
+    // happens in the "aboutMessageLoaded" event from aboutMessage.js.
     top.contentProgress.addProgressListenerToBrowser(webBrowser);
 
     messageBrowser = document.getElementById("messageBrowser");
