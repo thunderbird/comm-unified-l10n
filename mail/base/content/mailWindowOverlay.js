@@ -211,7 +211,6 @@ function view_init(event) {
   let message;
   let messagePaneVisible;
   let quickFilterBarVisible;
-  let threadPaneHeaderVisible;
 
   let tab = document.getElementById("tabmail")?.currentTabInfo;
   if (tab?.mode.name == "mail3PaneTab") {
@@ -224,11 +223,9 @@ function view_init(event) {
       messagePaneVisible,
     } = paneLayout);
     quickFilterBarVisible = quickFilterBar.filterer.visible;
-    threadPaneHeaderVisible = true;
   } else if (tab?.mode.name == "mailMessageTab") {
     message = tab.message;
     messagePaneVisible = true;
-    threadPaneHeaderVisible = false;
   }
 
   let isFeed = FeedUtils.isFeedMessage(message);
@@ -280,16 +277,6 @@ function view_init(event) {
     // Hidden in the standalone msg window.
     folderPaneAppMenuItem.setAttribute("checked", folderPaneVisible);
   }
-
-  let threadPaneMenuItem = document.getElementById(
-    "menu_toggleThreadPaneHeader"
-  );
-  threadPaneMenuItem.setAttribute("disabled", !threadPaneHeaderVisible);
-
-  let threadPaneAppMenuItem = document.getElementById(
-    "appmenu_toggleThreadPaneHeader"
-  );
-  threadPaneAppMenuItem.setAttribute("disabled", !threadPaneHeaderVisible);
 
   let colsEnabled = Services.prefs.getBoolPref("mail.folderpane.showColumns");
   let folderPaneColsMenuItem = document.getElementById(
@@ -422,20 +409,6 @@ function InitViewLayoutStyleMenu(event, appmenu) {
   let layoutStyleMenuitem = parent.children[paneConfig];
   if (layoutStyleMenuitem) {
     layoutStyleMenuitem.setAttribute("checked", "true");
-  }
-
-  if (
-    Services.xulStore.getValue(
-      "chrome://messenger/content/messenger.xhtml",
-      "threadPaneHeader",
-      "hidden"
-    ) !== "true"
-  ) {
-    parent
-      .querySelector(`[name="threadheader"]`)
-      .setAttribute("checked", "true");
-  } else {
-    parent.querySelector(`[name="threadheader"]`).removeAttribute("checked");
   }
 }
 
