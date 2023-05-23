@@ -34,6 +34,8 @@ pref("mail.identity.default.openpgp_key_id", "");
 pref("mail.identity.default.is_gnupg_key_id", false);
 // The hexadecimal OpenPGP key ID externally configured by GnuPG used for an identity.
 pref("mail.identity.default.last_entered_external_gnupg_key_id", "");
+// When using external GnuPG, also load public keys from GnuPG keyring
+pref("mail.openpgp.fetch_pubkeys_from_gnupg", false);
 
 // Load a JSON file that contains recipient key alias rules. See bug 1644085.
 // Suggested filename: openpgp-alias-rules.json

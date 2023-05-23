@@ -1876,6 +1876,7 @@ var EnigmailKeyRing = {
 
     if (
       Services.prefs.getBoolPref("mail.openpgp.allow_external_gnupg") &&
+      Services.prefs.getBoolPref("mail.openpgp.fetch_pubkeys_from_gnupg") &&
       !this.alreadyCheckedGnuPG.has(email)
     ) {
       this.alreadyCheckedGnuPG.add(email);
