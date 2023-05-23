@@ -170,6 +170,7 @@ tr[data-properties~="tagged"] .tag-icon {
      wrong. */
   margin-inline-start: 3px;
   opacity: 0.7;
+  pointer-events: none;
 }
 
 #threadTree tbody [data-properties~="ignore"] .tree-view-row-thread img {
@@ -190,7 +191,7 @@ tr[data-properties~="tagged"] .tag-icon {
   color: currentColor;
 }
 
-tr:not(.children, [data-properties~="ignoreSubthread"]) .tree-view-row-thread img {
+#threadTree tr:not(.children, [data-properties~="ignoreSubthread"]) .tree-view-row-thread > button {
   display: none;
 }
 
