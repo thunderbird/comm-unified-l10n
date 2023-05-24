@@ -28,7 +28,7 @@ var folder = null;
 const SUBJECT0 = "How is the printing?";
 const BODY0 = "Printing ok?";
 
-add_setup(async function () {
+add_setup(async function() {
   folder = await create_folder("PrintingTest");
   await add_message_to_folder(
     [folder],
