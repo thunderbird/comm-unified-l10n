@@ -329,7 +329,11 @@ var mailTabType = {
         mailTabType._cloneTemplate(
           "mailMessageTabTemplate",
           tab,
-          undefined,
+          win => {
+            // Make tabmail give the message pane focus when this tab becomes
+            // the active tab.
+            tab.lastActiveElement = tab.browser;
+          },
           win => {
             win.tabOrWindow = tab;
             win.displayMessage(messageURI, viewWrapper);
