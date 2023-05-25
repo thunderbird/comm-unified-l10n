@@ -1000,10 +1000,10 @@ function GetMessagesForInboxOnServer(server) {
   GetNewMsgs(server, inboxFolder);
 }
 
-function MsgGetMessage() {
+function MsgGetMessage(folders) {
   // if offline, prompt for getting messages
   if (MailOfflineMgr.isOnline() || MailOfflineMgr.getNewMail()) {
-    GetFolderMessages();
+    GetFolderMessages(folders);
   }
 }
 
@@ -1508,8 +1508,7 @@ function GetDefaultAccountRootFolder() {
  * Check for new messages for all selected folders, or for the default account
  * in case no folders are selected.
  */
-function GetFolderMessages() {
-  var selectedFolders = GetSelectedMsgFolders();
+function GetFolderMessages(selectedFolders = GetSelectedMsgFolders()) {
   var defaultAccountRootFolder = GetDefaultAccountRootFolder();
 
   // if nothing selected, use the default
