@@ -631,6 +631,7 @@ var folderPane = {
                   folderType.flag
                 )) {
                   searchFolders.push(f);
+                  searchFolders = searchFolders.concat(f.descendants);
                 }
               }
 
@@ -758,6 +759,10 @@ var folderPane = {
         }
         if (!parentFolder) {
           // If this folder is the root folder for a server, do nothing.
+          return;
+        }
+        if (childFolder.server.hidden) {
+          // If this folder is from a hidden server, do nothing.
           return;
         }
         if (
