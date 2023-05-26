@@ -2809,9 +2809,9 @@ var folderPane = {
   },
 
   toggleTotalCountBadge() {
-    let visible = !this.isTotalMsgCountVisible();
-    for (let badge of document.querySelectorAll(".total-count")) {
-      badge.hidden = visible;
+    const isHidden = !this.isTotalMsgCountVisible();
+    for (let row of document.querySelectorAll(`li[is="folder-tree-row"]`)) {
+      row.toggleTotalCountBadge(isHidden);
     }
   },
 
@@ -2941,7 +2941,24 @@ class FolderTreeRow extends HTMLLIElement {
   set name(value) {
     if (this.name != value) {
       this.nameLabel.textContent = value;
-      this.setAttribute("aria-label", value);
+      this.#updateAriaLabel();
+    }
+  }
+
+  /**
+   * Format and set the name label of this row.
+   */
+  _setName() {
+    switch (this._nameStyle) {
+      case "server":
+        this.name = this._serverName;
+        break;
+      case "folder":
+        this.name = this._folderName;
+        break;
+      case "both":
+        this.name = `${this._folderName} - ${this._serverName}`;
+        break;
     }
   }
 
@@ -2964,23 +2981,7 @@ class FolderTreeRow extends HTMLLIElement {
     } else {
       this.unreadCountLabel.textContent = value;
     }
-  }
-
-  /**
-   * Format and set the name label of this row.
-   */
-  _setName() {
-    switch (this._nameStyle) {
-      case "server":
-        this.name = this._serverName;
-        break;
-      case "folder":
-        this.name = this._folderName;
-        break;
-      case "both":
-        this.name = `${this._folderName} - ${this._serverName}`;
-        break;
-    }
+    this.#updateAriaLabel();
   }
 
   /**
@@ -2995,6 +2996,7 @@ class FolderTreeRow extends HTMLLIElement {
   set totalCount(value) {
     this.classList.toggle("total", value > 0);
     this.totalCountLabel.textContent = value;
+    this.#updateAriaLabel();
   }
 
   /**
@@ -3008,6 +3010,45 @@ class FolderTreeRow extends HTMLLIElement {
 
   set folderSize(value) {
     this.folderSizeLabel.textContent = value;
+    this.#updateAriaLabel();
+  }
+
+  #updateAriaLabel() {
+    // Collect the various strings and fluent IDs to build the full string for
+    // the folder aria-label.
+    let ariaLabelPromises = [];
+    ariaLabelPromises.push(this.name);
+
+    // If unread messages.
+    const count = this.unreadCount;
+    if (count > 0) {
+      ariaLabelPromises.push(
+        document.l10n.formatValue("folder-pane-unread-aria-label", { count })
+      );
+    }
+
+    // If total messages is visible.
+    if (folderPane.isTotalMsgCountVisible()) {
+      ariaLabelPromises.push(
+        document.l10n.formatValue("folder-pane-total-aria-label", {
+          count: this.totalCount,
+        })
+      );
+    }
+
+    if (folderPane.isItemVisible("folderPaneFolderSize")) {
+      ariaLabelPromises.push(this.folderSize);
+    }
+
+    Promise.allSettled(ariaLabelPromises).then(results => {
+      this.setAttribute(
+        "aria-label",
+        results
+          .map(settledPromise => settledPromise.value ?? "")
+          .filter(value => value.trim() != "")
+          .join(", ")
+      );
+    });
   }
 
   /**
@@ -3116,6 +3157,11 @@ class FolderTreeRow extends HTMLLIElement {
    */
   formatFolderSize(size) {
     return size / 1024 < 1 ? "" : top.messenger.formatFileSize(size, true);
+  }
+
+  toggleTotalCountBadge(isHidden) {
+    this.totalCountLabel.hidden = isHidden;
+    this.#updateAriaLabel();
   }
 
   /**
