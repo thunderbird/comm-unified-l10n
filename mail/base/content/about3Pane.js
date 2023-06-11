@@ -718,6 +718,12 @@ var folderPaneContextMenu = {
 var folderPane = {
   _initialized: false,
 
+  /**
+   * If the local folders should be hidden.
+   * @type {boolean}
+   */
+  _hideLocalFolders: false,
+
   _modes: {
     all: {
       name: "all",
@@ -1476,6 +1482,7 @@ var folderPane = {
       });
     this.toggleTotalCountBadge();
     this.toggleFolderSizes(this.isItemVisible("folderPaneFolderSize"));
+    folderPane.hideLocalFolders = this.isItemHidden("folderPaneLocalFolders");
     this.updateWidgets();
 
     this._initialized = true;
@@ -1552,6 +1559,35 @@ var folderPane = {
       case "folder-color-preview":
         this._changeRows(subject, row => row.setIconColor(data));
         break;
+    }
+  },
+
+  /**
+   * If the local folders are currently hidden.
+   *
+   * @returns {boolean}
+   */
+  get hideLocalFolders() {
+    return this._hideLocalFolders;
+  },
+
+  /**
+   * Reload the folder tree when the option changes.
+   *
+   * @param {boolean} - True if local folders should be hidden.
+   */
+  set hideLocalFolders(value) {
+    if (value == this._hideLocalFolders) {
+      return;
+    }
+
+    this._hideLocalFolders = value;
+    for (let mode of Object.values(this._modes)) {
+      if (!mode.active) {
+        continue;
+      }
+      mode.containerList.replaceChildren();
+      this._initMode(mode);
     }
   },
 
@@ -1772,6 +1808,13 @@ var folderPane = {
 
     // `.accounts` is used here because it is ordered, `.allServers` isn't.
     for (let account of MailServices.accounts.accounts) {
+      // Skip local folders if they're hidden.
+      if (
+        account.incomingServer.type == "none" &&
+        folderPane.hideLocalFolders
+      ) {
+        continue;
+      }
       // Skip IM accounts.
       if (account.incomingServer.type == "im") {
         continue;
@@ -3182,6 +3225,11 @@ var folderPane = {
             ? item.setAttribute("checked", true)
             : item.removeAttribute("checked");
           break;
+        case "folderPaneHeaderToggleLocalFolders":
+          this.isItemHidden("folderPaneLocalFolders")
+            ? item.setAttribute("checked", true)
+            : item.removeAttribute("checked");
+          break;
         default:
           item.removeAttribute("checked");
           break;
@@ -3257,6 +3305,15 @@ var folderPane = {
     for (let row of document.querySelectorAll(`li[is="folder-tree-row"]`)) {
       row.updateSizeCount(isHidden);
     }
+  },
+
+  /**
+   * Toggle the hiding of the local folders and update the XULStore.
+   */
+  toggleLocalFolders(event) {
+    let isHidden = event.target.hasAttribute("checked");
+    this.updateXULStoreAttribute("folderPaneLocalFolders", "hidden", !isHidden);
+    folderPane.hideLocalFolders = isHidden;
   },
 
   /**
