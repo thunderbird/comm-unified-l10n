@@ -5670,11 +5670,7 @@ var folderListener = {
       gViewWrapper?.close(true);
     }
   },
-  onMessageRemoved(parentFolder, msg) {
-    if (parentFolder == gFolder) {
-      threadTree.invalidate();
-    }
-  },
+  onMessageRemoved(parentFolder, msg) {},
   onFolderPropertyChanged(folder, property, oldValue, newValue) {},
   onFolderIntPropertyChanged(folder, property, oldValue, newValue) {
     switch (property) {
