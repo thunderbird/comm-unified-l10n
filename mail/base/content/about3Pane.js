@@ -2933,8 +2933,13 @@ var folderPane = {
         // In a failure, proceed anyway since we're dealing with problems
         folder.ForceDBClosed();
       }
-      folder.updateFolder(top.msgWindow);
-      // TODO: Reopen closed views.
+      if (gFolder == folder) {
+        gViewWrapper?.close();
+        folder.updateFolder(top.msgWindow);
+        folderTree.dispatchEvent(new CustomEvent("select"));
+      } else {
+        folder.updateFolder(top.msgWindow);
+      }
     }
 
     window.openDialog(
