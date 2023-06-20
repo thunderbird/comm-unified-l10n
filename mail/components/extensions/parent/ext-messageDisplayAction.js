@@ -159,9 +159,12 @@ this.messageDisplayAction = class extends ToolbarButtonAPI {
         break;
       case "popupshowing":
         const menu = event.target;
+        if (menu.tagName != "menupopup") {
+          return;
+        }
+
         const trigger = menu.triggerNode;
         const node = window.document.getElementById(this.id);
-
         const contexts = ["header-toolbar-context-menu"];
         if (contexts.includes(menu.id) && node && node.contains(trigger)) {
           global.actionContextMenu({
@@ -173,7 +176,10 @@ this.messageDisplayAction = class extends ToolbarButtonAPI {
           });
         }
 
-        if (menu.dataset.actionMenu == "messageDisplayAction") {
+        if (
+          menu.dataset.actionMenu == "messageDisplayAction" &&
+          this.extension.id == menu.dataset.extensionId
+        ) {
           global.actionContextMenu({
             tab: window.tabOrWindow,
             pageUrl: window.getMessagePaneBrowser().currentURI.spec,
