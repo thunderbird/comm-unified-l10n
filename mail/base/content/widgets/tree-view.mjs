@@ -1060,6 +1060,7 @@ class TreeView extends HTMLElement {
     }
 
     this._selection.adjustSelection(index, delta);
+    this._updateCurrentIndexClasses();
     this.dispatchEvent(new CustomEvent("rowcountchange"));
   }
 
@@ -1211,15 +1212,24 @@ class TreeView extends HTMLElement {
       return;
     }
 
+    this._selection.currentIndex = index;
+    this._updateCurrentIndexClasses();
+    this.scrollToIndex(index);
+  }
+
+  /**
+   * Set the "current" class on the right row, and remove it from all other rows.
+   */
+  _updateCurrentIndexClasses() {
+    let index = this.currentIndex;
+
     for (let row of this.querySelectorAll(
       `tr[is="${this._rowElementName}"].current`
     )) {
       row.classList.remove("current");
     }
 
-    this._selection.currentIndex = index;
-
-    if (index < 0 || index > this._view.rowCount - 1) {
+    if (!this._view || index < 0 || index > this._view.rowCount - 1) {
       this.table.body.removeAttribute("aria-activedescendant");
       return;
     }
@@ -1235,7 +1245,6 @@ class TreeView extends HTMLElement {
       row.classList.add("current");
       this.table.body.setAttribute("aria-activedescendant", row.id);
     }
-    this.scrollToIndex(index);
   }
 
   /**
@@ -1358,11 +1367,21 @@ class TreeView extends HTMLElement {
   }
 
   set selectedIndices(indices) {
+    this.setSelectedIndices(indices);
+  }
+
+  /**
+   * An array of the indices of all selected rows.
+   *
+   * @param {integer[]} indices
+   * @param {boolean} suppressEvent - Prevent a "select" event firing.
+   */
+  setSelectedIndices(indices, suppressEvent) {
     this._selection.clearSelection();
     for (let index of indices) {
       this._selection.toggleSelect(index);
     }
-    this.onSelectionChanged();
+    this.onSelectionChanged(false, suppressEvent);
   }
 
   /**
@@ -1382,10 +1401,7 @@ class TreeView extends HTMLElement {
 
     if (selected != wasSelected) {
       this._selection.toggleSelect(index);
-
-      if (!suppressEvent) {
-        this.onSelectionChanged();
-      }
+      this.onSelectionChanged(false, suppressEvent);
     }
 
     return selected;
@@ -1408,9 +1424,10 @@ class TreeView extends HTMLElement {
    * change in the selection state.
    *
    * @param {boolean} [delaySelect=false] - If the selection should be delayed.
+   * @param {boolean} [suppressEvent=false] - Prevent a "select" event firing.
    */
-  onSelectionChanged(delaySelect = false) {
-    const selectedCount = this.selectedIndices.length;
+  onSelectionChanged(delaySelect = false, suppressEvent = false) {
+    const selectedCount = this._selection.count;
     const allSelected = selectedCount == this._view.rowCount;
 
     this.table.classList.toggle("all-selected", allSelected);
@@ -1430,6 +1447,10 @@ class TreeView extends HTMLElement {
           ? "threadpane-column-header-deselect-all"
           : "threadpane-column-header-select-all"
       );
+    }
+
+    if (suppressEvent) {
+      return;
     }
 
     // No need to handle a delayed select if not required.

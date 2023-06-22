@@ -4563,6 +4563,12 @@ var threadPane = {
         threadTree.rowCountChanged(index, count);
       }
     },
+    get currentIndex() {
+      return threadTree.currentIndex;
+    },
+    set currentIndex(index) {
+      threadTree.currentIndex = index;
+    },
   },
 
   /**
@@ -4653,9 +4659,11 @@ var threadPane = {
    *
    * @param {boolean} [discard=true] - If false, the selection data should be
    *   kept after restoring the selection, otherwise it is forgotten.
+   * @param {boolean} [notify=true] - Whether a change in "select" event
+   *   should be fired.
    */
-  restoreSelection(discard = true) {
-    if (!this._savedSelections.has(gFolder?.URI)) {
+  restoreSelection(discard = true, notify = true) {
+    if (!this._savedSelections.has(gFolder?.URI) || !threadTree.view) {
       return;
     }
 
@@ -4689,7 +4697,7 @@ var threadPane = {
         console.error(ex);
       }
     }
-    threadTree.selectedIndices = indices.values();
+    threadTree.setSelectedIndices(indices.values(), !notify);
 
     if (currentIndex != nsMsgViewIndex_None) {
       // Do an instant scroll before setting the index to avoid animation.
