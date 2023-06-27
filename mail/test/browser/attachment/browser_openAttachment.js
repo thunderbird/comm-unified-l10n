@@ -573,10 +573,14 @@ add_task(async function useHelperApp() {
   let { file } = await openedPromise;
   Assert.ok(file.path);
 
-  // In the temp dir, files should be read only.
+  // In the temp dir, files should be read-only.
   if (AppConstants.platform != "win") {
     let fileInfo = await IOUtils.stat(file.path);
-    Assert.equal(fileInfo.permissions, 0o400);
+    Assert.equal(
+      fileInfo.permissions,
+      0o400,
+      `file ${file.path} should be read-only`
+    );
   }
   attachmentFile.permissions = 0o755;
   attachmentFile.remove(false);
@@ -627,10 +631,14 @@ add_task(async function useSystemDefault() {
   let { file } = await openedPromise;
   Assert.ok(file.path);
 
-  // In the temp dir, files should be read only.
+  // In the temp dir, files should be read-only.
   if (AppConstants.platform != "win") {
     let fileInfo = await IOUtils.stat(file.path);
-    Assert.equal(fileInfo.permissions, 0o400);
+    Assert.equal(
+      fileInfo.permissions,
+      0o400,
+      `file ${file.path} should be read-only`
+    );
   }
   attachmentFile.permissions = 0o755;
   attachmentFile.remove(false);
@@ -705,10 +713,14 @@ add_task(async function filenameSanitisedOpen() {
     "f i_le_123.bar"
   );
   Assert.equal(file.leafName, "f i_le_123.bar");
-  // In the temp dir, files should be read only.
+  // In the temp dir, files should be read-only.
   if (AppConstants.platform != "win") {
     let fileInfo = await IOUtils.stat(file.path);
-    Assert.equal(fileInfo.permissions, 0o400);
+    Assert.equal(
+      fileInfo.permissions,
+      0o400,
+      `file ${file.path} should be read-only`
+    );
   }
   attachmentFile.permissions = 0o755;
   attachmentFile.remove(false);
