@@ -5494,6 +5494,7 @@ function restoreState({
     folderPaneVisible = folderURI || !syntheticView;
   }
   paneLayout.folderPaneSplitter.isCollapsed = !folderPaneVisible;
+  paneLayout.folderPaneSplitter.isDisabled = syntheticView;
 
   if (messagePaneVisible === undefined) {
     messagePaneVisible =
