@@ -818,7 +818,7 @@ add_task(async function testOpenSignedInlineWithLeadingWS() {
     "encrypted icon is not displayed"
   );
   close_window(mc);
-}).skip(); // TODO
+});
 
 /**
  * Test that an encrypted inline message, with nbsp encoded as qp
