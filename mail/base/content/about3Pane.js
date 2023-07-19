@@ -5990,6 +5990,7 @@ customElements.whenDefined("tree-view-table-row").then(() => {
       this.dataset.properties = properties.value.trim();
 
       this.subjectLine.textContent = cellTexts[0];
+      this.subjectLine.title = cellTexts[0];
       this.senderLine.textContent = cellTexts[1];
       this.dateLine.textContent = cellTexts[2];
       this.tagIcon.title = cellTexts[3];
