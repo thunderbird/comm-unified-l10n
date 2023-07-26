@@ -6,11 +6,6 @@
 
 /* windows-specific overrides for multimessageview.css*/
 
-:root {
-  --header-background-color: ButtonFace;
-  --header-text-color: WindowText;
-}
-
 @media not (prefers-color-scheme: dark) {
   @media (-moz-windows-compositor) and (-moz-windows-default-theme) {
     :root {
