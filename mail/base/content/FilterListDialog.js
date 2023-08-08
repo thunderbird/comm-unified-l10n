@@ -691,6 +691,8 @@ function onFilterUnload() {
     filterEditorQuitObserver,
     "quit-application-requested"
   );
+
+  gFilterListMsgWindow.closeWindow();
 }
 
 function onFilterClose() {
