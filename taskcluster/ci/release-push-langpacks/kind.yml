@@ -51,5 +51,5 @@ job-template:
     run-on-projects: []
     scopes:
         - secrets:get:project/comm/thunderbird/releng/build/level-{level}/atn_langpack
-    shipping-phase: promote
+    shipping-phase: push
     shipping-product: thunderbird
