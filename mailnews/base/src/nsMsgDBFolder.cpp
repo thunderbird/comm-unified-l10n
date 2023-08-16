@@ -937,7 +937,7 @@ nsMsgDBFolder::GetMsgInputStream(nsIMsgDBHdr* aMsgHdr,
   nsresult rv = GetMsgStore(getter_AddRefs(msgStore));
   NS_ENSURE_SUCCESS(rv, rv);
   nsCString storeToken;
-  rv = aMsgHdr->GetStringProperty("storeToken", getter_Copies(storeToken));
+  rv = aMsgHdr->GetStringProperty("storeToken", storeToken);
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Handle legacy DB which has mbox offset but no storeToken.
@@ -954,7 +954,7 @@ nsMsgDBFolder::GetMsgInputStream(nsIMsgDBHdr* aMsgHdr,
     uint64_t offset;
     aMsgHdr->GetMessageOffset(&offset);
     storeToken = nsPrintfCString("%" PRIu64, offset);
-    rv = aMsgHdr->SetStringProperty("storeToken", storeToken.get());
+    rv = aMsgHdr->SetStringProperty("storeToken", storeToken);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -2278,12 +2278,12 @@ nsMsgDBFolder::OnMessageClassified(const nsACString& aMsgURI,
     msgJunkScore.AppendInt(aClassification == nsIJunkMailPlugin::JUNK
                                ? nsIJunkMailPlugin::IS_SPAM_SCORE
                                : nsIJunkMailPlugin::IS_HAM_SCORE);
-    mDatabase->SetStringProperty(msgKey, "junkscore", msgJunkScore.get());
-    mDatabase->SetStringProperty(msgKey, "junkscoreorigin", "plugin");
+    mDatabase->SetStringProperty(msgKey, "junkscore", msgJunkScore);
+    mDatabase->SetStringProperty(msgKey, "junkscoreorigin", "plugin"_ns);
 
     nsAutoCString strPercent;
     strPercent.AppendInt(aJunkPercent);
-    mDatabase->SetStringProperty(msgKey, "junkpercent", strPercent.get());
+    mDatabase->SetStringProperty(msgKey, "junkpercent", strPercent);
 
     if (aClassification == nsIJunkMailPlugin::JUNK) {
       // IMAP has its own way of marking read.
@@ -2342,7 +2342,7 @@ nsMsgDBFolder::OnMessageTraitsClassified(const nsACString& aMsgURI,
     traitId.InsertLiteral("bayespercent/", 0);
     nsAutoCString strPercent;
     strPercent.AppendInt(aPercents[i]);
-    mDatabase->SetStringPropertyByHdr(msgHdr, traitId.get(), strPercent.get());
+    mDatabase->SetStringPropertyByHdr(msgHdr, traitId.get(), strPercent);
   }
   return NS_OK;
 }
@@ -2557,7 +2557,7 @@ nsMsgDBFolder::CallFilterPlugins(nsIMsgWindow* aMsgWindow, bool* aFiltersRun) {
     {
       MOZ_LOG(FILTERLOGMODULE, LogLevel::Info, ("Spam filter"));
       nsCString junkScore;
-      msgHdr->GetStringProperty("junkscore", getter_Copies(junkScore));
+      msgHdr->GetStringProperty("junkscore", junkScore);
       if (!junkScore.IsEmpty()) {
         // ignore already scored messages.
         MOZ_LOG(FILTERLOGMODULE, LogLevel::Info,
@@ -2571,8 +2571,8 @@ nsMsgDBFolder::CallFilterPlugins(nsIMsgWindow* aMsgWindow, bool* aFiltersRun) {
         // mark this msg as non-junk, because we whitelisted it.
         nsAutoCString msgJunkScore;
         msgJunkScore.AppendInt(nsIJunkMailPlugin::IS_HAM_SCORE);
-        database->SetStringProperty(msgKey, "junkscore", msgJunkScore.get());
-        database->SetStringProperty(msgKey, "junkscoreorigin", "whitelist");
+        database->SetStringProperty(msgKey, "junkscore", msgJunkScore);
+        database->SetStringProperty(msgKey, "junkscoreorigin", "whitelist"_ns);
         MOZ_LOG(FILTERLOGMODULE, LogLevel::Info,
                 ("Message whitelisted, skipping"));
         break;  // skip this msg since it's in the white list
@@ -4457,9 +4457,8 @@ nsMsgDBFolder::SetJunkScoreForMessages(
     for (auto message : aMessages) {
       nsMsgKey msgKey;
       (void)message->GetMessageKey(&msgKey);
-      mDatabase->SetStringProperty(msgKey, "junkscore",
-                                   PromiseFlatCString(junkScore).get());
-      mDatabase->SetStringProperty(msgKey, "junkscoreorigin", "filter");
+      mDatabase->SetStringProperty(msgKey, "junkscore", junkScore);
+      mDatabase->SetStringProperty(msgKey, "junkscoreorigin", "filter"_ns);
     }
   }
   return NS_OK;
@@ -5346,7 +5345,7 @@ nsresult nsMsgDBFolder::GetMsgPreviewTextFromStream(nsIMsgDBHdr* msgHdr,
   // replaces all tabs and line returns with a space,
   // then trims off leading and trailing white space
   msgBody.CompressWhitespace();
-  msgHdr->SetStringProperty("preview", msgBody.get());
+  msgHdr->SetStringProperty("preview", msgBody);
   return rv;
 }
 
@@ -5390,7 +5389,7 @@ NS_IMETHODIMP nsMsgDBFolder::AddKeywordsToMessages(
     nsCString keywords;
 
     for (auto message : aMessages) {
-      message->GetStringProperty("keywords", getter_Copies(keywords));
+      message->GetStringProperty("keywords", keywords);
       nsTArray<nsCString> keywordArray;
       ParseString(aKeywords, ' ', keywordArray);
       uint32_t addCount = 0;
@@ -5405,7 +5404,7 @@ NS_IMETHODIMP nsMsgDBFolder::AddKeywordsToMessages(
       // avoid using the message key to set the string property, because
       // in the case of filters running on incoming pop3 mail with quarantining
       // turned on, the message key is wrong.
-      mDatabase->SetStringPropertyByHdr(message, "keywords", keywords.get());
+      mDatabase->SetStringPropertyByHdr(message, "keywords", keywords);
 
       if (addCount) NotifyPropertyFlagChanged(message, kKeywords, 0, addCount);
     }
@@ -5426,7 +5425,7 @@ NS_IMETHODIMP nsMsgDBFolder::RemoveKeywordsFromMessages(
     // If the tag is also a label, we should remove the label too...
 
     for (auto message : aMessages) {
-      rv = message->GetStringProperty("keywords", getter_Copies(keywords));
+      rv = message->GetStringProperty("keywords", keywords);
       uint32_t removeCount = 0;
       for (uint32_t j = 0; j < keywordArray.Length(); j++) {
         int32_t startOffset, length;
@@ -5447,7 +5446,7 @@ NS_IMETHODIMP nsMsgDBFolder::RemoveKeywordsFromMessages(
       }
 
       if (removeCount) {
-        mDatabase->SetStringPropertyByHdr(message, "keywords", keywords.get());
+        mDatabase->SetStringPropertyByHdr(message, "keywords", keywords);
         NotifyPropertyFlagChanged(message, kKeywords, removeCount, 0);
       }
     }
