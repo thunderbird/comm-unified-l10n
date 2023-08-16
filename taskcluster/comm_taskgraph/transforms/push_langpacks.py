@@ -35,7 +35,9 @@ langpack_push_description_schema = schema.extend(
             Required("os"): "linux",
             Optional("max-run-time"): int,
             Required("env"): {str: taskref_or_string},
-            Required("channel"): optionally_keyed_by("project", Any("listed", "unlisted")),
+            Required("channel"): optionally_keyed_by(
+                "project", "platform", Any("listed", "unlisted")
+            ),
             Required("command"): [taskref_or_string],
         },
         Required("run-on-projects"): [],
@@ -77,7 +79,7 @@ def resolve_keys(config, jobs):
             job,
             "worker.channel",
             item_name=job["label"],
-            project=config.params["project"],
+            platform=job["primary-dependency"].attributes["build_platform"],
         )
 
         yield job
