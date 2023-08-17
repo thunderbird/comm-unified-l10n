@@ -79,6 +79,7 @@ def resolve_keys(config, jobs):
             job,
             "worker.channel",
             item_name=job["label"],
+            project=config.params["project"],
             platform=job["primary-dependency"].attributes["build_platform"],
         )
 
