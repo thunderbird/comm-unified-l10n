@@ -96,6 +96,12 @@
   #messengerWindow[sizemode="normal"] .titlebar-buttonbox-container {
     padding-top: 3px;
   }
+  
+  @media (-moz-windows-default-theme: 0) {
+    menu {
+      appearance: none;
+    }
+  }
 }
 
 @media (-moz-windows-classic) {

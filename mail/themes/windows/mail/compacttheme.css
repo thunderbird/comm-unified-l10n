@@ -24,11 +24,6 @@
 
 @media (-moz-platform: windows-win7) {
   @media (-moz-windows-default-theme) {
-    /* Don't paint the background on aero surface */
-    :root[tabsintitlebar] #navigation-toolbox {
-      background-color: transparent;
-    }
-
     /* Always show light toolbar elements on aero surface. */
     #tabs-toolbar {
       color: hsl(240,9%,98%);
@@ -37,14 +32,6 @@
     /* Keep showing the correct color inside the tabs. */
     .tabmail-tab {
       color: var(--lwt-text-color) !important;
-    }
-
-    :root[tabsintitlebar] #mail-menubar {
-      color: CaptionText;
-    }
-
-    :root[tabsintitlebar]:not([inFullscreen]) #mail-menubar:-moz-window-inactive {
-      color: InactiveCaptionText;
     }
 
     #messengerWindow[tabsintitlebar] #mail-menubar > menu {
@@ -117,11 +104,13 @@
 
   /* Use proper menu text styling in Win7 classic mode (copied from browser.css) */
   @media (-moz-windows-default-theme: 0) {
-    :root[tabsintitlebar]:not([inFullscreen]) #mail-menubar {
+    :root[tabsintitlebar]:not([inFullscreen]) #mail-menubar,
+    :root[tabsintitlebar]:not([inFullscreen]) unified-toolbar {
       color: CaptionText;
     }
 
-    :root[tabsintitlebar]:not([inFullscreen]) #mail-menubar:-moz-window-inactive {
+    :root[tabsintitlebar]:not([inFullscreen]) #mail-menubar:-moz-window-inactive,
+    :root[tabsintitlebar]:not([inFullscreen]) unified-toolbar:-moz-window-inactive {
       color: InactiveCaptionText;
     }
 
