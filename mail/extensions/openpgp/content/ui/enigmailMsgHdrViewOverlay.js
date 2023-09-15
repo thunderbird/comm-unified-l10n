@@ -761,6 +761,7 @@ Enigmail.hdrView = {
 
     // Update the message.
     gMessage.subject = newSubject;
+    let oldFlags = gMessage.flags;
     if (hadRe) {
       gMessage.flags |= Ci.nsMsgMessageFlags.HasRe;
       newSubject = "Re: " + newSubject;
@@ -768,6 +769,13 @@ Enigmail.hdrView = {
     document.title = newSubject;
     currentHeaderData.subject.headerValue = newSubject;
     document.getElementById("expandedsubjectBox").headerValue = newSubject;
+    // This even works if the flags haven't changed. Causes repaint in all thread trees.
+    gMessage.folder?.msgDatabase.notifyHdrChangeAll(
+      gMessage,
+      oldFlags,
+      gMessage.flags,
+      {}
+    );
   },
 
   updateHdrBox(header, value) {
