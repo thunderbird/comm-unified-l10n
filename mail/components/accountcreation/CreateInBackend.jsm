@@ -84,8 +84,11 @@ function createAccountInBackend(config) {
   }
 
   if (inServer.authMethod == Ci.nsMsgAuthMethod.OAuth2) {
-    inServer.setCharValue("oauth2.scope", config.incoming.oauthSettings.scope);
-    inServer.setCharValue(
+    inServer.setUnicharValue(
+      "oauth2.scope",
+      config.incoming.oauthSettings.scope
+    );
+    inServer.setUnicharValue(
       "oauth2.issuer",
       config.incoming.oauthSettings.issuer
     );
