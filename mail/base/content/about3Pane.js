@@ -2503,7 +2503,6 @@ var folderPane = {
       threadPane.restoreColumns();
 
       gViewWrapper = new DBViewWrapper(dbViewWrapperListener);
-      gViewWrapper._viewFlags = Ci.nsMsgViewFlagsType.kThreadedDisplay;
       gViewWrapper.open(gFolder);
 
       // At this point `dbViewWrapperListener.onCreatedView` gets called,
@@ -5747,7 +5746,6 @@ function restoreState({
     }
 
     gViewWrapper = new DBViewWrapper(dbViewWrapperListener);
-    gViewWrapper._viewFlags = 1;
     gViewWrapper.openSynthetic(syntheticView);
     gDBView = gViewWrapper.dbView;
 
