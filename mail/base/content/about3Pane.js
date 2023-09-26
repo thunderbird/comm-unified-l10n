@@ -55,9 +55,10 @@ const messengerBundle = Services.strings.createBundle(
   "chrome://messenger/locale/messenger.properties"
 );
 
-const { getDefaultColumns } = ChromeUtils.importESModule(
-  "chrome://messenger/content/thread-pane-columns.mjs"
-);
+const { getDefaultColumns, getDefaultColumnsForCardsView, isOutgoing } =
+  ChromeUtils.importESModule(
+    "chrome://messenger/content/thread-pane-columns.mjs"
+  );
 
 // As defined in nsMsgDBView.h.
 const MSG_VIEW_FLAG_DUMMY = 0x20000000;
@@ -4222,6 +4223,8 @@ var threadPane = {
 
   columns: getDefaultColumns(gFolder),
 
+  cardColumns: getDefaultColumnsForCardsView(gFolder),
+
   async init() {
     quickFilterBar.init();
 
@@ -4322,6 +4325,8 @@ var threadPane = {
       ]);
     });
 
+    this.updateClassList();
+
     threadTree.addEventListener("contextmenu", this);
     threadTree.addEventListener("dblclick", this);
     threadTree.addEventListener("auxclick", this);
@@ -4386,6 +4391,18 @@ var threadPane = {
       // notified/the mail.displayname.version number has been updated.
       threadTree.invalidate();
     }
+  },
+
+  /**
+   * Update the CSS classes of the thread tree based on the current folder.
+   */
+  updateClassList() {
+    if (!gFolder) {
+      threadTree.classList.remove("is-outgoing");
+      return;
+    }
+
+    threadTree.classList.toggle("is-outgoing", isOutgoing(gFolder));
   },
 
   /**
@@ -4958,6 +4975,11 @@ var threadPane = {
    * Restore the visibility and order of the columns for the current folder.
    */
   restoreColumnsState() {
+    // Always fetch a fresh array of columns for the cards view even if we don't
+    // have a folder defined.
+    this.cardColumns = getDefaultColumnsForCardsView(gFolder);
+    this.updateClassList();
+
     // Avoid doing anything if no folder has been loaded yet.
     if (!gFolder) {
       return;
@@ -5036,6 +5058,8 @@ var threadPane = {
    */
   restoreDefaultColumns() {
     this.columns = getDefaultColumns(gFolder, gViewWrapper?.isSynthetic);
+    this.cardColumns = getDefaultColumnsForCardsView(gFolder);
+    this.updateClassList();
     this.updateColumns();
     threadTree.invalidate();
     this.persistColumnStates();
@@ -5256,19 +5280,6 @@ var threadPane = {
     } else {
       swappedColumnStateString = columStateString;
     }
-
-    /**
-     * Check if the current folder is a special Outgoing folder.
-     *
-     * @param {nsIMsgFolder} folder - The message folder.
-     * @returns {boolean} True if the folder is Outgoing.
-     */
-    const isOutgoing = folder => {
-      return folder.isSpecialFolder(
-        DBViewWrapper.prototype.OUTGOING_FOLDER_FLAGS,
-        true
-      );
-    };
 
     const currentFolderIsOutgoing = isOutgoing(gFolder);
 
@@ -6173,11 +6184,10 @@ customElements.whenDefined("tree-view-table-row").then(() => {
       // required data in one go.
       let properties = {};
       let threadLevel = {};
-      // TODO: Make also these columns dynamic based on what the users want to
-      // see.
+
       let cellTexts = this.view.cellDataForColumns(
         index,
-        ["subjectCol", "correspondentCol", "dateCol", "tagsCol"],
+        threadPane.cardColumns,
         properties,
         threadLevel
       );
