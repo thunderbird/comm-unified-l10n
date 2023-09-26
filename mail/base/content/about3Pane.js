@@ -2521,6 +2521,15 @@ var folderPane = {
       threadPane.restoreColumns();
 
       gViewWrapper = new DBViewWrapper(dbViewWrapperListener);
+
+      threadPane.scrollToNewMessage =
+        !(gFolder.flags & Ci.nsMsgFolderFlags.Virtual) &&
+        gFolder.hasNewMessages &&
+        Services.prefs.getBoolPref("mailnews.scroll_to_new_message");
+      if (threadPane.scrollToNewMessage) {
+        threadPane.forgetSelection(uri);
+      }
+
       gViewWrapper.open(gFolder);
 
       // At this point `dbViewWrapperListener.onCreatedView` gets called,
@@ -4273,6 +4282,14 @@ var threadPane = {
    * @type {Map<string, object>}
    */
   _savedSelections: new Map(),
+
+  /**
+   * This is set to true in folderPane._onSelect before opening the folder, if
+   * new messages have been received and the corresponding preference is set.
+   *
+   * @type {boolean}
+   */
+  scrollToNewMessage: false,
 
   columns: getDefaultColumns(gFolder),
 
