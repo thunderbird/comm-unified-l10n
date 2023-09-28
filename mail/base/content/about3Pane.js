@@ -6825,6 +6825,10 @@ commandController.registerCallback(
   "cmd_print",
   async () => {
     let PrintUtils = top.PrintUtils;
+    if (!webBrowser.hidden) {
+      PrintUtils.startPrintWindow(webBrowser.browsingContext);
+      return;
+    }
     let uris = gViewWrapper.dbView.getURIsForSelection();
     if (uris.length == 1) {
       if (messageBrowser.hidden) {
@@ -6864,7 +6868,13 @@ commandController.registerCallback(
     }
   },
   () => {
-    return Boolean(gViewWrapper);
+    if (!accountCentralBrowser.hidden) {
+      return false;
+    }
+    if (!webBrowser.hidden) {
+      return true;
+    }
+    return gDBView && gDBView.numSelected > 0;
   }
 );
 commandController.registerCallback(
