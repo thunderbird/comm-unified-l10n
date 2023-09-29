@@ -5,6 +5,9 @@
 var { XPCOMUtils } = ChromeUtils.importESModule("resource://gre/modules/XPCOMUtils.sys.mjs");
 var { ConsoleAPI } = ChromeUtils.importESModule("resource://gre/modules/Console.sys.mjs");
 
+const { ICAL } = ChromeUtils.import("resource:///modules/calendar/Ical.jsm");
+ICAL.design.strict = false;
+
 const lazy = {};
 XPCOMUtils.defineLazyModuleGetters(lazy, {
   CalDateTime: "resource:///modules/CalDateTime.jsm",
