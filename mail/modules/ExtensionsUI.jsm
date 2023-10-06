@@ -21,25 +21,28 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AppMenuNotifications: "resource://gre/modules/AppMenuNotifications.sys.mjs",
   ExtensionData: "resource://gre/modules/Extension.sys.mjs",
   ExtensionParent: "resource://gre/modules/ExtensionParent.sys.mjs",
+
   SITEPERMS_ADDON_TYPE:
     "resource://gre/modules/addons/siteperms-addon-utils.sys.mjs",
 });
 
-const { PERMISSIONS_WITH_MESSAGE, PERMISSION_L10N } =
-  ChromeUtils.importESModule(
-    "resource://gre/modules/ExtensionPermissionMessages.sys.mjs"
-  );
-
-// Add the Thunderbird specific permission description locale file, to allow
-// Extension.sys.mjs to resolve our permissions strings.
-PERMISSION_L10N.addResourceIds(["messenger/extensionPermissions.ftl"]);
+const { PERMISSIONS_WITH_MESSAGE } = ChromeUtils.importESModule(
+  "resource://gre/modules/ExtensionPermissionMessages.sys.mjs"
+);
 
 XPCOMUtils.defineLazyGetter(
   lazy,
   "l10n",
   () =>
     new Localization(
-      ["messenger/extensionsUI.ftl", "messenger/addonNotifications.ftl"],
+      [
+        "toolkit/global/extensions.ftl",
+        "toolkit/global/extensionPermissions.ftl",
+        "messenger/extensionsUI.ftl",
+        "messenger/extensionPermissions.ftl",
+        "messenger/addonNotifications.ftl",
+        "branding/brand.ftl",
+      ],
       true
     )
 );
@@ -992,16 +995,15 @@ var ExtensionsUI = {
       if (data.manifest.experiment_apis) {
         // Add the experiment permission text and use the header for
         // extensions with permissions.
-        let [experimentWarning] = await lazy.l10n.formatValues([
-          "webext-experiment-warning",
-        ]);
-        let [header, msg] = await PERMISSION_L10N.formatValues([
+        let [header, msg, experimentWarning] = lazy.l10n.formatValuesSync([
           {
             id: "webext-perms-header-with-perms",
             args: { extension: "<>" },
           },
           "webext-perms-description-experiment",
+          "webext-experiment-warning",
         ]);
+
         strings.header = header;
         strings.msgs = [msg];
         if (info.source != "AMO") {
@@ -1130,7 +1132,6 @@ var ExtensionsUI = {
       let { browser, name, icon, respond, currentEngine, newEngine } =
         subject.wrappedJSObject;
 
-      // FIXME: These only exist in mozilla/browser/locales/en-US/browser/extensionsUI.ftl.
       const [searchDesc, searchYes, searchNo] = lazy.l10n.formatMessagesSync([
         {
           id: "webext-default-search-description",
@@ -1164,6 +1165,7 @@ var ExtensionsUI = {
   _buildStrings(info) {
     const strings = lazy.ExtensionData.formatPermissionStrings(info, {
       collapseOrigins: true,
+      localization: lazy.l10n,
     });
     strings.addonName = info.addon.name;
     strings.learnMore = lazy.l10n.formatValueSync("webext-perms-learn-more");

@@ -28,7 +28,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 (async function () {
   window.MozXULElement.insertFTLIfNeeded("messenger/aboutAddonsExtra.ftl");
-  // Needed for webext-perms-description-experiment.
   window.MozXULElement.insertFTLIfNeeded("messenger/extensionPermissions.ftl");
   UIFontSize.registerWindow(window);
 
