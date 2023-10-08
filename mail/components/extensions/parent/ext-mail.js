@@ -1217,6 +1217,9 @@ class Tab extends TabBase {
   }
 
   get innerWindowID() {
+    if (!this.browser) {
+      return null;
+    }
     if (this.type == "messageCompose") {
       return this.browser.contentWindow.windowUtils.currentInnerWindowID;
     }
