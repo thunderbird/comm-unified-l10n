@@ -5,7 +5,7 @@
 <popupset id="calendar-popupset">
   <!-- Tooltips -->
   <tooltip id="eventTreeTooltip"
-          onpopupshowing="return showToolTip(this, getUnifinderView().getItemAtCoordinates(event.clientX, event.clientY))"
+          onpopupshowing="return showToolTip(this, unifinderTreeView.getItemFromEvent(event))"
           noautohide="true"/>
 
   <tooltip id="taskTreeTooltip"

@@ -47,21 +47,12 @@ add_task(async function testOpenEvent() {
 
   await CalendarTestUtils.openCalendarTab(window);
 
-  function isUnifinderHidden() {
-    const tabmail = window.document.getElementById("tabmail");
-
-    return (
-      tabmail.currentTabInfo?.mode.type != "calendar" ||
-      window.document.getElementById("bottom-events-box").hidden
-    );
-  }
-
-  if (isUnifinderHidden()) {
+  if (window.isUnifinderHidden()) {
     window.toggleUnifinder();
 
     await BrowserTestUtils.waitForCondition(
-      () => isUnifinderHidden(),
-      "calendar unifinder should have opened"
+      () => window.isUnifinderHidden(),
+      "calendar unifinder is open"
     );
   }
 
@@ -76,7 +67,7 @@ add_task(async function testOpenEvent() {
     const docUri = dialogWindow.document.documentURI;
     Assert.ok(
       docUri === "chrome://calendar/content/calendar-summary-dialog.xhtml",
-      "event summary dialog should have opened"
+      "event summary dialog did show"
     );
 
     await BrowserTestUtils.closeWindow(dialogWindow);

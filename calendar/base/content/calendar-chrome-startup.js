@@ -12,7 +12,7 @@
    prepareCalendarUnifinder, taskViewOnLoad, taskEdit, tearDownInvitationsManager,
    unloadCalendarManager, removeCalendarCommandController, finishCalendarUnifinder,
    PanelUI, changeMenuForTask, setupDeleteMenuitem, getMinimonth, currentView,
-   refreshUnifinderFilterInterval, gCurrentMode, InitMessageMenu, onViewToolbarsPopupShowing,
+   refreshEventTree, gCurrentMode, InitMessageMenu, onViewToolbarsPopupShowing,
    onCommandCustomize, CustomizeMailToolbar */
 
 var { AddonManager } = ChromeUtils.importESModule("resource://gre/modules/AddonManager.sys.mjs");
@@ -117,7 +117,7 @@ async function loadCalendarComponent() {
 
   updateTodayPaneButton();
 
-  await prepareCalendarUnifinder();
+  prepareCalendarUnifinder();
 
   taskViewOnLoad();
   taskEdit.onLoad();
@@ -290,9 +290,8 @@ function doMidnightUpdate() {
       TodayPane.setDay(cal.dtz.now());
     }
 
-    // The unifinder filter may be set relative to the current day, so we need
-    // to ensure that it is up-to-date.
-    refreshUnifinderFilterInterval();
+    // Update the unifinder.
+    refreshEventTree();
 
     // Update today's date on todaypane button.
     updateTodayPaneButtonDate();
