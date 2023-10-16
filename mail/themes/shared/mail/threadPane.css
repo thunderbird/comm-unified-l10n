@@ -812,4 +812,5 @@ tr[data-properties~="thread-children"] + tr:not([data-properties~="thread-childr
 #threadPaneDisplayButton {
   background-image: var(--icon-display-options);
   margin: 0;
+  flex-shrink: 0;
 }
