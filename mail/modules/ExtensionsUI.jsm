@@ -42,7 +42,7 @@ XPCOMUtils.defineLazyGetter(
       [
         "branding/brand.ftl",
         "messenger/extensionsUI.ftl",
-        "messenger/addonNotifications.ftl"
+        "messenger/addonNotifications.ftl",
       ],
       true
     )
