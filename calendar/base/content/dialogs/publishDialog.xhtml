@@ -23,6 +23,7 @@
 >
   <head>
     <title>&calendar.publish.dialog.title;</title>
+    <link rel="localization" href="branding/brand.ftl" />
     <script defer="defer" src="chrome://messenger/content/dialogShadowDom.js"></script>
     <script defer="defer" src="chrome://calendar/content/publishDialog.js"></script>
   </head>
@@ -37,6 +38,7 @@
         <html:input
           id="publish-remotePath-textbox"
           type="url"
+          pattern="(https?|webcals?)://.*"
           size="64"
           required="required"
           placeholder="https://www.example.com/webdav/calendar.ics"
