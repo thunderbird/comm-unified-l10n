@@ -91,7 +91,11 @@ const mailContextData = {
   ],
   "mailContext-openNewTab": singleSelectionThreadPane,
   "mailContext-openNewWindow": singleSelectionThreadPane,
-  "mailContext-openConversation": notExternal,
+  "mailContext-openConversation": [
+    ...singleSelectionMessagePane,
+    ...singleSelectionThreadPane,
+    ...onePane,
+  ],
   "mailContext-openContainingFolder": [
     "syntheticFolderDraft",
     "syntheticFolderDraftTree",
