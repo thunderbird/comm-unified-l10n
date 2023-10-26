@@ -17,6 +17,7 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 const { EnigmailSingletons } = ChromeUtils.import(
   "chrome://openpgp/content/modules/singletons.jsm"
 );
+const { MimeParser } = ChromeUtils.import("resource:///modules/mimeParser.jsm");
 
 const lazy = {};
 
@@ -714,7 +715,7 @@ MimeDecryptHandler.prototype = {
 
     try {
       this.extractEncryptedHeaders();
-      //this.extractAutocryptGossip();
+      this.extractAutocryptGossip();
     } catch (ex) {
       console.debug(ex);
     }
@@ -899,6 +900,25 @@ MimeDecryptHandler.prototype = {
       this.decryptedData =
         this.decryptedData.substr(0, r.startPos) +
         this.decryptedData.substr(r.endPos);
+    }
+  },
+
+  /**
+   * Process the Autocrypt-Gossip header lines.
+   */
+  async extractAutocryptGossip() {
+    let gossipHeaders =
+      MimeParser.extractHeaders(this.decryptedData).get("autocrypt-gossip") ||
+      [];
+    for (let h of gossipHeaders) {
+      try {
+        let keyData = atob(
+          MimeParser.getParameter(h.replace(/ /g, ""), "keydata")
+        );
+        if (keyData) {
+          LAST_MSG.gossip.push(keyData);
+        }
+      } catch {}
     }
   },
 };

@@ -20,6 +20,7 @@ var EnigmailSingletons = {
     lm.lastMessageURI = null;
     lm.mimePartNumber = "";
     lm.lastStatus = {};
+    lm.gossip = [];
   },
 
   isLastDecryptedMessagePart(folder, msgNum, mimePartNumber) {
