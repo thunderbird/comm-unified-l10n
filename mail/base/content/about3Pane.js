@@ -103,6 +103,7 @@ window.addEventListener("DOMContentLoaded", async event => {
   UIFontSize.registerWindow(window);
 
   folderTree = document.getElementById("folderTree");
+  accountCentralBrowser = document.getElementById("accountCentralBrowser");
 
   paneLayout.init();
   folderPaneContextMenu.init();
@@ -110,8 +111,6 @@ window.addEventListener("DOMContentLoaded", async event => {
   await threadPane.init();
   threadPaneHeader.init();
   await messagePane.init();
-
-  accountCentralBrowser = document.getElementById("accountCentralBrowser");
 
   // Set up the initial state using information which may have been provided
   // by mailTabs.js, or the saved state from the XUL store, or the defaults.
@@ -6409,7 +6408,7 @@ commandController.registerCallback(
       return commandController.isCommandEnabled("cmd_deleteFolder");
     }
     if (
-      !quickFilterBar.domNode ||
+      !quickFilterBar?.domNode ||
       quickFilterBar.domNode.contains(document.activeElement)
     ) {
       return false;
@@ -6425,7 +6424,7 @@ commandController.registerCallback(
   () => {
     if (
       document.activeElement == folderTree ||
-      !quickFilterBar.domNode ||
+      !quickFilterBar?.domNode ||
       quickFilterBar.domNode.contains(document.activeElement)
     ) {
       return false;
@@ -6879,10 +6878,10 @@ commandController.registerCallback(
     }
   },
   () => {
-    if (!accountCentralBrowser.hidden) {
+    if (!accountCentralBrowser?.hidden) {
       return false;
     }
-    if (!webBrowser.hidden) {
+    if (webBrowser && !webBrowser.hidden) {
       return true;
     }
     return gDBView && gDBView.numSelected > 0;
@@ -6959,7 +6958,7 @@ commandController.registerCallback(
   "cmd_find",
   () =>
     this.messageBrowser.contentWindow.commandController.doCommand("cmd_find"),
-  () => !this.messageBrowser.hidden
+  () => this.messageBrowser && !this.messageBrowser.hidden
 );
 commandController.registerCallback(
   "cmd_findAgain",
@@ -6967,7 +6966,7 @@ commandController.registerCallback(
     this.messageBrowser.contentWindow.commandController.doCommand(
       "cmd_findAgain"
     ),
-  () => !this.messageBrowser.hidden
+  () => this.messageBrowser && !this.messageBrowser.hidden
 );
 commandController.registerCallback(
   "cmd_findPrevious",
@@ -6975,7 +6974,7 @@ commandController.registerCallback(
     this.messageBrowser.contentWindow.commandController.doCommand(
       "cmd_findPrevious"
     ),
-  () => !this.messageBrowser.hidden
+  () => this.messageBrowser && !this.messageBrowser.hidden
 );
 
 /**
@@ -7039,12 +7038,12 @@ commandController.registerCallback(
 commandController.registerCallback(
   "cmd_reload",
   () => webBrowser.reload(),
-  () => !webBrowser.busy
+  () => webBrowser && !webBrowser.busy
 );
 commandController.registerCallback(
   "cmd_stop",
   () => webBrowser.stop(),
-  () => webBrowser.busy
+  () => webBrowser && webBrowser.busy
 );
 
 // Attachments commands.
@@ -7058,6 +7057,7 @@ for (let command of [
     command,
     () => messageBrowser.contentWindow.commandController.doCommand(command),
     () =>
+      messageBrowser &&
       !messageBrowser.hidden &&
       messageBrowser.contentWindow.commandController.isCommandEnabled(command)
   );
