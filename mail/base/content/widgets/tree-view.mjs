@@ -228,7 +228,7 @@ class TreeView extends HTMLElement {
     this.#calculateToleranceBufferSize();
 
     if (this._view) {
-      this.invalidate();
+      this.reset();
     }
   }
 
@@ -533,7 +533,7 @@ class TreeView extends HTMLElement {
     // Clear the height of the top spacer to avoid confusing
     // `_ensureVisibleRowsAreDisplayed`.
     this.table.spacerTop.setHeight(0);
-    this.invalidate();
+    this.reset();
 
     this.dispatchEvent(new CustomEvent("viewchange"));
   }
@@ -578,9 +578,18 @@ class TreeView extends HTMLElement {
   /**
    * Clear all rows from the list and create them again.
    */
-  invalidate() {
+  reset() {
     this.#resetRowBuffer();
     this._ensureVisibleRowsAreDisplayed();
+  }
+
+  /**
+   * Updates all existing rows in place, without removing all the rows and
+   * starting again. This can be used if the row element class hasn't changed
+   * and its `index` setter is capable of handling any modifications required.
+   */
+  invalidate() {
+    this.invalidateRange(this.#firstBufferRowIndex, this.#lastBufferRowIndex);
   }
 
   /**
@@ -591,18 +600,18 @@ class TreeView extends HTMLElement {
    * @param {integer} index
    */
   #doInvalidateRow(index) {
+    const rowCount = this._view?.rowCount ?? 0;
     let row = this.getRowAtIndex(index);
     if (row) {
-      if (index >= this._view.rowCount) {
-        row.remove();
-        this._rows.delete(index);
+      if (index >= rowCount) {
+        this._removeRowAtIndex(index);
       } else {
         row.index = index;
         row.selected = this._selection.isSelected(index);
       }
     } else if (
       index >= this.#firstBufferRowIndex &&
-      index <= this.#lastBufferRowIndex
+      index <= Math.min(rowCount - 1, this.#lastBufferRowIndex)
     ) {
       this._addRowAtIndex(index);
     }
@@ -670,9 +679,12 @@ class TreeView extends HTMLElement {
   }
 
   #createToleranceFillCallback() {
-    this.#bufferFillIdleCallbackHandle = requestIdleCallback(deadline =>
-      this.#fillToleranceBuffer(deadline)
-    );
+    // Don't schedule a new buffer fill callback if we already have one.
+    if (!this.#bufferFillIdleCallbackHandle) {
+      this.#bufferFillIdleCallbackHandle = requestIdleCallback(deadline =>
+        this.#fillToleranceBuffer(deadline)
+      );
+    }
   }
 
   #cancelToleranceFillCallback() {
@@ -884,6 +896,8 @@ class TreeView extends HTMLElement {
    * request filling of the tolerance buffer when idle.
    */
   _ensureVisibleRowsAreDisplayed() {
+    this.#cancelToleranceFillCallback();
+
     let rowCount = this._view?.rowCount ?? 0;
     this.placeholder?.classList.toggle("show", !rowCount);
 
@@ -950,8 +964,7 @@ class TreeView extends HTMLElement {
       const pruneBeforeRow = this.getRowAtIndex(ranges.pruneBefore);
       let rowToPrune = pruneBeforeRow.previousElementSibling;
       while (rowToPrune) {
-        rowToPrune.remove();
-        this._rows.delete(rowToPrune.index);
+        this._removeRowAtIndex(rowToPrune.index);
         rowToPrune = pruneBeforeRow.previousElementSibling;
       }
     }
@@ -960,8 +973,7 @@ class TreeView extends HTMLElement {
       const pruneAfterRow = this.getRowAtIndex(ranges.pruneAfter);
       let rowToPrune = pruneAfterRow.nextElementSibling;
       while (rowToPrune) {
-        rowToPrune.remove();
-        this._rows.delete(rowToPrune.index);
+        this._removeRowAtIndex(rowToPrune.index);
         rowToPrune = pruneAfterRow.nextElementSibling;
       }
     }
@@ -991,10 +1003,7 @@ class TreeView extends HTMLElement {
     // we may throw them away very quickly. To save the expense, only fill the
     // buffer while idle.
 
-    // Don't schedule a new buffer fill callback if we already have one.
-    if (!this.#bufferFillIdleCallbackHandle) {
-      this.#createToleranceFillCallback();
-    }
+    this.#createToleranceFillCallback();
   }
 
   /**
@@ -1115,6 +1124,17 @@ class TreeView extends HTMLElement {
       this.table.body.setAttribute("aria-activedescendant", row.id);
     }
     this._rows.set(index, row);
+  }
+
+  /**
+   * Removes the row element at `index` from the DOM and map of rows.
+   *
+   * @param {integer} index
+   */
+  _removeRowAtIndex(index) {
+    const row = this._rows.get(index);
+    row?.remove();
+    this._rows.delete(index);
   }
 
   /**
@@ -1270,7 +1290,7 @@ class TreeView extends HTMLElement {
   _selectSingle(index, delaySelect = false) {
     let changeSelection =
       this._selection.count != 1 || !this._selection.isSelected(index);
-    // Update the TreeSelection selection to trigger a tree invalidate().
+    // Update the TreeSelection selection to trigger a tree reset().
     if (changeSelection) {
       this._selection.select(index);
     }
@@ -2464,6 +2484,9 @@ class TreeViewTableRow extends HTMLTableRowElement {
    * The 0-based position of this row in the list. Override this setter to
    * fill layout based on values from the list's view. Always call back to
    * this class's getter/setter when inheriting.
+   *
+   * @note Don't short-circuit the setter if the given index is equal to the
+   * existing index. Rows can be reused to display new data at the same index.
    *
    * @type {integer}
    */

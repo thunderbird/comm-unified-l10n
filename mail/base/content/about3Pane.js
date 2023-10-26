@@ -4332,7 +4332,7 @@ var threadPane = {
 
     window.addEventListener("uidensitychange", () => {
       this.densityChange();
-      threadTree.invalidate();
+      threadTree.reset();
     });
     this.densityChange();
 
@@ -4841,7 +4841,7 @@ var threadPane = {
     },
     invalidate() {
       if (!this._inBatch) {
-        threadTree.invalidate();
+        threadTree.reset();
       }
     },
     invalidateRange(startIndex, endIndex) {
@@ -5130,7 +5130,7 @@ var threadPane = {
     this.cardColumns = getDefaultColumnsForCardsView(gFolder);
     this.updateClassList();
     this.updateColumns();
-    threadTree.invalidate();
+    threadTree.reset();
     this.persistColumnStates();
   },
 
@@ -5171,7 +5171,7 @@ var threadPane = {
 
     this.persistColumnStates();
     this.updateColumns(true);
-    threadTree.invalidate();
+    threadTree.reset();
 
     // Swap the DOM elements.
     const originalTH = document.getElementById(column);
@@ -5189,7 +5189,7 @@ var threadPane = {
 
     this.persistColumnStates();
     this.updateColumns(true);
-    threadTree.invalidate();
+    threadTree.reset();
   },
 
   /**
@@ -5206,7 +5206,7 @@ var threadPane = {
 
     this.persistColumnStates();
     this.updateColumns(true);
-    threadTree.invalidate();
+    threadTree.reset();
   },
 
   /**
@@ -5523,7 +5523,7 @@ var threadPane = {
           });
           // Invalidation should be unnecessary but the back end doesn't
           // notify us properly and resists attempts to fix this.
-          threadTree.invalidate();
+          threadTree.reset();
           threadTree.table.body.focus();
           return false; // Close notification.
         },
@@ -6927,7 +6927,7 @@ commandController.registerCallback(
     commandController._navigate(Ci.nsMsgNavigationType.toggleThreadKilled);
     // Invalidation should be unnecessary but the back end doesn't notify us
     // properly and resists attempts to fix this.
-    threadTree.invalidate();
+    threadTree.reset();
   },
   () => gDBView?.numSelected >= 1 && (gFolder || gViewWrapper.isSynthetic)
 );
@@ -6944,7 +6944,7 @@ commandController.registerCallback(
     commandController._navigate(Ci.nsMsgNavigationType.toggleSubthreadKilled);
     // Invalidation should be unnecessary but the back end doesn't notify us
     // properly and resists attempts to fix this.
-    threadTree.invalidate();
+    threadTree.reset();
   },
   () => gDBView?.numSelected >= 1 && (gFolder || gViewWrapper.isSynthetic)
 );

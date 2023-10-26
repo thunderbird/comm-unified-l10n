@@ -1488,7 +1488,7 @@ var cardsPane = {
         tableRowClass.ROW_HEIGHT = 22;
         break;
     }
-    this.cardsList.invalidate();
+    this.cardsList.reset();
   },
 
   searchInput: null,
@@ -1656,7 +1656,7 @@ var cardsPane = {
     }
 
     this.table.updateColumns(cardsPane.COLUMNS);
-    this.cardsList.invalidate();
+    this.cardsList.reset();
 
     Services.xulStore.setValue(
       cardsPane.URL,
