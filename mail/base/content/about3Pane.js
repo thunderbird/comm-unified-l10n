@@ -409,6 +409,7 @@ var folderPaneContextMenu = {
     let isTrash = isSpecialFolder(Ci.nsMsgFolderFlags.Trash, true);
     let isVirtual = flags & Ci.nsMsgFolderFlags.Virtual;
     let isRealFolder = !isServer && !isVirtual;
+    let isSmartVirtualFolder = FolderUtils.isSmartVirtualFolder(folder);
     let isSmartTagsFolder = FolderUtils.isSmartTagsFolder(folder);
     let serverType = server.type;
 
@@ -467,7 +468,7 @@ var folderPaneContextMenu = {
 
     showItem(
       "folderPaneContext-markMailFolderAllRead",
-      isRealFolder && serverType != "nntp"
+      !isServer && !isSmartTagsFolder && serverType != "nntp"
     );
     showItem(
       "folderPaneContext-markNewsgroupAllRead",
@@ -500,13 +501,8 @@ var folderPaneContextMenu = {
     let movePopup = document.getElementById("folderContext-movePopup");
     if (isVirtual) {
       showItem("folderPaneContext-copyMenu", false);
-      let folder = this.activeFolder;
       let showMove = true;
-      if (
-        (folder.server.hostName == "smart mailboxes" &&
-          folder.parent.isServer) ||
-        isSmartTagsFolder
-      ) {
+      if (isSmartVirtualFolder || isSmartTagsFolder) {
         showMove = false;
       }
       showItem("folderPaneContext-moveMenu", showMove);
@@ -629,7 +625,13 @@ var folderPaneContextMenu = {
         break;
       case "folderPaneContext-markMailFolderAllRead":
       case "folderPaneContext-markNewsgroupAllRead":
-        topChromeWindow.MsgMarkAllRead([folder]);
+        if (folder.flags & Ci.nsMsgFolderFlags.Virtual) {
+          topChromeWindow.MsgMarkAllRead(
+            VirtualFolderHelper.wrapVirtualFolder(folder).searchFolders
+          );
+        } else {
+          topChromeWindow.MsgMarkAllRead([folder]);
+        }
         break;
       case "folderPaneContext-emptyTrash":
         folderPane.emptyTrash(folder);
@@ -3263,7 +3265,7 @@ var folderPane = {
 
     // Check if this is a top-level smart folder. If so, we're going
     // to empty all the trash folders.
-    if (folder.server.hostName == "smart mailboxes" && folder.parent.isServer) {
+    if (FolderUtils.isSmartVirtualFolder(folder)) {
       for (let server of MailServices.accounts.allServers) {
         for (let trash of server.rootFolder.getFoldersWithFlags(
           Ci.nsMsgFolderFlags.Trash
@@ -3292,7 +3294,7 @@ var folderPane = {
       return;
     }
 
-    if (folder.getFlag(Ci.nsMsgFolderFlags.Virtual)) {
+    if (FolderUtils.isSmartVirtualFolder(folder)) {
       // This is the unified junk folder.
       let wrappedFolder = VirtualFolderHelper.wrapVirtualFolder(folder);
       for (let searchFolder of wrappedFolder.searchFolders) {
