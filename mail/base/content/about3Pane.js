@@ -5024,7 +5024,7 @@ var threadPane = {
    * selected.
    */
   scrollToLatestRowIfNoSelection() {
-    if (gDBView.selection.count > 0 || gDBView.rowCount <= 0) {
+    if (!gDBView || gDBView.selection.count > 0 || gDBView.rowCount <= 0) {
       return;
     }
     if (
