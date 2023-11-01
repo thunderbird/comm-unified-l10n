@@ -77,9 +77,9 @@ form {
   }
 }
 
-div:has(legend) {
+/* div:has(legend) {
   display: flex;
-}
+} */
 
 .input-control {
   display: flex;
