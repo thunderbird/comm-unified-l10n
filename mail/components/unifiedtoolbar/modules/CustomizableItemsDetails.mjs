@@ -329,7 +329,7 @@ export default [
     spaces: ["mail"],
     templateId: "viewPickerTemplate",
     requiredModules: [
-      "chrome://messenger/content/unifiedtoolbar/mail-tab-button.mjs",
+      "chrome://messenger/content/unifiedtoolbar/view-picker-button.mjs",
     ],
   },
   {

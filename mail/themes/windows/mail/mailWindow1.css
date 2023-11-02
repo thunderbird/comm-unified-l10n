@@ -386,13 +386,6 @@ treechildren::-moz-tree-row(dummy, selected, focus) {
   }
 }
 
-@media (-moz-windows-non-native-menus) {
-  #viewPickerPopup > menu,
-  #viewPickerPopup > menuitem {
-    padding-inline-start: 1em;
-  }
-}
-
 @media (-moz-windows-default-theme) {
   :root:not([lwt-tree],:-moz-lwtheme) #folderTree {
     background-color: #fafafa;

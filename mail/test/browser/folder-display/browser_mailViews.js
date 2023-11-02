@@ -11,6 +11,7 @@ var {
   make_message_sets_in_folders,
   mc,
   wait_for_all_messages_to_load,
+  get_about_3pane,
 } = ChromeUtils.import(
   "resource://testing-common/mozmill/FolderDisplayHelpers.jsm"
 );
@@ -20,6 +21,10 @@ var { plan_for_modal_dialog, wait_for_modal_dialog } = ChromeUtils.import(
 
 var { MailViewConstants } = ChromeUtils.import(
   "resource:///modules/MailViewManager.jsm"
+);
+
+const { storeState } = ChromeUtils.importESModule(
+  "resource:///modules/CustomizationState.mjs"
 );
 
 var baseFolder, savedFolder;
@@ -34,12 +39,28 @@ add_setup(async function () {
     [{}, {}]
   );
   setTagged.addTag("$label1"); // Important, by default
+  storeState({
+    mail: ["view-picker"],
+  });
+  await BrowserTestUtils.waitForMutationCondition(
+    document.getElementById("unifiedToolbarContent"),
+    {
+      subtree: true,
+      childList: true,
+    },
+    () => document.querySelector("#unifiedToolbarContent .view-picker")
+  );
+
+  registerCleanupFunction(() => {
+    storeState({});
+  });
 });
 
 add_task(function test_put_view_picker_on_toolbar() {
-  let toolbar = mc.window.document.getElementById("mail-bar3");
-  toolbar.insertItem("mailviews-container", null);
-  Assert.ok(mc.window.document.getElementById("mailviews-container"));
+  Assert.ok(
+    window.ViewPickerBinding.isVisible,
+    "View picker is registered as visible"
+  );
 });
 
 /**
@@ -54,7 +75,7 @@ add_task(async function test_save_view_as_folder() {
   // just call the ViewChange global.  it's sad, but it has the same effects.
   // at least, it does once we've caused the popups to get refreshed.
   mc.window.RefreshAllViewPopups(
-    mc.window.document.getElementById("viewPickerPopup")
+    mc.window.document.getElementById("toolbarViewPickerPopup")
   );
   mc.window.ViewChange(":$label1");
   wait_for_all_messages_to_load();
@@ -84,7 +105,7 @@ function subtest_save_mail_view(savc) {
   Assert.equal(selector.value, "$label1");
 
   // - save it
-  savc.window.onOK();
+  savc.window.document.querySelector("dialog").acceptDialog();
 }
 
 add_task(async function test_verify_saved_mail_view() {
