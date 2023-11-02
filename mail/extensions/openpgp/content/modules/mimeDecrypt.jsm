@@ -734,6 +734,12 @@ MimeDecryptHandler.prototype = {
           break;
         }
       }
+
+      if (!/^Content-Type:/im.test(this.decryptedData)) {
+        this.decryptedData =
+          "Content-Type: text/plain; charset=utf-8\r\n\r\n" +
+          this.decryptedData;
+      }
     }
 
     this.exitCode = exitCode;
