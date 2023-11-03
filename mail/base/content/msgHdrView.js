@@ -34,8 +34,6 @@ ChromeUtils.defineESModuleGetters(this, {
 });
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  calendarDeactivator:
-    "resource:///modules/calendar/calCalendarDeactivator.jsm",
   Gloda: "resource:///modules/gloda/GlodaPublic.jsm",
   GlodaUtils: "resource:///modules/gloda/GlodaUtils.jsm",
   MailUtils: "resource:///modules/MailUtils.jsm",
@@ -2416,9 +2414,6 @@ function onShowOtherActionsPopup() {
     }
   }
 
-  document.getElementById("otherActions-calendar-convert-menu").hidden =
-    isDummyMessage || !calendarDeactivator.isCalendarActivated;
-
   // Check if the current message is feed or not.
   let isFeed = FeedUtils.isFeedMessage(gMessage);
   document.getElementById("otherActionsMessageBodyAs").hidden = isFeed;
@@ -3556,13 +3551,6 @@ function MsgMarkMsgAsRead(read) {
 
 function MsgMarkAsFlagged() {
   MarkSelectedMessagesFlagged(!SelectedMessagesAreFlagged());
-}
-
-/**
- * Extract email data and prefill the event/task dialog with that data.
- */
-function convertToEventOrTask(isTask = false) {
-  window.top.calendarExtract.extractFromEmail(gMessage, isTask);
 }
 
 /**

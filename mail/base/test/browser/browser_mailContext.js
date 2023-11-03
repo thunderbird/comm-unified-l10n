@@ -17,9 +17,6 @@ var { MailUtils } = ChromeUtils.import("resource:///modules/MailUtils.jsm");
 var { MessageGenerator } = ChromeUtils.import(
   "resource://testing-common/mailnews/MessageGenerator.jsm"
 );
-var { cal } = ChromeUtils.importESModule(
-  "resource:///modules/calendar/calUtils.sys.mjs"
-);
 
 const TEST_MESSAGE_URL =
   "http://mochi.test:8888/browser/comm/mail/base/test/browser/files/sampleContent.eml";
@@ -62,11 +59,6 @@ let allThreePane = [
   "multipleTemplatesFolderTree",
 ];
 let notExternal = [...allThreePane, ...onePane];
-let singleNotExternal = [
-  ...singleSelectionMessagePane,
-  ...singleSelectionThreadPane,
-  ...onePane,
-];
 
 const mailContextData = {
   "mailContext-selectall": [
@@ -113,8 +105,8 @@ const mailContextData = {
   ],
   "mailContext-redirect": true,
   "mailContext-editAsNew": true,
-  "mailContext-tags": notExternal,
-  "mailContext-mark": notExternal,
+  "mailContext-tags": true, // Should be notExternal really.
+  "mailContext-mark": true, // Should be notExternal really.
   "mailContext-archive": notExternal,
   "mailContext-moveMenu": notExternal,
   "mailContext-copyMenu": true,
@@ -123,7 +115,7 @@ const mailContextData = {
     "multipleDraftsFolderTree",
     "multipleTemplatesFolderTree",
   ],
-  "mailContext-calendar-convert-menu": singleNotExternal,
+  "mailContext-calendar-convert-menu": allSingleSelection,
   "mailContext-delete": notExternal,
   "mailContext-ignoreThread": allThreePane,
   "mailContext-ignoreSubthread": allThreePane,
@@ -144,9 +136,7 @@ function checkMenuitems(menu, mode) {
     return;
   }
 
-  info(`Checking menus for ${mode} ...`);
-
-  Assert.notEqual(menu.state, "closed", "Menu should be closed");
+  Assert.notEqual(menu.state, "closed");
 
   let expectedItems = [];
   for (let [id, modes] of Object.entries(mailContextData)) {
@@ -257,13 +247,9 @@ add_setup(async function () {
     messagePaneVisible: true,
   });
 
-  // Enable home calendar.
-  cal.manager.getCalendars()[0].setProperty("disabled", false);
-
   registerCleanupFunction(() => {
     MailServices.accounts.removeAccount(account, false);
     Services.prefs.clearUserPref("mail.openMessageBehavior");
-    cal.manager.getCalendars()[0].setProperty("disabled", true);
   });
 });
 
@@ -338,7 +324,6 @@ add_task(async function testSingleMessage() {
     BrowserTestUtils.is_visible(messageBrowser),
     "message browser should be visible"
   );
-
   let shownPromise = BrowserTestUtils.waitForEvent(mailContext, "popupshown");
   await BrowserTestUtils.synthesizeMouseAtCenter(
     ":root",
