@@ -21,8 +21,6 @@ var { XPCOMUtils } = ChromeUtils.importESModule(
 );
 
 XPCOMUtils.defineLazyModuleGetters(this, {
-  calendarDeactivator:
-    "resource:///modules/calendar/calCalendarDeactivator.jsm",
   EnigmailURIs: "chrome://openpgp/content/modules/uris.jsm",
   MailUtils: "resource:///modules/MailUtils.jsm",
   PhishingDetector: "resource:///modules/PhishingDetector.jsm",
@@ -368,13 +366,11 @@ var mailContextMenu = {
     );
 
     if (isDummyMessage) {
-      showItem("mailContext-tags", false);
+      enableItem("mailContext-tags", false);
     } else {
-      showItem("mailContext-tags", true);
+      enableItem("mailContext-tags", true);
       this._initMessageTags();
     }
-
-    showItem("mailContext-mark", !isDummyMessage);
     checkItem("mailContext-markFlagged", message?.isFlagged);
 
     setSingleSelection("mailContext-copyMessageUrl", !!isNewsgroup);
@@ -387,12 +383,9 @@ var mailContextMenu = {
     );
 
     // Show only if a message is actively selected in the DOM.
-    // extractFromEmail can't work on dummy messages.
     showItem(
       "mailContext-calendar-convert-menu",
-      numSelectedMessages == 1 &&
-        !isDummyMessage &&
-        calendarDeactivator.isCalendarActivated
+      numSelectedMessages == 1 && !this.selectionIsOverridden
     );
 
     document.l10n.setAttributes(
