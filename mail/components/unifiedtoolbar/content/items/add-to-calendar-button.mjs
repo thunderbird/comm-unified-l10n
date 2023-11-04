@@ -14,19 +14,19 @@ import { MailTabButton } from "chrome://messenger/content/unifiedtoolbar/mail-ta
  */
 class AddToCalendarButton extends MailTabButton {
   onCommandContextChange() {
-    const about3Pane = document.getElementById("tabmail").currentAbout3Pane;
+    const tabmail = document.getElementById("tabmail");
+    const about3Pane = tabmail.currentAbout3Pane;
     this.disabled =
+      !tabmail.currentAboutMessage ||
       (about3Pane && !about3Pane.gDBView) ||
       (about3Pane?.gDBView?.numSelected ?? -1) === 0;
   }
 
   handleClick = event => {
-    const tabmail = document.getElementById("tabmail");
-    const about3Pane = tabmail.currentAbout3Pane;
     const type = this.getAttribute("type");
+    const tabmail = document.getElementById("tabmail");
     calendarExtract.extractFromEmail(
-      tabmail.currentAboutMessage?.gMessage ||
-        about3Pane.gDBView.hdrForFirstSelectedMessage,
+      tabmail.currentAboutMessage.gMessage,
       type !== "task"
     );
     event.preventDefault();
