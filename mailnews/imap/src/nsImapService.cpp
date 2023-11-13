@@ -418,6 +418,17 @@ NS_IMETHODIMP nsImapService::LoadMessage(const nsACString& aMessageURI,
                      (dontMarkAsReadPos != kNotFound));
       }
 
+      if (!forcePeek) {
+        // If we're loading a message in an inactive docShell, don't let it
+        // be marked as read immediately.
+        nsCOMPtr<nsIDocShell> docShell =
+            do_QueryInterface(aDisplayConsumer, &rv);
+        if (NS_SUCCEEDED(rv) && docShell) {
+          auto* bc = docShell->GetBrowsingContext();
+          forcePeek = !bc->IsActive();
+        }
+      }
+
       nsCOMPtr<nsIURI> dummyURI;
       rv = FetchMessage(imapUrl,
                         forcePeek ? nsIImapUrl::nsImapMsgFetchPeek

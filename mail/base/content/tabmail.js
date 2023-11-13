@@ -872,11 +872,17 @@ var { UIFontSize } = ChromeUtils.import("resource:///modules/UIFontSize.jsm");
         if (oldPanel && !background) {
           this.rememberLastActiveElement(oldTab);
           oldPanel.removeAttribute("selected");
+          if (oldTab.chromeBrowser) {
+            oldTab.chromeBrowser.docShellIsActive = false;
+          }
         }
 
         this.panelContainer.selectedPanel.setAttribute("selected", "true");
         let tabOpenFunc = tab.mode.openTab || tab.mode.tabType.openTab;
         tabOpenFunc.apply(tab.mode.tabType, [tab, aArgs]);
+        if (tab.chromeBrowser) {
+          tab.chromeBrowser.docShellIsActive = !background;
+        }
 
         if (!t.linkedPanel) {
           if (!tab.panel.id) {
@@ -1622,11 +1628,17 @@ var { UIFontSize } = ChromeUtils.import("resource:///modules/UIFontSize.jsm");
         if (oldPanel) {
           this.rememberLastActiveElement(oldTab);
           oldPanel.removeAttribute("selected");
+          if (oldTab.chromeBrowser) {
+            oldTab.chromeBrowser.docShellIsActive = false;
+          }
         }
 
         this.panelContainer.selectedPanel.setAttribute("selected", "true");
         let showTabFunc = tab.mode.showTab || tab.mode.tabType.showTab;
         showTabFunc.call(tab.mode.tabType, tab);
+        if (tab.chromeBrowser) {
+          tab.chromeBrowser.docShellIsActive = true;
+        }
 
         let browser = this.getBrowserForTab(tab);
         if (browser && !tab.browser) {
