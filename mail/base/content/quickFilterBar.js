@@ -54,7 +54,8 @@ var quickFilterBar = {
    */
   activeElement: null,
 
-  init() {
+  async init() {
+    await window.customElements.whenDefined("search-bar");
     this._bindUI();
     this.updateRovingTab();
 
