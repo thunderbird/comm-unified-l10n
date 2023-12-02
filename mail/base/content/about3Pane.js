@@ -2407,9 +2407,21 @@ var folderPane = {
    * @param {boolean} hasNewMessages
    */
   changeNewMessages(folder, hasNewMessages) {
-    this._changeRows(folder, row =>
-      row.classList.toggle("new-messages", hasNewMessages)
-    );
+    this._changeRows(folder, row => {
+      // Find the nearest visible ancestor and update it.
+      let collapsedAncestor = row.parentElement?.closest("li.collapsed");
+      while (collapsedAncestor) {
+        const next = collapsedAncestor.parentElement?.closest("li.collapsed");
+        if (!next) {
+          collapsedAncestor.updateNewMessages();
+          break;
+        }
+        collapsedAncestor = next;
+      }
+
+      // Update the row itself.
+      row.updateNewMessages();
+    });
   },
 
   /**
@@ -2421,9 +2433,9 @@ var folderPane = {
   changeUnreadCount(folder, newValue) {
     this._changeRows(folder, row => {
       // Find the nearest visible ancestor and update it.
-      let collapsedAncestor = row.parentNode.closest("li.collapsed");
+      let collapsedAncestor = row.parentElement?.closest("li.collapsed");
       while (collapsedAncestor) {
-        let next = collapsedAncestor.parentNode.closest("li.collapsed");
+        const next = collapsedAncestor.parentElement?.closest("li.collapsed");
         if (!next) {
           collapsedAncestor.updateUnreadMessageCount();
           break;
@@ -2432,12 +2444,36 @@ var folderPane = {
       }
 
       // Update the row itself.
-      row.unreadCount = newValue;
+      row.updateUnreadMessageCount();
     });
 
     if (this._modes.unread.active && !folder.server.hidden) {
       this._modes.unread.changeUnreadCount(folder, newValue);
     }
+  },
+
+  /**
+   * Called when a folder's total count changes, to update the UI.
+   *
+   * @param {nsIMsgFolder} folder
+   * @param {integer} newValue
+   */
+  changeTotalCount(folder, newValue) {
+    this._changeRows(folder, row => {
+      // Find the nearest visible ancestor and update it.
+      let collapsedAncestor = row.parentElement?.closest("li.collapsed");
+      while (collapsedAncestor) {
+        const next = collapsedAncestor.parentElement?.closest("li.collapsed");
+        if (!next) {
+          collapsedAncestor.updateTotalMessageCount();
+          break;
+        }
+        collapsedAncestor = next;
+      }
+
+      // Update the row itself.
+      row.updateTotalMessageCount();
+    });
   },
 
   /**
@@ -2452,16 +2488,6 @@ var folderPane = {
     )) {
       row.setServerName(name);
     }
-  },
-
-  /**
-   * Called when a folder's unread count changes, to update the UI.
-   *
-   * @param {nsIMsgFolder} folder
-   * @param {integer} newValue
-   */
-  changeTotalCount(folder, newValue) {
-    this._changeRows(folder, row => (row.totalCount = newValue));
   },
 
   /**
@@ -2712,6 +2738,7 @@ var folderPane = {
     }
     target.updateUnreadMessageCount();
     target.updateTotalMessageCount();
+    target.updateNewMessages();
   },
 
   _onExpanded({ target }) {
@@ -2719,8 +2746,20 @@ var folderPane = {
       let mode = target.closest("[data-mode]").dataset.mode;
       FolderTreeProperties.setIsExpanded(target.uri, mode, true);
     }
-    target.updateUnreadMessageCount();
-    target.updateTotalMessageCount();
+
+    const updateRecursively = row => {
+      row.updateUnreadMessageCount();
+      row.updateTotalMessageCount();
+      row.updateNewMessages();
+      if (row.classList.contains("collapsed")) {
+        return;
+      }
+      for (const child of row.childList.children) {
+        updateRecursively(child);
+      }
+    };
+
+    updateRecursively(target);
 
     // Get server type. IMAP is the only server type that does folder discovery.
     let folder = MailServices.folderLookup.getFolderForURL(target.uri);
@@ -3910,6 +3949,16 @@ class FolderTreeRow extends HTMLLIElement {
     } else {
       this.setAttribute("draggable", "true");
     }
+  }
+
+  updateNewMessages() {
+    const folder = MailServices.folderLookup.getFolderForURL(this.uri);
+    this.classList.toggle(
+      "new-messages",
+      this.classList.contains("collapsed")
+        ? folder.hasFolderOrSubfolderNewMessages
+        : folder.hasNewMessages
+    );
   }
 
   updateUnreadMessageCount() {
