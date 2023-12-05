@@ -1752,7 +1752,7 @@ var gAccountSetup = {
     // Implicit TLS for SMTP is on port 465. STARTTLS won't work there.
     if (
       outgoing.port == 465 &&
-      outgoing.socketType == Ci.nsMsgSocketType.STARTTLS
+      outgoing.socketType == Ci.nsMsgSocketType.alwaysSTARTTLS
     ) {
       document.getElementById("outgoingPort").value = 587;
     }
@@ -1784,7 +1784,7 @@ var gAccountSetup = {
         incoming.socketType == Ci.nsMsgSocketType.SSL
       ) {
         document.getElementById("incomingSsl").value =
-          Ci.nsMsgSocketType.STARTTLS;
+          Ci.nsMsgSocketType.alwaysSTARTTLS;
         return;
       }
     }
@@ -1803,7 +1803,7 @@ var gAccountSetup = {
         incoming.socketType == Ci.nsMsgSocketType.SSL
       ) {
         document.getElementById("incomingSsl").value =
-          Ci.nsMsgSocketType.STARTTLS;
+          Ci.nsMsgSocketType.alwaysSTARTTLS;
       }
     }
   },
@@ -1829,7 +1829,7 @@ var gAccountSetup = {
       outgoing.socketType == Ci.nsMsgSocketType.SSL
     ) {
       document.getElementById("outgoingSsl").value =
-        Ci.nsMsgSocketType.STARTTLS;
+        Ci.nsMsgSocketType.alwaysSTARTTLS;
     }
   },
 
