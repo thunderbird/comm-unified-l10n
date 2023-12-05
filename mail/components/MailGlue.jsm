@@ -1152,6 +1152,7 @@ function reportPreferences() {
     "mail.biff.play_sound",
     "mail.close_message_window.on_delete",
     "mail.display_glyph",
+    "mail.mailnews.scroll_to_new_message",
     "mail.prompt_purge_threshhold",
     "mail.purge.ask",
     "mail.showCondensedAddresses",
