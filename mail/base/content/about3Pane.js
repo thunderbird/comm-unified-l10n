@@ -4364,7 +4364,7 @@ var threadPane = {
   cardColumns: getDefaultColumnsForCardsView(gFolder),
 
   async init() {
-    await quickFilterBar.init();
+    quickFilterBar.init();
 
     this.setUpTagStyles();
     Services.prefs.addObserver("mailnews.tags.", this);
