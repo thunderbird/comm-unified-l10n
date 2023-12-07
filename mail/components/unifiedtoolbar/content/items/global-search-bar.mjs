@@ -113,7 +113,7 @@ class GlobalSearchBar extends SearchBar {
   }
 
   handleEvent(event) {
-    switch(event.type) {
+    switch (event.type) {
       case "blur":
         if (this.popup.mPopupOpen) {
           this.popup.closePopup();
