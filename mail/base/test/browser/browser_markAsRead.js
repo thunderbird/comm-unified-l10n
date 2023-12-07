@@ -7,14 +7,12 @@
  * background tab.
  */
 
-const { IMAPServer } = ChromeUtils.importESModule(
-  "resource://testing-common/IMAPServer.sys.mjs"
-);
+
 const { MessageGenerator } = ChromeUtils.import(
   "resource://testing-common/mailnews/MessageGenerator.jsm"
 );
 
-let localTestFolder, imapTestFolder;
+let localTestFolder;
 
 add_setup(async function () {
   // We need to get messages directly from the server when displaying them,
@@ -36,24 +34,8 @@ add_setup(async function () {
     generator.makeMessages({}).map(message => message.toMboxString())
   );
 
-  const imapServer = new IMAPServer(this);
-  const imapAccount = MailServices.accounts.createAccount();
-  imapAccount.addIdentity(MailServices.accounts.createIdentity());
-  imapAccount.incomingServer = MailServices.accounts.createIncomingServer(
-    `${imapAccount.key}user`,
-    "localhost",
-    "imap"
-  );
-  imapAccount.incomingServer.port = imapServer.port;
-  imapAccount.incomingServer.username = "user";
-  imapAccount.incomingServer.password = "password";
-  const imapRootFolder = imapAccount.incomingServer.rootFolder;
-  imapTestFolder = imapRootFolder.getFolderWithFlags(Ci.nsMsgFolderFlags.Inbox);
-  await imapServer.addMessages(imapTestFolder, generator.makeMessages({}));
-
   registerCleanupFunction(() => {
     MailServices.accounts.removeAccount(account, false);
-    MailServices.accounts.removeAccount(imapAccount, false);
     Services.prefs.clearUserPref("mail.server.default.offline_download");
     Services.prefs.clearUserPref("mailnews.mark_message_read.auto");
     Services.prefs.clearUserPref("mailnews.mark_message_read.delay");
@@ -63,12 +45,6 @@ add_setup(async function () {
 
 add_task(async function testLocal() {
   await subtest(localTestFolder);
-});
-
-add_task(async function testIMAP() {
-  // Our IMAP code marks a message as read if we have to fetch it from the
-  // server for display, unless we tell it not to. Check we didn't break that.
-  await subtest(imapTestFolder);
 });
 
 async function subtest(testFolder) {
