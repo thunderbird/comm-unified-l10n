@@ -1032,7 +1032,7 @@ var dbViewWrapperListener = {
   onMessagesRemoved() {
     window.quickFilterBar?.onMessagesChanged();
 
-    if (!gDBView || !gFolder) {
+    if (!gDBView || (!gFolder && !gViewWrapper?.isSynthetic)) {
       // This can't be a notification about the message currently displayed.
       return;
     }
