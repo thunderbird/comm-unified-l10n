@@ -7,7 +7,6 @@
  * background tab.
  */
 
-
 const { MessageGenerator } = ChromeUtils.import(
   "resource://testing-common/mailnews/MessageGenerator.jsm"
 );
@@ -165,7 +164,10 @@ async function subtest(testFolder) {
     messagePaneVisible: true,
   });
   const secondAbout3Pane = tabmail.tabInfo[1].chromeBrowser.contentWindow;
-  await BrowserTestUtils.waitForEvent(secondAbout3Pane, "aboutMessageLoaded");
+  await TestUtils.waitForCondition(
+    () => secondAbout3Pane.gDBView,
+    "waiting for view to load"
+  );
 
   message = testMessages.getNext();
   Assert.ok(!message.isRead, "message 4 should not be read before load");
