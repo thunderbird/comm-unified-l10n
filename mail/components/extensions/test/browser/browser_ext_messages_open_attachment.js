@@ -2,13 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, you can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { create_folder } = ChromeUtils.import(
-  "resource://testing-common/mozmill/FolderDisplayHelpers.jsm"
-);
-
 add_setup(async () => {
-  let folder = await create_folder("AttachmentA");
-
+  MailServices.accounts.createLocalMailAccount();
+  let localRoot =
+    MailServices.accounts.localFoldersServer.rootFolder.QueryInterface(
+      Ci.nsIMsgLocalMailFolder
+    );
+  let folder = localRoot.createLocalSubfolder("AttachmentA");
   await createMessageFromFile(
     folder,
     getTestFilePath("messages/attachedMessageSample.eml")
