@@ -333,6 +333,11 @@ add_task(async function testNoSecretForExistingPublicSubkey() {
   Assert.ok(importResult.exitCode == 0);
 });
 
+// Test that old ECC secret keys, which were created using older RNP
+// versions (as used in Thunderbird versions older then 91.8),
+// can be correctly backed up. This test ensures that we successfully
+// removed the key protection prior to the call to perform the
+// binary key tweaking.
 // Sanity check for bug 1790610 and bug 1792450, test that our passphrase
 // reading code, which can run through repair code for corrupted profiles,
 // will not replace our existing and good data.
