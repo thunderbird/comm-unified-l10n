@@ -1092,6 +1092,12 @@ var dbViewWrapperListener = {
           if (
             Services.prefs.getBoolPref("mail.close_message_window.on_delete")
           ) {
+            // Bail out early if this is about a partial POP3 message that has
+            // just been completed and reloaded.
+            if (document.body.classList.contains("completed-message")) {
+              document.body.classList.remove("completed-message");
+              return;
+            }
             // Close the tab or window if the displayed message is deleted.
             let tabmail = top.document.getElementById("tabmail");
             if (tabmail) {
