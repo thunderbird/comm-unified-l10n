@@ -45,17 +45,6 @@ var { MsgUtils } = ChromeUtils.import(
 
 class SmtpClient {
   /**
-   * The number of RCPT TO commands sent on the connection by this client.
-   * This can count-up over multiple messages.
-   */
-  rcptCount = 0;
-
-  /**
-   * Set true only when doing a retry.
-   */
-  isRetry = false;
-
-  /**
    * Creates a connection object to a SMTP server and allows to send mail through it.
    * Call `connect` method to inititate the actual connection, the constructor only
    * defines the properties but does not actually connect.
@@ -488,29 +477,8 @@ class SmtpClient {
    * @param {nsresult} nsError - A nsresult.
    * @param {string} errorParam - Param to form the error message.
    * @param {string} [extra] - Some messages take two arguments to format.
-   * @param {number} [statusCode] - Only needed when checking need to retry.
    */
   _onNsError(nsError, errorParam, extra) {
-    // First check if handling an error response that might need a retry.
-    if ([this._actionMAIL, this._actionRCPT].includes(this._currentAction)) {
-      if (statusCode >= 400 && statusCode < 500) {
-        // Possibly too many recipients, too many messages, to much data
-        // or too much time has elapsed on this connection.
-        if (!this.isRetry) {
-          // Now seeing error 4xx meaning that the current message can't be
-          // accepted. We close the connection and try again to send on a new
-          // connection using this same client instance. If the retry also
-          // fails on the new connection, we give up and report the error.
-          this.logger.debug("Retry send on new connection.");
-          this.quit();
-          this.isRetry = true; // flag that we will retry on new connection
-          this.close(true);
-          this.connect();
-          return; // return without reporting the error yet
-        }
-      }
-    }
-
     let errorName = MsgUtils.getErrorStringName(nsError);
     let errorMessage = "";
     if (
@@ -549,7 +517,6 @@ class SmtpClient {
   _onClose = () => {
     this.logger.debug("Socket closed.");
     this._free();
-    this.rcptCount = 0;
     if (this._authenticating) {
       // In some cases, socket is closed for invalid username/password.
       this._onAuthFailed({ data: "Socket closed." });
@@ -564,7 +531,7 @@ class SmtpClient {
    */
   _onCommand(command) {
     if (command.statusCode < 200 || command.statusCode >= 400) {
-      // @see https://datatracker.ietf.org/doc/html/rfc5321#section-3.8
+      // @see rfc5321#section-3.8
       // 421: SMTP service shutting down and closing transmission channel.
       // When that happens during idle, just close the connection.
       if (
@@ -1184,19 +1151,18 @@ class SmtpClient {
    */
   _actionMAIL(command) {
     if (!command.success) {
-      let errorCode = MsgUtils.NS_ERROR_SENDING_FROM_COMMAND; // default code
-      if (command.statusCode == 552) {
-        // Too much mail data indicated by "size" parameter of MAIL FROM.
-        // @see https://datatracker.ietf.org/doc/html/rfc5321#section-4.5.3.1.9
-        errorCode = MsgUtils.NS_ERROR_SMTP_PERM_SIZE_EXCEEDED_2;
+      let errorCode = MsgUtils.NS_ERROR_SENDING_FROM_COMMAND;
+      if (this._capabilities.includes("SIZE")) {
+        if (command.statusCode == 452) {
+          errorCode = MsgUtils.NS_ERROR_SMTP_TEMP_SIZE_EXCEEDED;
+        } else if (command.statusCode == 552) {
+          errorCode = MsgUtils.NS_ERROR_SMTP_PERM_SIZE_EXCEEDED_2;
+        }
       }
-      if (command.statusCode == 452 || command.statusCode == 451) {
-        // @see https://datatracker.ietf.org/doc/html/rfc5321#section-4.5.3.1.10
-        errorCode = MsgUtils.NS_ERROR_SMTP_TEMP_SIZE_EXCEEDED;
-      }
-      this._onNsError(errorCode, command.data, null, command.statusCode);
+      this._onNsError(errorCode, command.data);
       return;
     }
+
     this.logger.debug(
       "MAIL FROM successful, proceeding with " +
         this._envelope.rcptQueue.length +
@@ -1248,12 +1214,10 @@ class SmtpClient {
       this._onNsError(
         MsgUtils.NS_ERROR_SENDING_RCPT_COMMAND,
         command.data,
-        this._envelope.curRecipient,
-        command.statusCode
+        this._envelope.curRecipient
       );
       return;
     }
-    this.rcptCount++;
     this._envelope.responseQueue.push(this._envelope.curRecipient);
 
     if (this._envelope.rcptQueue.length) {
@@ -1264,10 +1228,7 @@ class SmtpClient {
         `RCPT TO:<${this._envelope.curRecipient}>${this._getRCPTParameters()}`
       );
     } else {
-      this.logger.debug(
-        `Total RCPTs during this connection: ${this.rcptCount}`
-      );
-      this.logger.debug("RCPT TO done. Proceeding with payload.");
+      this.logger.debug("RCPT TO done, proceeding with payload");
       this._currentAction = this._actionDATA;
       this._sendCommand("DATA");
     }
@@ -1327,7 +1288,6 @@ class SmtpClient {
         this.logger.error("Message sending failed.");
       } else {
         this.logger.debug("Message sent successfully.");
-        this.isRetry = false;
       }
 
       this._currentAction = this._actionIdle;
