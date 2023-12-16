@@ -2214,6 +2214,7 @@ var cardsPane = {
         this.cardsList.view.sortDirection
       );
       this._updatePlaceholder();
+      detailsPane.displayCards();
       return;
     }
 
