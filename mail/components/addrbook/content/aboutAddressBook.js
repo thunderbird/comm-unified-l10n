@@ -2461,6 +2461,7 @@ var detailsPane = {
     "addrbook-contact-deleted",
     "addrbook-list-updated",
     "addrbook-list-deleted",
+    "addrbook-list-member-removed",
   ],
 
   init() {
@@ -2740,13 +2741,15 @@ var detailsPane = {
         }
         break;
       case "addrbook-contact-deleted":
+      case "addrbook-list-member-removed":
         subject.QueryInterface(Ci.nsIAbCard);
         updateAddressBookCount();
 
-        if (
-          this.currentCard?.directoryUID == data &&
-          this.currentCard.equals(subject)
-        ) {
+        const directoryUID =
+          topic == "addrbook-contact-deleted"
+            ? this.currentCard?.directoryUID
+            : cardsPane.cardsList.view.directory?.UID;
+        if (directoryUID == data && this.currentCard?.equals(subject)) {
           // The card being displayed was deleted.
           this.isEditing = false;
           this.displayCards();
@@ -2763,7 +2766,7 @@ var detailsPane = {
           }
         } else if (!this.selectedCardsSection.hidden) {
           for (let li of this.selectedCardsSection.querySelectorAll("li")) {
-            if (li._card.directoryUID == data && li._card.equals(subject)) {
+            if (li._card.equals(subject)) {
               // A selected card was deleted.
               this.displayCards(cardsPane.selectedCards);
               break;
