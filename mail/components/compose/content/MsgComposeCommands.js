@@ -8104,11 +8104,16 @@ async function AddAttachments(aAttachments, aContentChanged = true) {
       await IOUtils.makeDirectory(pathTempDir, { permissions: 0o700 });
       let tempDir = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
       tempDir.initWithPath(pathTempDir);
-
+      // Ensure we don't mess with an existing file in saveAttachmentToFolder.
+      const uniquePath = await IOUtils.createUniqueFile(
+        pathTempDir,
+        attachment.name.replaceAll(/[/:*?\"<>|]/g, "_")
+      );
+      const uniqueTmpFile = await IOUtils.getFile(uniquePath);
       let tempFile = gMessenger.saveAttachmentToFolder(
         attachment.contentType,
         attachment.url,
-        encodeURIComponent(attachment.name),
+        encodeURIComponent(uniqueTmpFile.leafName),
         attachment.msgUri,
         tempDir
       );
