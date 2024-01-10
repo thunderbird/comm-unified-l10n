@@ -639,7 +639,7 @@ var folderPaneContextMenu = {
         folderPane.emptyJunk(folder);
         break;
       case "folderPaneContext-sendUnsentMessages":
-        topChromeWindow.SendUnsentMessages();
+        goDoCommand("cmd_sendUnsentMsgs");
         break;
       case "folderPaneContext-properties":
         folderPane.editFolder(folder);
