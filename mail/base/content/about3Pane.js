@@ -4014,11 +4014,36 @@ class FolderTreeRow extends HTMLLIElement {
   }
 
   updateSizeCount(isHidden, folder = null) {
+    // Called recursively.
+    const getChildrenSizeCount = row => {
+      let sizeCount = 0;
+      for (const child of row.childList.children) {
+        // If size is unknown, sizeOnDisk returns -1.
+        sizeCount +=
+          Math.max(
+            0,
+            MailServices.folderLookup.getFolderForURL(child.uri).sizeOnDisk
+          ) + getChildrenSizeCount(child);
+      }
+      return sizeCount;
+    };
+
     this.folderSizeLabel.hidden = isHidden;
-    if (!isHidden) {
-      folder = folder ?? MailServices.folderLookup.getFolderForURL(this.uri);
-      this.folderSize = this.formatFolderSize(folder.sizeOnDisk);
+    if (isHidden) {
+      return;
     }
+
+    folder = folder ?? MailServices.folderLookup.getFolderForURL(this.uri);
+    let sizeCount = folder.sizeOnDisk;
+    if (sizeCount < 0) {
+      this.folderSize = "";
+      return;
+    }
+
+    if (this.classList.contains("collapsed")) {
+      sizeCount += getChildrenSizeCount(this);
+    }
+    this.folderSize = this.formatFolderSize(sizeCount);
   }
 
   /**
