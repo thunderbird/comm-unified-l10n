@@ -39,13 +39,12 @@ export class VCardTelComponent extends HTMLElement {
     let clonedTemplate = template.content.cloneNode(true);
     this.appendChild(clonedTemplate);
 
-    this.inputElement = this.querySelector('input[type="text"]');
+    this.inputElement = this.querySelector('input[type="tel"]');
     let urlId = vCardIdGen.next().value;
     this.inputElement.id = urlId;
-    let urlLabel = this.querySelector('label[for="text"]');
+    const urlLabel = this.querySelector('label[for="tel"]');
     urlLabel.htmlFor = urlId;
     document.l10n.setAttributes(urlLabel, "vcard-tel-label");
-    this.inputElement.type = "tel";
 
     // Create the tel type selection.
     this.vCardType = this.querySelector("vcard-type");

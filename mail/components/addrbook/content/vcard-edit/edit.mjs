@@ -975,7 +975,8 @@ class VCardTypeSelectionComponent extends HTMLElement {
    * @param {string} [options.propertyType] - Specifies the set of types that
    *   should be available and shown for the corresponding property. Set as
    *   "tel" to use the set of telephone types. Otherwise defaults to only using
-   *   the `home`, `work` and `(None)` types.
+   *   the `home`, `work` and `(None)` types. Also used to set the telemetry
+   *   identifier.
    */
   createTypeSelection(vCardPropertyEntry, options) {
     let template;
@@ -997,6 +998,7 @@ class VCardTypeSelectionComponent extends HTMLElement {
     this.selectEl = this.querySelector("select");
     let selectId = vCardIdGen.next().value;
     this.selectEl.id = selectId;
+    this.selectEl.dataset.telemetryId = `vcard-type-selection-${options.propertyType}`;
 
     // Just abandon any values we don't have UI for. We don't have any way to
     // know whether to keep them or not, and they're very rarely used.
