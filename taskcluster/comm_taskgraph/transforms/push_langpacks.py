@@ -16,10 +16,7 @@ from voluptuous import Any, Optional, Required
 
 from gecko_taskgraph.loader.single_dep import schema
 from gecko_taskgraph.transforms.task import task_description_schema
-from gecko_taskgraph.util.attributes import (
-    copy_attributes_from_dependent_job,
-    release_level,
-)
+from gecko_taskgraph.util.attributes import copy_attributes_from_dependent_job, release_level
 from mozbuild.action.langpack_manifest import get_version_maybe_buildid
 
 transforms = TransformSequence()
@@ -63,6 +60,10 @@ transforms.add_validate(langpack_push_description_schema)
 @transforms.add
 def resolve_keys(config, jobs):
     for job in jobs:
+        # Do not attempt to run when staging releases on try-comm-central
+        if release_level(config.params["project"]) != "production":
+            continue
+
         resolve_keyed_by(
             job,
             "worker-type",
