@@ -22,6 +22,10 @@ ChromeUtils.defineModuleGetter(
   "resource:///modules/accountcreation/Sanitizer.jsm"
 );
 
+const { OAuth2Providers } = ChromeUtils.import(
+  "resource:///modules/OAuth2Providers.jsm"
+);
+
 /* eslint-disable complexity */
 /**
  * Takes an XML snipplet (as JXON) and reads the values into
@@ -121,28 +125,17 @@ function readFromXML(clientConfigXML, subSource) {
       }
       exception = null;
 
-      for (let iXauth of array_or_undef(iX.$authentication)) {
-        try {
-          iO.auth = lazy.Sanitizer.translate(iXauth, {
-            "password-cleartext": Ci.nsMsgAuthMethod.passwordCleartext,
-            // @deprecated TODO remove
-            plain: Ci.nsMsgAuthMethod.passwordCleartext,
-            "password-encrypted": Ci.nsMsgAuthMethod.passwordEncrypted,
-            // @deprecated TODO remove
-            secure: Ci.nsMsgAuthMethod.passwordEncrypted,
-            GSSAPI: Ci.nsMsgAuthMethod.GSSAPI,
-            NTLM: Ci.nsMsgAuthMethod.NTLM,
-            OAuth2: Ci.nsMsgAuthMethod.OAuth2,
-          });
-          break; // take first that we support
-        } catch (e) {
-          exception = e;
-        }
-      }
-      if (!iO.auth) {
-        throw exception ? exception : "need proper <authentication> in XML";
-      }
-      exception = null;
+      iO.auth = readAuthentication(iX.$authentication, iO.hostname, {
+        "password-cleartext": Ci.nsMsgAuthMethod.passwordCleartext,
+        // @deprecated TODO remove
+        plain: Ci.nsMsgAuthMethod.passwordCleartext,
+        "password-encrypted": Ci.nsMsgAuthMethod.passwordEncrypted,
+        // @deprecated TODO remove
+        secure: Ci.nsMsgAuthMethod.passwordEncrypted,
+        GSSAPI: Ci.nsMsgAuthMethod.GSSAPI,
+        NTLM: Ci.nsMsgAuthMethod.NTLM,
+        OAuth2: Ci.nsMsgAuthMethod.OAuth2,
+      });
 
       if (iO.type == "exchange") {
         try {
@@ -254,35 +247,23 @@ function readFromXML(clientConfigXML, subSource) {
       }
       exception = null;
 
-      for (let oXauth of array_or_undef(oX.$authentication)) {
-        try {
-          oO.auth = lazy.Sanitizer.translate(oXauth, {
-            // open relay
-            none: Ci.nsMsgAuthMethod.none,
-            // inside ISP or corp network
-            "client-IP-address": Ci.nsMsgAuthMethod.none,
-            // hope for the best
-            "smtp-after-pop": Ci.nsMsgAuthMethod.none,
-            "password-cleartext": Ci.nsMsgAuthMethod.passwordCleartext,
-            // @deprecated TODO remove
-            plain: Ci.nsMsgAuthMethod.passwordCleartext,
-            "password-encrypted": Ci.nsMsgAuthMethod.passwordEncrypted,
-            // @deprecated TODO remove
-            secure: Ci.nsMsgAuthMethod.passwordEncrypted,
-            GSSAPI: Ci.nsMsgAuthMethod.GSSAPI,
-            NTLM: Ci.nsMsgAuthMethod.NTLM,
-            OAuth2: Ci.nsMsgAuthMethod.OAuth2,
-          });
-
-          break; // take first that we support
-        } catch (e) {
-          exception = e;
-        }
-      }
-      if (!oO.auth) {
-        throw exception ? exception : "need proper <authentication> in XML";
-      }
-      exception = null;
+      oO.auth = readAuthentication(oX.$authentication, oO.hostname, {
+        // open relay
+        none: Ci.nsMsgAuthMethod.none,
+        // inside ISP or corp network
+        "client-IP-address": Ci.nsMsgAuthMethod.none,
+        // hope for the best
+        "smtp-after-pop": Ci.nsMsgAuthMethod.none,
+        "password-cleartext": Ci.nsMsgAuthMethod.passwordCleartext,
+        // @deprecated TODO remove
+        plain: Ci.nsMsgAuthMethod.passwordCleartext,
+        "password-encrypted": Ci.nsMsgAuthMethod.passwordEncrypted,
+        // @deprecated TODO remove
+        secure: Ci.nsMsgAuthMethod.passwordEncrypted,
+        GSSAPI: Ci.nsMsgAuthMethod.GSSAPI,
+        NTLM: Ci.nsMsgAuthMethod.NTLM,
+        OAuth2: Ci.nsMsgAuthMethod.OAuth2,
+      });
 
       if (
         "username" in oX ||
@@ -350,3 +331,27 @@ function readFromXML(clientConfigXML, subSource) {
   return d;
 }
 /* eslint-enable complexity */
+
+function readAuthentication(authenticationValues, hostname, mapping) {
+  let exception;
+  for (const authenticationValue of authenticationValues || []) {
+    try {
+      const authMethod = lazy.Sanitizer.translate(authenticationValue, mapping);
+
+      if (
+        authMethod === Ci.nsMsgAuthMethod.OAuth2 &&
+        !OAuth2Providers.getHostnameDetails(hostname)
+      ) {
+        throw new Error(`Lacking OAuth2 config for ${hostname}`);
+      }
+
+      return authMethod;
+    } catch (e) {
+      exception = e;
+    }
+  }
+
+  throw exception
+    ? exception
+    : new Error("need proper <authentication> in XML");
+}
