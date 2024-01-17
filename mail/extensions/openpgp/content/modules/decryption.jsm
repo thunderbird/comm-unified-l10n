@@ -43,7 +43,7 @@ function statusObjectFrom(
   sigDetailsObj,
   errorMsgObj,
   blockSeparationObj,
-  encToDetailsObj
+  extraDetailsObj
 ) {
   return {
     signature: signatureObj,
@@ -54,7 +54,7 @@ function statusObjectFrom(
     sigDetails: sigDetailsObj,
     message: errorMsgObj,
     blockSeparation: blockSeparationObj,
-    encToDetails: encToDetailsObj,
+    extraDetails: extraDetailsObj,
   };
 }
 
@@ -124,7 +124,7 @@ var EnigmailDecryption = {
    *out @sigDetailsObj
    *out @errorMsgObj  error string
    *out @blockSeparationObj
-   *out @encToDetailsObj  returns in details, which keys the message was encrypted for (ENC_TO entries)
+   *out @extraDetailsObj JSON with (optional) additional data: encryptedTo, packetDump
    *
    * @returns string plaintext ("" if error)
    *
@@ -142,7 +142,7 @@ var EnigmailDecryption = {
     sigDetailsObj,
     errorMsgObj,
     blockSeparationObj,
-    encToDetailsObj
+    extraDetailsObj
   ) {
     lazy.EnigmailLog.DEBUG(
       "decryption.jsm: decryptMessage(" +
@@ -326,8 +326,12 @@ var EnigmailDecryption = {
     userIdObj.value = result.userId;
     keyIdObj.value = result.keyId;
     sigDetailsObj.value = result.sigDetails;
-    if (encToDetailsObj) {
-      encToDetailsObj.value = result.encToDetails;
+
+    if (extraDetailsObj) {
+      extraDetailsObj.value = JSON.stringify({
+        encryptedTo: result.encToDetails,
+        packetDump: "packetDump" in result ? result.packetDump : "",
+      });
     }
     blockSeparationObj.value = result.blockSeparation;
 
@@ -367,7 +371,7 @@ var EnigmailDecryption = {
           sigDetailsObj,
           errorMsgObj,
           blockSeparationObj,
-          encToDetailsObj
+          extraDetailsObj
         )
       );
     }

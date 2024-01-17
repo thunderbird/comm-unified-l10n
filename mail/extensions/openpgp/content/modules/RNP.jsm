@@ -2031,6 +2031,50 @@ var RNP = {
       }
     }
 
+    if (!result.decryptedData) {
+      let inmem = new RNPLib.rnp_input_t();
+      RNPLib.rnp_input_from_memory(
+        inmem.address(),
+        encrypted_array,
+        encrypted_array.length,
+        false
+      );
+
+      let outmem = new RNPLib.rnp_output_t();
+      RNPLib.rnp_output_to_memory(outmem.address(), max_out);
+
+      let rv = RNPLib.rnp_dump_packets_to_output(inmem, outmem, 0);
+      if (!rv) {
+        let result_buf = new lazy.ctypes.uint8_t.ptr();
+        let result_len = new lazy.ctypes.size_t();
+        rv = RNPLib.rnp_output_memory_get_buf(
+          outmem,
+          result_buf.address(),
+          result_len.address(),
+          false
+        );
+
+        if (!rv) {
+          // type casting the pointer type to an array type allows us to
+          // access the elements by index.
+          let uint8_array = lazy.ctypes.cast(
+            result_buf,
+            lazy.ctypes.uint8_t.array(result_len.value).ptr
+          ).contents;
+
+          let str = "";
+          for (let i = 0; i < uint8_array.length; i++) {
+            str += String.fromCharCode(uint8_array[i]);
+          }
+
+          result.packetDump = str;
+        }
+      }
+
+      RNPLib.rnp_input_destroy(inmem);
+      RNPLib.rnp_output_destroy(outmem);
+    }
+
     return result;
   },
 

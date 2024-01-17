@@ -685,6 +685,10 @@ MimeDecryptHandler.prototype = {
           this.uri,
           JSON.stringify({
             encryptedTo: this.returnStatus.encToDetails,
+            packetDump:
+              "packetDump" in this.returnStatus
+                ? this.returnStatus.packetDump
+                : "",
           }),
           this.mimePartNumber
         );
