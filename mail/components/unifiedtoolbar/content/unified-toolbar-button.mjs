@@ -101,6 +101,7 @@ export class UnifiedToolbarButton extends HTMLButtonElement {
     this.label = template.querySelector("span");
     this.#updateLabel();
     this.appendChild(template);
+    this.addEventListener("mousedown", event => this.handleMousedown(event));
     this.addEventListener("click", event => this.handleClick(event));
   }
 
@@ -128,6 +129,16 @@ export class UnifiedToolbarButton extends HTMLButtonElement {
         }
         break;
     }
+  }
+
+  /**
+   * Default handling for the mousedown event on the button. Needed to prevent
+   * the button from getting focus.
+   *
+   * @param {MouseEvent} event - Mousedown event.
+   */
+  handleMousedown(event) {
+    event.preventDefault();
   }
 
   /**
