@@ -13,9 +13,6 @@ var { mc } = ChromeUtils.import(
 var { input_value, delete_all_existing } = ChromeUtils.import(
   "resource://testing-common/mozmill/KeyboardHelpers.jsm"
 );
-var { gMockPromptService } = ChromeUtils.import(
-  "resource://testing-common/mozmill/PromptHelpers.jsm"
-);
 
 var { cal } = ChromeUtils.import("resource:///modules/calendar/calUtils.jsm");
 var { DNS } = ChromeUtils.import("resource:///modules/DNS.jsm");
@@ -25,21 +22,9 @@ var { MailServices } = ChromeUtils.import(
 let { TelemetryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
-var { MockRegistrar } = ChromeUtils.importESModule(
-  "resource://testing-common/MockRegistrar.sys.mjs"
-);
 var { nsMailServer } = ChromeUtils.import(
   "resource://testing-common/mailnews/Maild.jsm"
 );
-
-var originalAlertsServiceCID;
-// We need a mock alerts service to capture notification events when loading the
-// UI after a successful account configuration in order to catch the alert
-// triggered when trying to connect to the fake IMAP server.
-class MockAlertsService {
-  QueryInterface = ChromeUtils.generateQI(["nsIAlertsService"]);
-  showAlert() {}
-}
 
 var user = {
   name: "Yamato Nadeshiko",
@@ -190,15 +175,14 @@ function remove_account_internal(tab, account, outgoing) {
 }
 
 add_task(async function test_mail_account_setup() {
-  originalAlertsServiceCID = MockRegistrar.register(
-    "@mozilla.org/alerts-service;1",
-    MockAlertsService
-  );
-
   // Set the pref to load a local autoconfig file.
   let url =
     "http://mochi.test:8888/browser/comm/mail/test/browser/account/xml/";
   Services.prefs.setCharPref(PREF_NAME, url);
+
+  // This test will cause a connection failure alert. Prevent it to avoid
+  // test failure messages.
+  Services.prefs.setBoolPref("mail.suppressAlertsForTests", true);
 
   let tab = await openAccountSetup();
   let tabDocument = tab.browser.contentWindow.document;
@@ -252,10 +236,6 @@ add_task(async function test_mail_account_setup() {
   Assert.ok(tabDocument.getElementById("resultsOption-imap").hidden);
   Assert.ok(tabDocument.getElementById("resultsOption-exchange").hidden);
 
-  // Register the prompt service to handle the confirm() dialog
-  gMockPromptService.register();
-  gMockPromptService.returnValue = true;
-
   // Open the advanced settings (Account Manager) to create the account
   // immediately. We use an invalid email/password so the setup will fail
   // anyway.
@@ -279,11 +259,14 @@ add_task(async function test_mail_account_setup() {
   let advancedSetupButton = tabDocument.getElementById("advancedSetupButton");
   advancedSetupButton.scrollIntoView();
 
+  // Handle the confirmation dialog.
+  const dialogPromise = BrowserTestUtils.promiseAlertDialog("accept");
   EventUtils.synthesizeMouseAtCenter(
     advancedSetupButton,
     {},
     tab.browser.contentWindow
   );
+  await dialogPromise;
 
   // Wait for the current Account Setup tab to be closed and the Account
   // Settings tab to open before running other sub tests.
@@ -301,11 +284,7 @@ add_task(async function test_mail_account_setup() {
   // Confirm that the folder pane is visible.
   Assert.ok(BrowserTestUtils.is_visible(tabmail.currentAbout3Pane.folderTree));
 
-  let promptState = gMockPromptService.promptState;
-  Assert.equal("confirm", promptState.method);
-
   // Clean up
-  gMockPromptService.unregister();
   Services.prefs.setCharPref(PREF_NAME, PREF_VALUE);
 });
 
@@ -925,7 +904,7 @@ add_task(async function test_full_account_setup() {
 });
 
 registerCleanupFunction(function () {
-  MockRegistrar.unregister(originalAlertsServiceCID);
   DNS.srv = _srv;
   DNS.txt = _txt;
+  Services.prefs.clearUserPref("mail.suppressAlertsForTests");
 });
