@@ -69,8 +69,7 @@ nsresult nsMsgIncomingServer::Init() {
       mozilla::services::GetObserverService();
   NS_ENSURE_TRUE(observerService, NS_ERROR_UNEXPECTED);
 
-  observerService->AddObserver(this, "passwordmgr-storage-changed", false);
-  observerService->AddObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID, false);
+  observerService->AddObserver(this, "passwordmgr-storage-changed", true);
   return NS_OK;
 }
 
@@ -156,14 +155,6 @@ nsMsgIncomingServer::Observe(nsISupports* aSubject, const char* aTopic,
     // will still clear the cached password regardless of authentication method.
     rv = ForgetSessionPassword(NS_strcmp(aData, u"modifyLogin") == 0);
     NS_ENSURE_SUCCESS(rv, rv);
-  } else if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
-    // Now remove ourselves from the observer service as well.
-    nsCOMPtr<nsIObserverService> observerService =
-        mozilla::services::GetObserverService();
-    NS_ENSURE_TRUE(observerService, NS_ERROR_UNEXPECTED);
-
-    observerService->RemoveObserver(this, "passwordmgr-storage-changed");
-    observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
   }
 
   return NS_OK;
@@ -335,6 +326,11 @@ nsMsgIncomingServer::Shutdown() {
     NS_ENSURE_SUCCESS(rv, rv);
     mSpamSettings = nullptr;
   }
+
+  nsCOMPtr<nsIObserverService> observerService =
+      mozilla::services::GetObserverService();
+  observerService->RemoveObserver(this, "passwordmgr-storage-changed");
+
   return rv;
 }
 
