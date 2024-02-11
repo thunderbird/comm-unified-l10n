@@ -6837,7 +6837,7 @@ commandController.registerCallback(
     gFolder &&
     !gFolder.isServer &&
     MailOfflineMgr.isOnline() &&
-    gViewWrapper.dbView.selectedCount > 0
+    gViewWrapper.dbView.numSelected > 0
 );
 
 var sortController = {
