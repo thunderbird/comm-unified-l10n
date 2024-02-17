@@ -616,10 +616,10 @@ menuitem.server[data-server-type="rss"] {
   font-weight: bold;
   color: var(--layout-color-3);
   margin-inline-end: 6px;
+}
 
-  &:empty {
-    display: none;
-  }
+.folder-size:empty {
+  display: none;
 }
 
 #folderTree:focus-within li.selected > .container > .folder-size {
