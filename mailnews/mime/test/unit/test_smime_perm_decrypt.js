@@ -92,6 +92,7 @@ let smimeHeaderSink = {
     this._expectedEvents = maxLen;
     this.countReceived = 0;
     this._results = [];
+    this._resultsProduced = false;
     this.haveSignedBad = false;
     this.haveEncryptionBad = false;
     this.resultSig = null;
@@ -144,7 +145,8 @@ let smimeHeaderSink = {
     this.checkFinished();
   },
   checkFinished() {
-    if (this.countReceived == this._expectedEvents) {
+    if (!this._resultsProduced && this.countReceived == this._expectedEvents) {
+      this._resultsProduced = true;
       if (this.resultSigFirst) {
         if (this.resultSig) {
           this._results.push(this.resultSig);
@@ -179,7 +181,8 @@ let smimeHeaderSink = {
  *        is encrypted.
  */
 
-var gMessages = [{ filename: "alice.env.eml", enc: true }];
+var gMessages = [{ filename: "alice.env.eml", enc: true, sig: false },
+{ filename: "alice.sig.SHA256.opaque.env.eml", enc: true, sig: true},];
 
 var gDecFolder;
 
@@ -211,9 +214,13 @@ add_task(async function check_smime_message() {
   for (let msg of gMessages) {
     console.log("checking " + msg.filename);
 
-    let numExpected = 1;
-
-    let eventsExpected = numExpected;
+    let eventsExpected = 0;
+    if (msg.enc) {
+      eventsExpected++;
+    }
+    if (msg.sig) {
+      eventsExpected++;
+    }
 
     let hdr = mailTestUtils.getMsgHdrN(gInbox, hdrIndex);
     let uri = hdr.folder.getUriForMsg(hdr);
@@ -231,7 +238,7 @@ add_task(async function check_smime_message() {
     await sinkPromise;
 
     let r = smimeHeaderSink._results;
-    Assert.equal(r.length, numExpected);
+    Assert.equal(r.length, eventsExpected);
 
     if (msg.enc) {
       Assert.equal(r[0].type, "encrypted");
@@ -247,6 +254,9 @@ add_task(async function check_smime_message() {
     );
 
     eventsExpected = 0;
+    if (msg.sig) {
+      eventsExpected++;
+    }
 
     hdr = mailTestUtils.getMsgHdrN(gDecFolder, hdrIndex);
     uri = hdr.folder.getUriForMsg(hdr);
@@ -266,8 +276,12 @@ add_task(async function check_smime_message() {
     smimeHeaderSink.checkFinished();
     await sinkPromise;
 
-    // If the result length is 0, it wasn't decrypted.
-    Assert.equal(smimeHeaderSink._results.length, 0);
+    r = smimeHeaderSink._results;
+    Assert.equal(r.length, eventsExpected);
+
+    if (msg.sig) {
+      Assert.equal(r[0].type, "signed");
+    }
 
     hdrIndex++;
   }
