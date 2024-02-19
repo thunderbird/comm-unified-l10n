@@ -159,6 +159,7 @@ add_task(async function () {
     "should find ACE server by normalized IDN hostname"
   );
 
+  /** skip for 115 - the idl string types do not allow this to work.
   // Test that an account with IDN hostname entered is found.
   const acc6 = MailServices.accounts.createAccount();
   acc6.incomingServer = MailServices.accounts.createIncomingServer(
@@ -184,6 +185,7 @@ add_task(async function () {
     "account2,account5,account6,account3",
     "listed accounts should be correct after testing IDN host"
   );
+  */
   const idnServer = MailServices.accounts.findServerByURI(
     Services.io.newURI("imap://thünderbird.example:143/INBOX")
   );
