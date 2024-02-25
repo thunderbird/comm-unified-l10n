@@ -1143,9 +1143,9 @@ findbar:-moz-lwtheme {
 /* Panel toolbarbuttons */
 
 .panelTitle {
-  margin-top: 8px;
+  font-weight: bold;
+  margin-block: 6px;
   margin-inline-start: 7px;
-  margin-bottom: 6px;
 }
 
 .panelButton {
