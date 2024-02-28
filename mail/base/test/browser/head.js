@@ -6,12 +6,17 @@ var { MailServices } = ChromeUtils.import(
   "resource:///modules/MailServices.jsm"
 );
 
-const lazy = {};
-ChromeUtils.defineESModuleGetters(lazy, {
-  SmartServerUtils: "resource:///modules/SmartServerUtils.sys.mjs",
-});
+async function focusWindow(win) {
+  win.focus();
+  await TestUtils.waitForCondition(
+    () => Services.focus.focusedWindow?.browsingContext.topChromeWindow == win,
+    "waiting for window to be focused"
+  );
+}
 
 async function clickExtensionButton(win, buttonId) {
+  await focusWindow(win.top);
+
   buttonId = CSS.escape(buttonId);
   let actionButton = await TestUtils.waitForCondition(
     () =>
