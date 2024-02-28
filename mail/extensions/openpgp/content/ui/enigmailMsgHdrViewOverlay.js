@@ -732,7 +732,7 @@ Enigmail.hdrView = {
     return canDetach;
   },
 
-  setSubject(subject) {
+  setSubject(subject, hdr) {
     // Strip multiple localized Re: prefixes. This emulates NS_MsgStripRE().
     let prefixes = Services.prefs
       .getComplexValue("mailnews.localizedRe", Ci.nsIPrefLocalizedString)
@@ -749,22 +749,21 @@ Enigmail.hdrView = {
     let hadRe = newSubject != subject;
 
     // Update the message.
-    gMessage.subject = newSubject;
+    hdr.subject = newSubject;
     let oldFlags = gMessage.flags;
     if (hadRe) {
-      gMessage.flags |= Ci.nsMsgMessageFlags.HasRe;
+      hdr.flags |= Ci.nsMsgMessageFlags.HasRe;
       newSubject = "Re: " + newSubject;
     }
-    document.title = newSubject;
-    currentHeaderData.subject.headerValue = newSubject;
-    document.getElementById("expandedsubjectBox").headerValue = newSubject;
+    if (hdr == gMessage) {
+      document.title = newSubject;
+      if ("subject" in currentHeaderData) {
+        currentHeaderData.subject.headerValue = newSubject;
+      }
+      document.getElementById("expandedsubjectBox").headerValue = newSubject;
+    }
     // This even works if the flags haven't changed. Causes repaint in all thread trees.
-    gMessage.folder?.msgDatabase.notifyHdrChangeAll(
-      gMessage,
-      oldFlags,
-      gMessage.flags,
-      {}
-    );
+    hdr.folder?.msgDatabase.notifyHdrChangeAll(hdr, oldFlags, hdr.flags, {});
   },
 
   updateHdrBox(header, value) {
@@ -787,16 +786,23 @@ Enigmail.hdrView = {
   },
 
   headerPane: {
-    isCurrentMessage(uri) {
-      let uriSpec = uri ? uri.spec : null;
+    isCurrentMessage(uriParam) {
+      // FIXME: it would be nicer to just be able to compare the URI specs.
+      // That does currently not work for all cases, e.g.
+      // mailbox:///...data/eml/signed-encrypted-autocrypt-gossip.eml?type=application/x-message-display&number=0 vs.
+      // file:///...data/eml/signed-encrypted-autocrypt-gossip.eml?type=application/x-message-display
 
-      EnigmailLog.DEBUG(
-        "enigmailMsgHdrViewOverlay.js: EnigMimeHeaderSink.isCurrentMessage: uri.spec=" +
-          uriSpec +
-          "\n"
-      );
+      const uri = Services.io
+        .newURI(uriParam.spec)
+        .QueryInterface(Ci.nsIMsgMessageUrl);
+      const uri2 = EnigmailFuncs.getUrlFromUriSpec(gMessageURI);
+      if (uri.host != uri2.host) {
+        return false;
+      }
 
-      return true;
+      const id = EnigmailURIs.msgIdentificationFromUrl(uri);
+      const id2 = EnigmailURIs.msgIdentificationFromUrl(uri2);
+      return id.folder === id2.folder && id.msgNum === id2.msgNum;
     },
 
     /**
@@ -1049,7 +1055,6 @@ Enigmail.hdrView = {
         "enigmailMsgHdrViewOverlay.js: EnigMimeHeaderSink.modifyMessageHeaders:\n"
       );
 
-      let uriSpec = uri ? uri.spec : null;
       let hdr;
 
       try {
@@ -1064,14 +1069,21 @@ Enigmail.hdrView = {
       if (typeof hdr !== "object") {
         return;
       }
-      if (!this.displaySubPart(mimePartNumber, uriSpec)) {
+      if (!this.displaySubPart(mimePartNumber, uri?.spec)) {
         return;
       }
 
-      let msg = gMessage;
+      let msg = uri.messageHeader;
+      if (!msg && this.isCurrentMessage(uri)) {
+        // .eml messages opened from file://
+        msg = gMessage;
+      }
+      if (!msg) {
+        return;
+      }
 
       if ("subject" in hdr) {
-        Enigmail.hdrView.setSubject(hdr.subject);
+        Enigmail.hdrView.setSubject(hdr.subject, msg);
       }
 
       if ("date" in hdr) {
