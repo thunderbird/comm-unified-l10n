@@ -181,8 +181,10 @@ let smimeHeaderSink = {
  *        is encrypted.
  */
 
-var gMessages = [{ filename: "alice.env.eml", enc: true, sig: false },
-{ filename: "alice.sig.SHA256.opaque.env.eml", enc: true, sig: true},];
+var gMessages = [
+  { filename: "alice.env.eml", enc: true, sig: false },
+  { filename: "alice.sig.SHA256.opaque.env.eml", enc: true, sig: true },
+];
 
 var gDecFolder;
 
