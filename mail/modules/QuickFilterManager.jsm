@@ -27,6 +27,10 @@ XPCOMUtils.defineLazyModuleGetters(lazy, {
   TagUtils: "resource:///modules/TagUtils.jsm",
 });
 
+ChromeUtils.defineESModuleGetters(lazy, {
+  XULStoreUtils: "resource:///modules/XULStoreUtils.sys.mjs",
+});
+
 /**
  * Shallow object copy.
  */
@@ -1158,6 +1162,12 @@ var MessageTextFilter = {
       let filterDef = MessageTextFilter.textFilterDefsByDomId[this.id];
       state.states[filterDef.name] = this.pressed;
       aMuxer.updateSearch();
+      lazy.XULStoreUtils.setValue(
+        "messenger",
+        "quickFilter",
+        "textFilters",
+        JSON.stringify(state.states)
+      );
     }
 
     for (let name in this.textFilterDefs) {
