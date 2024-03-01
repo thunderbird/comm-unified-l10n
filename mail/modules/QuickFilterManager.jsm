@@ -1158,6 +1158,12 @@ var MessageTextFilter = {
       let filterDef = MessageTextFilter.textFilterDefsByDomId[this.id];
       state.states[filterDef.name] = this.pressed;
       aMuxer.updateSearch();
+      Services.xulStore.setValue(
+        "chrome://messenger/content/messenger.xhtml",
+        "quickFilter",
+        "textFilters",
+        JSON.stringify(state.states)
+      );
     }
 
     for (let name in this.textFilterDefs) {
