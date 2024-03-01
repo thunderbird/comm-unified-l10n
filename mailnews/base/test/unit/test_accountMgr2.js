@@ -185,7 +185,6 @@ add_task(async function () {
     "account2,account5,account6,account3",
     "listed accounts should be correct after testing IDN host"
   );
-  */
   const idnServer = MailServices.accounts.findServerByURI(
     Services.io.newURI("imap://thünderbird.example:143/INBOX")
   );
@@ -198,4 +197,5 @@ add_task(async function () {
     idnServer2?.hostName,
     "should find idn server by by ACE encodeed uri"
   );
+  */
 });
