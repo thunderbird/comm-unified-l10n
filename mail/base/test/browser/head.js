@@ -8,6 +8,7 @@ var { MailServices } = ChromeUtils.import(
 
 async function clickExtensionButton(win, buttonId) {
   buttonId = CSS.escape(buttonId);
+
   let actionButton = await TestUtils.waitForCondition(
     () =>
       win.document.querySelector(
@@ -315,7 +316,7 @@ async function ensure_table_view() {
 // chance to run. Instead, when it runs register another cleanup function
 // which will run last.
 registerCleanupFunction(function () {
-  registerCleanupFunction(function () {
+  registerCleanupFunction(async function () {
     Services.prefs.clearUserPref("mail.pane_config.dynamic");
     Services.xulStore.removeValue(
       "chrome://messenger/content/messenger.xhtml",
@@ -356,13 +357,10 @@ registerCleanupFunction(function () {
     resetSmartMailboxes();
     ensure_cards_view();
 
-    // Some tests that open new windows don't return focus to the main window
-    // in a way that satisfies mochitest, and the test times out.
-    Services.focus.focusedWindow = window;
-    // Focus an element in the main window, then blur it again to avoid it
-    // hijacking keypresses.
-    let mainWindowElement = document.getElementById("button-appmenu");
-    mainWindowElement.focus();
-    mainWindowElement.blur();
+    // Some tests that open new windows confuse mochitest, which waits for a
+    // focus event on the main window, and the test times out. If we focus a
+    // different window (browser-harness.xhtml should be the only other window
+    // at this point) then mochitest gets its focus event and the test ends.
+    await SimpleTest.promiseFocus([...Services.wm.getEnumerator(null)][1]);
   });
 });
