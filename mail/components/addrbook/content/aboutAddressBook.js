@@ -251,6 +251,7 @@ function externalAction({ action, address, card, vCard } = {}) {
       return;
     }
 
+    cardsPane.searchInput._clearSearch();
     booksList.selectedIndex = booksList.getIndexForUID(card.directoryUID);
     cardsPane.cardsList.selectedIndex = cardsPane.cardsList.view.getIndexForUID(
       card.UID
