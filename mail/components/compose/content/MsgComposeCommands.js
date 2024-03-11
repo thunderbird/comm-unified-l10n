@@ -5902,6 +5902,15 @@ function updateTooltipsOfAddressRow(row) {
 function onSendSMIME() {
   let emailAddresses = [];
 
+  // For signed only messages, use transfer encoding if needed, making it less
+  // likely for servers to turn the signature invalid.
+  if (
+    gMsgCompose.compFields.composeSecure?.signMessage &&
+    !gMsgCompose.compFields.composeSecure?.requireEncryptMessage
+  ) {
+    gMsgCompose.compFields.forceMsgEncoding = true;
+  }
+
   try {
     if (!gMsgCompose.compFields.composeSecure.requireEncryptMessage) {
       return;
