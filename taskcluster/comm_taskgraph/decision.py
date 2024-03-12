@@ -63,6 +63,7 @@ PER_PROJECT_PARAMETERS = {
     "comm-release": {
         "target_tasks_method": "mozilla_release_tasks",
         "release_type": "release",
+        "release_history": {},
     },
     "comm-esr115": {
         "target_tasks_method": "mozilla_esr115_tasks",
