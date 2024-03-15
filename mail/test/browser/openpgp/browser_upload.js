@@ -10,9 +10,7 @@ const { OpenPGPTestUtils } = ChromeUtils.import(
   "resource://testing-common/mozmill/OpenPGPTestUtils.jsm"
 );
 
-var { HttpServer } = ChromeUtils.import(
-"resource://testing-common/httpd.js"
-);
+var { HttpServer } = ChromeUtils.import("resource://testing-common/httpd.js");
 
 const { CommonUtils } = ChromeUtils.importESModule(
   "resource://services-common/utils.sys.mjs"
