@@ -4604,8 +4604,8 @@ var threadPane = {
         threadTree.invalidate();
         break;
       case "custom-column-refreshed":
-        // TODO: Invalidate only the column identified by data.
-        threadTree.invalidate();
+        // Invalidate only the column specified in data.
+        threadTree.invalidate(data);
         break;
       case "custom-column-added":
         this.addCustomColumn(data);
@@ -6346,11 +6346,18 @@ customElements.whenDefined("tree-view-table-row").then(() => {
     set index(index) {
       super.index = index;
 
+      // Check if a only a single column should be updated.
+      const columns = this.invalidateSingleColumn
+        ? threadPane.columns.filter(
+            column => column.id == this.invalidateSingleColumn
+          )
+        : threadPane.columns;
+
       let textColumns = [];
-      for (let column of threadPane.columns) {
+      for (const column of columns) {
         // No need to update the text of this cell if it's hidden, the selection
-        // column, or an icon column that doesn't match a specific flag.
-        if (column.hidden || column.icon || column.select) {
+        // column, or a non-custom icon column that doesn't match a specific flag.
+        if (column.hidden || (!column.custom && column.icon) || column.select) {
           continue;
         }
         textColumns.push(column.id);
@@ -6376,7 +6383,7 @@ customElements.whenDefined("tree-view-table-row").then(() => {
 
       this.dataset.properties = properties.value.trim();
 
-      for (let column of threadPane.columns) {
+      for (const column of columns) {
         // Skip this column if it's hidden or it's the "select" column, since
         // the selection state is communicated via the aria-activedescendant.
         if (column.hidden || column.select) {
@@ -6486,10 +6493,12 @@ customElements.whenDefined("tree-view-table-row").then(() => {
 
         //
         if (column.custom && column.icon) {
+          // For simplicity, custom icon columns return the cellIconId as their
+          // cell text.
+          const cellIconId = cellTexts[textIndex];
           const images = cell.querySelectorAll("img");
           for (const image of images) {
-            const cellIconProperty = `${column.id}-${image.dataset.cellIconId}`;
-            image.hidden = !propertiesSet.has(cellIconProperty);
+            image.hidden = !cellIconId.includes(image.dataset.cellIconId);
           }
           continue;
         }
