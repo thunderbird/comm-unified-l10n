@@ -8,6 +8,9 @@
 // msgViewNavigation.js
 /* globals CrossFolderNavigation */
 
+// about3pane.js
+/* globals ThreadPaneColumns */
+
 var { MailServices } = ChromeUtils.import(
   "resource:///modules/MailServices.jsm"
 );
@@ -976,6 +979,9 @@ var dbViewWrapperListener = {
   onSearching(isSearching) {},
   onCreatedView() {
     if (window.threadTree) {
+      for (const col of ThreadPaneColumns.getCustomColumns()) {
+        gViewWrapper.dbView.addColumnHandler(col.id, col.handler);
+      }
       window.threadPane.setTreeView(gViewWrapper.dbView);
       // There is no persisted thread last expanded state for synthetic views.
       if (!gViewWrapper.isSynthetic) {

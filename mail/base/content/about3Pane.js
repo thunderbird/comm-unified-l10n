@@ -57,10 +57,9 @@ const messengerBundle = Services.strings.createBundle(
   "chrome://messenger/locale/messenger.properties"
 );
 
-const { getDefaultColumns, getDefaultColumnsForCardsView, isOutgoing } =
-  ChromeUtils.importESModule(
-    "chrome://messenger/content/thread-pane-columns.mjs"
-  );
+const { ThreadPaneColumns } = ChromeUtils.importESModule(
+  "chrome://messenger/content/thread-pane-columns.mjs"
+);
 
 // As defined in nsMsgDBView.h.
 const MSG_VIEW_FLAG_DUMMY = 0x20000000;
@@ -4414,9 +4413,9 @@ var threadPane = {
    */
   isFirstScroll: true,
 
-  columns: getDefaultColumns(gFolder),
+  columns: ThreadPaneColumns.getDefaultColumns(gFolder),
 
-  cardColumns: getDefaultColumnsForCardsView(gFolder),
+  cardColumns: ThreadPaneColumns.getDefaultColumnsForCardsView(gFolder),
 
   async init() {
     quickFilterBar.init();
@@ -4425,6 +4424,9 @@ var threadPane = {
     Services.prefs.addObserver("mailnews.tags.", this);
 
     Services.obs.addObserver(this, "addrbook-displayname-changed");
+    Services.obs.addObserver(this, "custom-column-added");
+    Services.obs.addObserver(this, "custom-column-removed");
+    Services.obs.addObserver(this, "custom-column-refreshed");
 
     // Ensure TreeView and its classes are properly defined.
     await customElements.whenDefined("tree-view-table-row");
@@ -4536,6 +4538,9 @@ var threadPane = {
   uninit() {
     Services.prefs.removeObserver("mailnews.tags.", this);
     Services.obs.removeObserver(this, "addrbook-displayname-changed");
+    Services.obs.removeObserver(this, "custom-column-added");
+    Services.obs.removeObserver(this, "custom-column-removed");
+    Services.obs.removeObserver(this, "custom-column-refreshed");
   },
 
   handleEvent(event) {
@@ -4589,12 +4594,25 @@ var threadPane = {
     }
   },
   observe(subject, topic, data) {
-    if (topic == "nsPref:changed") {
-      this.setUpTagStyles();
-    } else if (topic == "addrbook-displayname-changed") {
-      // This runs the when mail.displayname.version preference observer is
-      // notified/the mail.displayname.version number has been updated.
-      threadTree.invalidate();
+    switch (topic) {
+      case "nsPref:changed":
+        this.setUpTagStyles();
+        break;
+      case "addrbook-displayname-changed":
+        // This runs the when mail.displayname.version preference observer is
+        // notified/the mail.displayname.version number has been updated.
+        threadTree.invalidate();
+        break;
+      case "custom-column-refreshed":
+        // TODO: Invalidate only the column identified by data.
+        threadTree.invalidate();
+        break;
+      case "custom-column-added":
+        this.addCustomColumn(data);
+        break;
+      case "custom-column-removed":
+        this.removeCustomColumn(data);
+        break;
     }
   },
 
@@ -4607,7 +4625,10 @@ var threadPane = {
       return;
     }
 
-    threadTree.classList.toggle("is-outgoing", isOutgoing(gFolder));
+    threadTree.classList.toggle(
+      "is-outgoing",
+      ThreadPaneColumns.isOutgoing(gFolder)
+    );
   },
 
   /**
@@ -5256,7 +5277,7 @@ var threadPane = {
   restoreColumnsState() {
     // Always fetch a fresh array of columns for the cards view even if we don't
     // have a folder defined.
-    this.cardColumns = getDefaultColumnsForCardsView(gFolder);
+    this.cardColumns = ThreadPaneColumns.getDefaultColumnsForCardsView(gFolder);
     this.updateClassList();
 
     // Avoid doing anything if no folder has been loaded yet.
@@ -5279,7 +5300,7 @@ var threadPane = {
       // default columns for the currently visible folder, otherwise the table
       // layout will maintain whatever state is currently set from the previous
       // folder, which it doesn't reflect reality.
-      this.columns = getDefaultColumns(gFolder);
+      this.columns = ThreadPaneColumns.getDefaultColumns(gFolder);
       return;
     }
 
@@ -5302,6 +5323,34 @@ var threadPane = {
     });
   },
 
+  makeCustomColumnCell(column) {
+    if (!column?.custom) {
+      throw new Error(`Not a custom column: ${column?.id}`);
+    }
+
+    const cell = document.createElement("td");
+    const columnName = column.id.toLowerCase();
+    cell.classList.add(`${columnName}-column`);
+
+    // Default columns have this hardcoded in about3Pane.xhtml.
+    cell.dataset.columnName = columnName;
+    if (column.icon && column.iconCellDefinitions) {
+      cell.classList.add("button-column");
+      // Add predefined icons for custom icon columns.
+      for (const { id, url, title, alt } of column.iconCellDefinitions) {
+        const img = document.createElement("img");
+        img.dataset.cellIconId = id;
+        img.src = url;
+        img.alt = alt || "";
+        img.title = title || "";
+        img.hidden = true;
+        cell.appendChild(img);
+      }
+    }
+
+    return cell;
+  },
+
   /**
    * Force an update of the thread tree to reflect the columns change.
    *
@@ -5311,6 +5360,11 @@ var threadPane = {
   updateColumns(isSimple = false) {
     if (!this.rowTemplate) {
       this.rowTemplate = document.getElementById("threadPaneRowTemplate");
+      this.rowTemplate.content.append(
+        ...ThreadPaneColumns.getCustomColumns().map(column =>
+          this.makeCustomColumnCell(column)
+        )
+      );
     }
 
     // Update the row template to match the column properties.
@@ -5336,12 +5390,58 @@ var threadPane = {
    * Restore the default columns visibility and order and save the change.
    */
   restoreDefaultColumns() {
-    this.columns = getDefaultColumns(gFolder, gViewWrapper?.isSynthetic);
-    this.cardColumns = getDefaultColumnsForCardsView(gFolder);
+    this.columns = ThreadPaneColumns.getDefaultColumns(
+      gFolder,
+      gViewWrapper?.isSynthetic
+    );
+    this.cardColumns = ThreadPaneColumns.getDefaultColumnsForCardsView(gFolder);
     this.updateClassList();
     this.updateColumns();
     threadTree.reset();
     this.persistColumnStates();
+  },
+
+  /**
+   * Adds a custom column to the thread pane.
+   *
+   * @param {string} columnID - uniqe id of the custom column
+   */
+  addCustomColumn(columnID) {
+    const column = ThreadPaneColumns.getColumn(columnID);
+    if (this.rowTemplate) {
+      this.rowTemplate.content.appendChild(this.makeCustomColumnCell(column));
+    }
+
+    this.columns.push(column);
+    const columnStates =
+      gFolder.msgDatabase.dBFolderInfo.getCharProperty("columnStates");
+    if (columnStates) {
+      this.applyPersistedColumnsState(JSON.parse(columnStates));
+    }
+
+    gViewWrapper?.dbView.addColumnHandler(column.id, column.handler);
+    this.updateColumns();
+    this.restoreSortIndicator();
+    threadTree.reset();
+  },
+
+  /**
+   * Removes a custom column from the thread pane.
+   *
+   * @param {string} columnID - uniqe id of the custom column
+   */
+  removeCustomColumn(columnID) {
+    if (this.rowTemplate) {
+      this.rowTemplate.content
+        .querySelector(`td.${columnID.toLowerCase()}-column`)
+        ?.remove();
+    }
+
+    this.columns = this.columns.filter(column => column.id != columnID);
+    this.updateColumns();
+
+    gViewWrapper?.dbView.removeColumnHandler(columnID);
+    threadTree.reset();
   },
 
   /**
@@ -5398,7 +5498,7 @@ var threadPane = {
     this.columns = data.columns;
 
     this.persistColumnStates();
-    this.updateColumns(true);
+    this.updateColumns();
     threadTree.reset();
   },
 
@@ -5464,25 +5564,30 @@ var threadPane = {
    * @param {object} data - The detail of the custom event.
    */
   onSortChanged(data) {
-    const sortColumn = sortController.convertSortTypeToColumnID(
+    const curSortColumnId = sortController.convertSortTypeToColumnID(
       gViewWrapper.primarySortType
     );
-    const column = data.column;
+    const newSortColumnId = data.column;
 
     // A click happened on the column that is already used to sort the list.
-    if (sortColumn == column) {
+    if (curSortColumnId == newSortColumnId) {
       if (gViewWrapper.isSortedAscending) {
         sortController.sortDescending();
       } else {
         sortController.sortAscending();
       }
-      this.updateSortIndicator(column);
+      this.updateSortIndicator(newSortColumnId);
       return;
     }
 
-    const sortName = this.columns.find(c => c.id == data.column).sortKey;
+    // If the new sort column is a custom column, we need to pass the id of the
+    // custom column, instead of the the general "byCustom" sortName.
+    const newSortColumnData = this.columns.find(c => c.id == newSortColumnId);
+    const sortName = newSortColumnData.custom
+      ? newSortColumnId
+      : newSortColumnData.sortKey;
     sortController.sortThreadPane(sortName);
-    this.updateSortIndicator(column);
+    this.updateSortIndicator(newSortColumnId);
   },
 
   /**
@@ -5494,6 +5599,10 @@ var threadPane = {
     this.treeTable
       .querySelector(".sorting")
       ?.classList.remove("sorting", "ascending", "descending");
+    // The column could be a removed custom column.
+    if (!column) {
+      return;
+    }
     this.treeTable
       .querySelector(`#${column} button`)
       ?.classList.add(
@@ -5560,7 +5669,7 @@ var threadPane = {
       swappedColumnStateString = columStateString;
     }
 
-    const currentFolderIsOutgoing = isOutgoing(gFolder);
+    const currentFolderIsOutgoing = ThreadPaneColumns.isOutgoing(gFolder);
 
     /**
      * Update the columnStates property of the folder database and forget the
@@ -5575,7 +5684,7 @@ var threadPane = {
       // Check if the destination folder we're trying to update matches the same
       // special state of the folder we're getting the column state from.
       const colStateString =
-        isOutgoing(folder) == currentFolderIsOutgoing
+        ThreadPaneColumns.isOutgoing(folder) == currentFolderIsOutgoing
           ? columStateString
           : swappedColumnStateString;
 
@@ -6375,6 +6484,16 @@ customElements.whenDefined("tree-view-table-row").then(() => {
           continue;
         }
 
+        //
+        if (column.custom && column.icon) {
+          const images = cell.querySelectorAll("img");
+          for (const image of images) {
+            const cellIconProperty = `${column.id}-${image.dataset.cellIconId}`;
+            image.hidden = !propertiesSet.has(cellIconProperty);
+          }
+          continue;
+        }
+
         if (textIndex >= 0) {
           if (isDummyRow) {
             cell.textContent = "";
@@ -6746,7 +6865,12 @@ var sortController = {
     this.sortThreadPane("byDate");
   },
   sortThreadPane(sortName) {
-    let sortType = Ci.nsMsgViewSortType[sortName];
+    // The sortName is either a sortKey (see Ci.nsMsgViewSortType and
+    // DEFAULT_COLUMNS in thread-pane-columns.js), or the id of a custom column.
+    // TODO: Using the columnId as input whould be a lot more obvious, here and
+    // in gViewWrapper.sort(), because now sortType could be a string or an int.
+    const sortType = Ci.nsMsgViewSortType[sortName] ?? sortName;
+
     let grouped = gViewWrapper.showGroupedBySort;
     gViewWrapper._threadExpandAll = Boolean(
       gViewWrapper._viewFlags & Ci.nsMsgViewFlagsType.kExpandAll
