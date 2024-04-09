@@ -47,6 +47,6 @@ job-defaults:
                 default: thunderbird-comm-central
         accepted-mar-channel-ids:
             by-release-type:
-                release: thunderbird-comm-release
+                release: thunderbird-comm-release,thunderbird-comm-esr
                 beta: thunderbird-comm-beta,thunderbird-comm-release
                 default: thunderbird-comm-central
