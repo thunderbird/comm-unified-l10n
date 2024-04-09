@@ -1,8 +1,8 @@
 ---
 GECKO_BASE_REPOSITORY: https://hg.mozilla.org/mozilla-unified
 GECKO_HEAD_REPOSITORY: https://hg.mozilla.org/releases/mozilla-esr115
-GECKO_HEAD_REF: FIREFOX_115_9_0esr_BUILD1
-GECKO_HEAD_REV: f3dd0afed51cb7283d4fa06a0c40286eee657e30
+GECKO_HEAD_REF: FIREFOX_115_10_0esr_BUILD1
+GECKO_HEAD_REV: 64fc0d6e7ff6b1d626e40d45c492fa210591a1c0
 
 ### For comm-central
 # GECKO_BASE_REPOSITORY: https://hg.mozilla.org/mozilla-unified
