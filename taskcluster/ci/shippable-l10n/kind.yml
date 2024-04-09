@@ -31,12 +31,6 @@ only-for-build-platforms:
 job-template:
     description: Localization
     locales-file:
-        by-release-level:
-            production:
-                by-release-type:
-                    beta|release|esr.*: comm/mail/locales/shipped-locales
-                    default: comm/mail/locales/all-locales
-            staging: comm/mail/locales/onchange-locales
         by-release-type:
             beta|release: comm/mail/locales/shipped-locales
             default: comm/mail/locales/all-locales
