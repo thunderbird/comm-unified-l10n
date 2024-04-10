@@ -1244,7 +1244,6 @@ nsMsgDBView::GetCellProperties(int32_t aRow, nsTreeColumn* col,
   }
 
   const nsAString& colID = col->GetId();
-  nsIMsgCustomColumnHandler* colHandler = GetColumnHandler(colID);
   if (colID.First() == 'c' && colID.EqualsLiteral("correspondentCol")) {
     // Correspondent.
     if (IsOutgoingMsg(msgHdr))
