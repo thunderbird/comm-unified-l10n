@@ -494,8 +494,7 @@ function addCustomColumn(id, properties) {
     iconHeaderUrl,
     handler: {
       QueryInterface: ChromeUtils.generateQI(["nsIMsgCustomColumnHandler"]),
-      // For simplicity return the icon information for custom icon cells here.
-      getCellText: icon ? iconCallback : textCallback,
+      getCellText: textCallback,
       // With Bug 1192696, Grouped By Sort was implemented for custom columns.
       // Implementers should consider that the value returned by GetSortStringForRow
       // will be displayed in the grouped header row, as well as be used as the
@@ -505,6 +504,17 @@ function addCustomColumn(id, properties) {
       getSortLongForRow: sortCallback,
       isString() {
         return !sortCallback;
+      },
+      getRowProperties(msgHdr) {
+        // Row properties are used for icons.
+        if (icon) {
+          const iconId = iconCallback(msgHdr);
+          if (/\W/g.test(iconId)) {
+            throw new Error(`Invalid icon value used: ${iconId}`);
+          }
+          return `${id}-${iconId}`;
+        }
+        return "";
       },
     },
   };

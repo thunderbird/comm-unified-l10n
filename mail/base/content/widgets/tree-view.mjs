@@ -618,16 +618,9 @@ class TreeView extends HTMLElement {
    * Updates all existing rows in place, without removing all the rows and
    * starting again. This can be used if the row element class hasn't changed
    * and its `index` setter is capable of handling any modifications required.
-   *
-   * @param {string} [columnId] - Optional column id, to limit invalidation to a
-   *   single column.
    */
-  invalidate(columnId) {
-    this.invalidateRange(
-      this.#firstBufferRowIndex,
-      this.#lastBufferRowIndex,
-      columnId
-    );
+  invalidate() {
+    this.invalidateRange(this.#firstBufferRowIndex, this.#lastBufferRowIndex);
   }
 
   /**
@@ -636,20 +629,16 @@ class TreeView extends HTMLElement {
    * on its own.
    *
    * @param {integer} index
-   * @param {string} [columnId] - Optional column id, to limit invalidation to a
-   *   single column.
    */
-  #doInvalidateRow(index, columnId) {
+  #doInvalidateRow(index) {
     const rowCount = this._view?.rowCount ?? 0;
     let row = this.getRowAtIndex(index);
     if (row) {
       if (index >= rowCount) {
         this._removeRowAtIndex(index);
       } else {
-        row.invalidateSingleColumn = columnId;
         row.index = index;
         row.selected = this._selection.isSelected(index);
-        row.invalidateSingleColumn = null;
       }
     } else if (
       index >= this.#firstBufferRowIndex &&
@@ -664,17 +653,15 @@ class TreeView extends HTMLElement {
    *
    * @param {integer} startIndex
    * @param {integer} endIndex
-   * @param {string} [columnId] - Optional column id, to limit invalidation to a
-   *   single column.
    */
-  invalidateRange(startIndex, endIndex, columnId) {
+  invalidateRange(startIndex, endIndex) {
     for (
       let index = Math.max(startIndex, this.#firstBufferRowIndex),
         last = Math.min(endIndex, this.#lastBufferRowIndex);
       index <= last;
       index++
     ) {
-      this.#doInvalidateRow(index, columnId);
+      this.#doInvalidateRow(index);
     }
     this._ensureVisibleRowsAreDisplayed();
   }
@@ -2546,14 +2533,6 @@ class TreeViewTableRow extends HTMLTableRowElement {
     this.view = this.list.view;
     this.setAttribute("aria-selected", !!this.selected);
   }
-
-  /**
-   * Id of a column. If set, the index setter will only update the specified
-   * column.
-   *
-   * @type {?string}
-   */
-  invalidateSingleColumn = null;
 
   /**
    * The 0-based position of this row in the list. Override this setter to
