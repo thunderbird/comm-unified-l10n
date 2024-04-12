@@ -284,21 +284,10 @@ class TreeView extends HTMLElement {
           if (this._view.isContainerOpen(index)) {
             this.collapseRowAtIndex(index);
           } else {
-            const rowHeight = this._rowElementClass.ROW_HEIGHT;
-            const visibleHeight = this.#calculateVisibleHeight();
             let addedRows = this.expandRowAtIndex(index);
-            const bottomOfLastRow =
-              rowHeight *
-                (index +
-                  Math.min(addedRows, this.#calculateVisibleRowCount() - 1)) +
-              rowHeight;
-            const topOfFirstRow = rowHeight * index;
-            if (bottomOfLastRow > this.scrollTop + visibleHeight) {
-              this.scrollTo({
-                top: Math.min(topOfFirstRow, bottomOfLastRow - visibleHeight),
-                behavior: "auto",
-              });
-            }
+            this.scrollToIndex(
+              index + Math.min(addedRows, this.#calculateVisibleRowCount() - 1)
+            );
           }
           this.table.body.focus();
           return;
@@ -421,34 +410,11 @@ class TreeView extends HTMLElement {
             } else if (this._view.isContainer(this.currentIndex)) {
               // Expand action.
               if (!this._view.isContainerOpen(this.currentIndex)) {
-                const index = this.currentIndex;
-                const rowHeight = this._rowElementClass.ROW_HEIGHT;
-                const visibleHeight = this.#calculateVisibleHeight();
-                const addedRows = this.expandRowAtIndex(index);
-                const bottomOfLastRow =
-                  rowHeight *
-                    (index +
-                      Math.min(
-                        addedRows,
-                        this.#calculateVisibleRowCount() - 1
-                      )) +
-                  rowHeight;
-                const topOfFirstRow = rowHeight * index;
-                if (bottomOfLastRow > this.scrollTop + visibleHeight) {
-                  // Expanding a thread near the bottom of the view right
-                  // after collapsing results in the exact same scrolling
-                  // destination, which is then discarded by
-                  // nsHTMLScrollFrame::ApzSmoothScrollTo
-                  // So we reset it by doing a dummy scroll before.
-                  this.scrollTo({ top: 0 });
-                  this.scrollTo({
-                    top: Math.min(
-                      topOfFirstRow,
-                      bottomOfLastRow - visibleHeight
-                    ),
-                    behavior: "auto",
-                  });
-                }
+                let addedRows = this.expandRowAtIndex(this.currentIndex);
+                this.scrollToIndex(
+                  this.currentIndex +
+                    Math.min(addedRows, this.#calculateVisibleRowCount() - 1)
+                );
               } else {
                 newIndex = this.currentIndex + 1;
               }
