@@ -22,6 +22,7 @@ def register(graph_config):
     Import all modules that are siblings of this one, triggering decorators in
     the process.
     """
+    from comm_taskgraph.util import taskgraph_attributes  # noqa: patch gecko_taskgraph
     from comm_taskgraph.parameters import register_parameters
 
     logger.info("{} path registered".format(__name__))
