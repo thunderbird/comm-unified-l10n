@@ -1,0 +1,26 @@
+name: mirror
+
+on:
+    workflow_dispatch:
+    # schedule:
+    #    - cron: "03 */8 * * *"
+
+jobs:
+  mirror-buildbot:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: mirror https://hg.mozilla.org/comm-unified to https://github.com/jfx2006/comm-unified
+        uses: 'mozillazg/mirror-hg-repo@v2'
+        with:
+          source-hg-repo-url: 'https://hg.mozilla.org/comm-unified'
+          destination-git-repo-owner: 'jfx2006'
+          destination-git-repo-name: 'comm-unified'
+          destination-git-personal-token: '${{ secrets.PERSONAL_GIT_TOKEN }}'
