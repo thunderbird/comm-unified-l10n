@@ -92,16 +92,16 @@ release-promotion:
         promote_thunderbird:
             product: thunderbird
             target-tasks-method: promote_desktop
-            partial-updates: true
+            partial-updates: false
         push_thunderbird:
             product: thunderbird
             target-tasks-method: push_desktop
-            partial-updates: true
+            partial-updates: false
         ship_thunderbird:
             product: thunderbird
             target-tasks-method: ship_desktop
             version-bump: true
-            partial-updates: true
+            partial-updates: false
 
 # Paths in this section should not be prefixed by comm/
 # Behavior names are prefixed with 'comm-'
