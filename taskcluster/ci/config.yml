@@ -250,6 +250,11 @@ workers:
             implementation: docker-worker
             os: linux
             worker-type: '{alias}-gcp'
+        t-linux(-large|-xlarge|-xlarge-source)-noscratch:
+            provisioner: '{trust-domain}-t'
+            implementation: docker-worker
+            os: linux
+            worker-type: '{alias}-gcp'
         t-osx-1015-r8:
             provisioner: releng-hardware
             implementation: generic-worker
