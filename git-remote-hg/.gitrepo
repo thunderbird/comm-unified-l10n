@@ -1,0 +1,12 @@
+; DO NOT EDIT (unless you know what you are doing)
+;
+; This subdirectory is a git "subrepo", and this file is maintained by the
+; git-subrepo command. See https://github.com/ingydotnet/git-subrepo#readme
+;
+[subrepo]
+	remote = https://github.com/mnauw/git-remote-hg.git
+	branch = master
+	commit = b029ac050058ea289f9429f3cc0280bf63a702c0
+	parent = e1ee677efba1081eba64b9fe1201a1ad33d1ce19
+	method = merge
+	cmdver = 0.4.6
