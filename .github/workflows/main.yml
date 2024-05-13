@@ -5,22 +5,59 @@ on:
     # schedule:
     #    - cron: "03 */8 * * *"
 
+env:
+    GIT_SSH_COMMAND: ssh -v
+
 jobs:
-  mirror-buildbot:
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
+    mirror-hgmo:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
 
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v2
+              with:
+                  path: "."
 
-      - name: mirror https://hg.mozilla.org/comm-unified to https://github.com/jfx2006/comm-unified
-        uses: 'mozillazg/mirror-hg-repo@v2'
-        with:
-          source-hg-repo-url: 'https://hg.mozilla.org/comm-unified'
-          destination-git-repo-owner: 'jfx2006'
-          destination-git-repo-name: 'comm-unified'
-          destination-git-personal-token: '${{ secrets.PERSONAL_GIT_TOKEN }}'
+            - name: Setup Depends
+              uses: getsentry/action-setup-venv@v2.1.0
+              id: venv
+              with:
+                  python-version: 3.11
+                  cache-dependency-path: updater/requirements.txt
+                  install-cmd: pip install mercurial==6.7.2
+
+            - name: Install SSH deploy key
+              uses: shimataro/ssh-key-action@v2
+              with:
+                  key: ${{ secrets.SSH_KEY }}
+                  name: id_ed25519
+                  known_hosts: unnecessary
+                  config: |
+                      Host github.com
+                      User git
+                      IdentityFile ~/.ssh/id_ed25519
+
+            - name: Restore hgmo cache
+              id: cache-hgmo-comm-unified
+              uses: actions/cache/restore@v4
+              with:
+                  path: hg_repo
+                  key: 'hgmo-${{ runner.os }}'
+
+            - name: mirror https://hg.mozilla.org/comm-unified
+              uses: ./.github/actions/mirror-hgmo
+              with:
+                  source-hg-repo-url: 'https://hg.mozilla.org/comm-unified'
+                  source-hg-bookmarks: 'comm comm-beta comm-release comm-esr115'
+                  destination-git-repo-owner: 'thunderbird'
+                  destination-git-repo-name: 'comm-unified-l10n'
+                  path: hg_repo
+
+            - name: Save hgmo cache
+              id: cache-hgmo-comm-unified
+              uses: actions/cache/save@v4
+              with:
+                  path: hg_repo
+                  key: 'hgmo-${{ runner.os }}'

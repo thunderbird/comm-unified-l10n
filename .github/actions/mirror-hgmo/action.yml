@@ -1,0 +1,33 @@
+name: 'Mirror hgmo repository to GitHub'
+description: |-
+  Mirror hgmo repository to GitHub.
+inputs:
+  source-hg-repo-url:
+    description: 'The clone URL of a Mercurial (hg) repository'
+    required: true
+  source-hg-bookmarks:
+    description: Space separated list of Mercurial bookmarks to mirror as Git branches
+    required: true
+    default: ''
+  destination-git-repo-owner:
+    description: 'The owner of Github repository'
+    required: true
+  destination-git-repo-name:
+    description: 'The name of the Github repository'
+    required: true
+  force-push:
+    description: 'Run `git push` command with the `--force` flag.'
+    required: false
+    default: 'false'
+  path:
+    description: 'path for repo clone (relative to $GITHUB_WORKSPACE'
+    required: true
+    default: 'hg_repo'
+
+branding:
+  icon: 'arrow-up-circle'
+  color: 'blue'
+
+runs:
+  using: 'node20'
+  main: 'index.js'
