@@ -7,6 +7,7 @@ loader: gecko_taskgraph.loader.transform:loader
 transforms:
     - taskgraph.transforms.from_deps
     - gecko_taskgraph.transforms.name_sanity
+    - gecko_taskgraph.transforms.release:run_on_releases
     - gecko_taskgraph.transforms.repackage
     - comm_taskgraph.transforms.repackage_msix
     - gecko_taskgraph.transforms.job
@@ -32,6 +33,7 @@ jobs:
         from-deps:
             group-by: platform
             unique-kinds: false
+        run-on-releases: [beta, esr115]
         worker-type: b-linux-gcp
         worker:
             max-run-time: 2700

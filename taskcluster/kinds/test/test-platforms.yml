@@ -93,10 +93,7 @@ windows11-64-2009-ccov-qr/opt:
 
 windows11-64-2009-qr/opt:
     build-platform: win64/opt
-    build-signing-label:
-        by-variant:
-            msix: repackage-signing-msix-win64/opt
-            default: build-signing-win64/opt
+    build-signing-label: build-signing-win64/opt
     test-sets:
         - gtest-tests
         - mochitest-tests
@@ -104,10 +101,7 @@ windows11-64-2009-qr/opt:
 
 windows11-64-2009-shippable-qr/opt:
     build-platform: win64-shippable/opt
-    build-signing-label:
-        by-variant:
-            msix: repackage-signing-shippable-l10n-msix-win64-shippable/opt
-            default: build-signing-win64-shippable/opt
+    build-signing-label: build-signing-win64-shippable/opt
     test-sets:
         - gtest-tests
         - mochitest-tests
@@ -115,10 +109,7 @@ windows11-64-2009-shippable-qr/opt:
 
 windows11-64-2009-qr/debug:
     build-platform: win64/debug
-    build-signing-label:
-        by-variant:
-            msix: repackage-signing-msix-win64/debug
-            default: build-signing-win64/debug
+    build-signing-label: build-signing-win64/debug
     test-sets:
         - gtest-tests
         - mochitest-tests
