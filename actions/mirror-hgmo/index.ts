@@ -138,8 +138,7 @@ async function main() {
 
     const gitRepoURL = `git@${gitDomain}:${gitRepoOwner}/${gitRepoName}.git`
 
-    const tmpDir = await utils.execOut('mktemp', ['-d', '--suffix', '-mirror-hg-dir'], true, '')
-    await installGitRemoteHg(tmpDir)
+    await installGitRemoteHg(githubWorkspacePath)
     await mirrorHgRepo(repoDir, hgRepoURL, hgSourceBookmarks, gitRepoURL, forcePush)
 }
 

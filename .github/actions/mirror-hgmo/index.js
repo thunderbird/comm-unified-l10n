@@ -26307,8 +26307,7 @@ function main() {
             return;
         }
         const gitRepoURL = `git@${gitDomain}:${gitRepoOwner}/${gitRepoName}.git`;
-        const tmpDir = yield utils.execOut('mktemp', ['-d', '--suffix', '-mirror-hg-dir'], true, '');
-        yield installGitRemoteHg(tmpDir);
+        yield installGitRemoteHg(githubWorkspacePath);
         yield mirrorHgRepo(repoDir, hgRepoURL, hgSourceBookmarks, gitRepoURL, forcePush);
     });
 }
