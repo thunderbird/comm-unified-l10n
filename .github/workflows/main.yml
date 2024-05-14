@@ -51,8 +51,8 @@ jobs:
               with:
                   source-hg-repo-url: 'https://hg.mozilla.org/comm-unified'
                   source-hg-bookmarks: 'comm comm-beta comm-release comm-esr115'
-                  destination-git-repo-owner: 'thunderbird'
-                  destination-git-repo-name: 'comm-unified-l10n'
+                  destination-git-repo-owner: 'jfx2006'
+                  destination-git-repo-name: 'comm-unified'
                   path: hg_repo
 
             - name: Save hgmo cache
