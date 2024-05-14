@@ -40,7 +40,7 @@ jobs:
                       IdentityFile ~/.ssh/id_ed25519
 
             - name: Restore hgmo cache
-              id: cache-hgmo-comm-unified
+              id: cache-hgmo-comm-unified-restore
               uses: actions/cache/restore@v4
               with:
                   path: hg_repo
@@ -56,7 +56,7 @@ jobs:
                   path: hg_repo
 
             - name: Save hgmo cache
-              id: cache-hgmo-comm-unified
+              id: cache-hgmo-comm-unified-save
               uses: actions/cache/save@v4
               with:
                   path: hg_repo
