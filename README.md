@@ -26,10 +26,8 @@ the actual mirroring. It is simply included in this repository from
 https://github.com/mnauw/git-remote-hg rather than utilizing the copy used
 by upstream.
 
-Unlike the original, there is no support for using a Github Personal Token
-for push access to the Github repository. It is expected that an SSH Deploy
-Key is used, and this project in fact uses `shimataro/ssh-key-action` to
-handle setting the key up.
+Like the original, a Github Personal Token with push access to the Github 
+destination repository is needed.
 
 This project also caches the working copy that it creates using `actions/cache`.
 

@@ -20,12 +20,15 @@ async function installGitRemoteHg(dir: string) {
 }
 
 async function doHgClone(hgURL: string, repoPath: string, gitPath: string, gitURL: string, bookmarks: string[]) {
-    await io.mkdirP(repoPath)
+    await utils.execOut(gitPath, ['init', '-b', bookmarks[0], repoPath], false, githubWorkspacePath)
 
-    await utils.execOut(gitPath, ['clone', `hg::${hgURL}`, repoPath], false, githubWorkspacePath)
-    await utils.execOut(gitPath, ['config', 'core.notesRef', 'refs/notes/hg'], false, repoPath)
     await utils.execOut(gitPath, ['config', 'remote-hg.track-branches', 'false'], false, repoPath)
-    await utils.execOut(gitPath, ['config', 'remote-hg.hg-git-compat', 'true'], false, repoPath)
+    await utils.execOut(gitPath, ['config', 'remote-hg.shared-marks', 'true'], false, repoPath)
+    await utils.execOut(gitPath, ['config', 'remote-hg.remove-username-quotes', 'false'], false, repoPath)
+    await utils.execOut(gitPath, ['config', 'core.notesRef', 'refs/notes/hg'], false, repoPath)
+
+    await utils.execOut(gitPath, ['remote', 'add', 'origin', `hg::${hgURL}`], false, repoPath)
+
     await utils.execOut(gitPath, ['remote', 'add', 'github', gitURL], false, repoPath)
     await utils.execOut(gitPath, ['config', '--add', 'remote.github.fetch', '+refs/notes/*:refs/notes/*'], false, repoPath)
     await utils.execOut(gitPath, ['config', '--add', 'remote.github.push', 'refs/notes/*:refs/notes/*'], false, repoPath)
@@ -44,6 +47,11 @@ async function updateBookmarks(gitPath: string, repoPath: string, bookmarks: str
             await utils.execOut(gitPath, ['pull', 'origin', bookmark], false, repoPath)
         } else {
             await utils.execOut(gitPath, ['branch', '--track', bookmark, `origin/${bookmark}`], false, repoPath)
+        }
+
+        if (await ioUtil.exists(`${repoPath}/.git/refs/remotes/github/${bookmark}`)) {
+            await utils.execOut(gitPath, ['checkout', bookmark], false, repoPath)
+            await utils.execOut(gitPath, ['pull', 'github', bookmark], false, repoPath)
         }
     }
 }
@@ -111,10 +119,14 @@ async function main() {
     const hgRepoURL = core.getInput('source-hg-repo-url', {required: true})
     const hgSourceBookmarks = core.getInput('source-hg-bookmarks', {required: true})
     const gitDomain = 'github.com'
+    const gitScheme = 'https'
     const gitRepoOwner = core.getInput('destination-git-repo-owner', {required: true})
     const gitRepoName = core.getInput('destination-git-repo-name', {required: true})
     const forcePush = core.getBooleanInput('force-push', {required: false})
     const repoDir = core.getInput('path', {required: true})
+
+    const gitToken = core.getInput('destination-git-personal-token', { required: true })
+    core.setSecret(gitToken)
 
     const reValidStrInput = /^[-a-zA-Z0-9_:\/\.@ ]+$/
     const checkInputs = {
@@ -123,6 +135,7 @@ async function main() {
         'destination-git-domain': gitDomain,
         'destination-git-repo-owner': gitRepoOwner,
         'destination-git-repo-name': gitRepoName,
+        'destination-git-personal-token': gitToken,
         'path': repoDir,
     }
     let invalid = false
@@ -136,7 +149,7 @@ async function main() {
         return
     }
 
-    const gitRepoURL = `git@${gitDomain}:${gitRepoOwner}/${gitRepoName}.git`
+    const gitRepoURL = `${gitScheme}://${gitRepoOwner}:${gitToken}@${gitDomain}/${gitRepoOwner}/${gitRepoName}.git`
 
     await installGitRemoteHg(githubWorkspacePath)
     await mirrorHgRepo(repoDir, hgRepoURL, hgSourceBookmarks, gitRepoURL, forcePush)

@@ -26204,11 +26204,12 @@ function installGitRemoteHg(dir) {
 }
 function doHgClone(hgURL, repoPath, gitPath, gitURL, bookmarks) {
     return __awaiter(this, void 0, void 0, function* () {
-        yield io.mkdirP(repoPath);
-        yield utils.execOut(gitPath, ['clone', `hg::${hgURL}`, repoPath], false, githubWorkspacePath);
-        yield utils.execOut(gitPath, ['config', 'core.notesRef', 'refs/notes/hg'], false, repoPath);
+        yield utils.execOut(gitPath, ['init', '-b', bookmarks[0], repoPath], false, githubWorkspacePath);
         yield utils.execOut(gitPath, ['config', 'remote-hg.track-branches', 'false'], false, repoPath);
-        yield utils.execOut(gitPath, ['config', 'remote-hg.hg-git-compat', 'true'], false, repoPath);
+        yield utils.execOut(gitPath, ['config', 'remote-hg.shared-marks', 'true'], false, repoPath);
+        yield utils.execOut(gitPath, ['config', 'remote-hg.remove-username-quotes', 'false'], false, repoPath);
+        yield utils.execOut(gitPath, ['config', 'core.notesRef', 'refs/notes/hg'], false, repoPath);
+        yield utils.execOut(gitPath, ['remote', 'add', 'origin', `hg::${hgURL}`], false, repoPath);
         yield utils.execOut(gitPath, ['remote', 'add', 'github', gitURL], false, repoPath);
         yield utils.execOut(gitPath, ['config', '--add', 'remote.github.fetch', '+refs/notes/*:refs/notes/*'], false, repoPath);
         yield utils.execOut(gitPath, ['config', '--add', 'remote.github.push', 'refs/notes/*:refs/notes/*'], false, repoPath);
@@ -26228,6 +26229,10 @@ function updateBookmarks(gitPath, repoPath, bookmarks) {
             }
             else {
                 yield utils.execOut(gitPath, ['branch', '--track', bookmark, `origin/${bookmark}`], false, repoPath);
+            }
+            if (yield ioUtil.exists(`${repoPath}/.git/refs/remotes/github/${bookmark}`)) {
+                yield utils.execOut(gitPath, ['checkout', bookmark], false, repoPath);
+                yield utils.execOut(gitPath, ['pull', 'github', bookmark], false, repoPath);
             }
         }
     });
@@ -26283,10 +26288,13 @@ function main() {
         const hgRepoURL = core.getInput('source-hg-repo-url', { required: true });
         const hgSourceBookmarks = core.getInput('source-hg-bookmarks', { required: true });
         const gitDomain = 'github.com';
+        const gitScheme = 'https';
         const gitRepoOwner = core.getInput('destination-git-repo-owner', { required: true });
         const gitRepoName = core.getInput('destination-git-repo-name', { required: true });
         const forcePush = core.getBooleanInput('force-push', { required: false });
         const repoDir = core.getInput('path', { required: true });
+        const gitToken = core.getInput('destination-git-personal-token', { required: true });
+        core.setSecret(gitToken);
         const reValidStrInput = /^[-a-zA-Z0-9_:\/\.@ ]+$/;
         const checkInputs = {
             'source-hg-repo-url': hgRepoURL,
@@ -26294,6 +26302,7 @@ function main() {
             'destination-git-domain': gitDomain,
             'destination-git-repo-owner': gitRepoOwner,
             'destination-git-repo-name': gitRepoName,
+            'destination-git-personal-token': gitToken,
             'path': repoDir,
         };
         let invalid = false;
@@ -26306,7 +26315,7 @@ function main() {
         if (invalid) {
             return;
         }
-        const gitRepoURL = `git@${gitDomain}:${gitRepoOwner}/${gitRepoName}.git`;
+        const gitRepoURL = `${gitScheme}://${gitRepoOwner}:${gitToken}@${gitDomain}/${gitRepoOwner}/${gitRepoName}.git`;
         yield installGitRemoteHg(githubWorkspacePath);
         yield mirrorHgRepo(repoDir, hgRepoURL, hgSourceBookmarks, gitRepoURL, forcePush);
     });

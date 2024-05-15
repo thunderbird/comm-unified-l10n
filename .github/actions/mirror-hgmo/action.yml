@@ -15,6 +15,9 @@ inputs:
   destination-git-repo-name:
     description: 'The name of the Github repository'
     required: true
+  destination-git-personal-token:
+    description: 'A Github personal access token which hs permission to push to the repository'
+    required: true
   force-push:
     description: 'Run `git push` command with the `--force` flag.'
     required: false
