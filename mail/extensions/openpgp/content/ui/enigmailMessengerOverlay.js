@@ -910,7 +910,6 @@ Enigmail.msg = {
     }
 
     let topElement = bodyElement;
-    var findStr = /* interactive ? null : */ "-----BEGIN PGP";
     var msgText = null;
     var foundIndex = -1;
 
@@ -935,7 +934,7 @@ Enigmail.msg = {
             break;
           }
 
-          foundIndex = node.textContent.indexOf(findStr);
+          foundIndex = node.textContent.indexOf("-----BEGIN PGP");
 
           if (foundIndex < 0) {
             hasHeadOrTailNode = true;
@@ -943,15 +942,15 @@ Enigmail.msg = {
             continue;
           }
 
-          if (foundIndex >= 0) {
-            if (
-              node.textContent.indexOf(findStr + " LICENSE AUTHORIZATION") ==
+          if (
+            node.textContent.indexOf("-----BEGIN PGP SIGNED MESSAGE-----") !=
+              foundIndex &&
+            node.textContent.indexOf("-----BEGIN PGP MESSAGE-----") !=
               foundIndex
-            ) {
-              foundIndex = -1;
-              node = node.nextSibling;
-              continue;
-            }
+          ) {
+            foundIndex = -1;
+            node = node.nextSibling;
+            continue;
           }
 
           if (foundIndex === 0) {
