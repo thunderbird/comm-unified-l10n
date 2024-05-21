@@ -33,7 +33,8 @@ jobs:
               uses: actions/cache/restore@v4
               with:
                   path: hg_repo
-                  key: 'hgmo-${{ runner.os }}'
+                  key: 'hgmo-${{ runner.os }}-${{ github.run_id }}'
+                  restore-keys: 'hgmo-${{ runner.os }}'
 
             - name: mirror https://hg.mozilla.org/comm-unified
               uses: ./.github/actions/mirror-hgmo
@@ -50,4 +51,4 @@ jobs:
               uses: actions/cache/save@v4
               with:
                   path: hg_repo
-                  key: 'hgmo-${{ runner.os }}'
+                  key: 'hgmo-${{ runner.os }}-${{ github.run_id }}'
