@@ -283,6 +283,7 @@ var GPGME = {
     if (GPGMELib.gpgme_new(ctx.address())) {
       throw new Error("gpgme_new failed");
     }
+    GPGMELib.gpgme_set_armor(ctx, 0);
     let keyHandle = new GPGMELib.gpgme_key_t();
     if (!GPGMELib.gpgme_get_key(ctx, keyId, keyHandle.address(), 1)) {
       if (!GPGMELib.gpgme_signers_add(ctx, keyHandle)) {
