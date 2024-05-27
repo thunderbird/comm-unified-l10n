@@ -415,6 +415,12 @@ var gMailInit = {
       // Add a timeout to prevent opening the browser immediately at startup.
       setTimeout(this.showEOYDonationAppeal, 2000);
     }
+
+    // Show a survey page.
+    if (this.shouldShowSurvey()) {
+      // A bit later than the donation and beta appeal.
+      setTimeout(() => this.showSurvey(), 8000);
+    }
   },
 
   /**
@@ -476,6 +482,60 @@ var gMailInit = {
 
     let currentEOY = Services.prefs.getIntPref("app.donation.eoy.version", 1);
     Services.prefs.setIntPref("app.donation.eoy.version.viewed", currentEOY);
+  },
+  
+  /**
+   * Check if we can trigger the opening of the survey page.
+   *
+   * @returns {boolean} - True if the survey page should be opened.
+   */
+  shouldShowSurvey() {
+    const currentSurvey = Services.prefs.getIntPref("app.survey.version", 1);
+    const viewedSurvey = Services.prefs.getIntPref(
+      "app.survey.version.viewed",
+      0
+    );
+
+    // True if the user never saw the beta appeal, this is not a new
+    // profile, and we're not running tests.
+    const applicable =
+      viewedSurvey < currentSurvey &&
+      !specialTabs.shouldShowPolicyNotification() &&
+      !Cu.isInAutomation;
+    if (!applicable) {
+      return false;
+    }
+
+    // Never shown, filter to 1% of users.
+    const factor = Math.random() * 100;
+    if (factor > 1) {
+      this.markSurveyVersion();
+      return false;
+    }
+
+    return true;
+  },
+
+  /**
+   * Open the survey in a new web browser page.
+   */
+  showSurvey() {
+    const url = Services.prefs.getStringPref("app.survey.url");
+    const protocolSvc = Cc[
+      "@mozilla.org/uriloader/external-protocol-service;1"
+    ].getService(Ci.nsIExternalProtocolService);
+    protocolSvc.loadURI(Services.io.newURI(url));
+
+    this.markSurveyVersion();
+  },
+
+  /**
+   * Mark the viewed version of the survey as the latest version stored in the
+   * schema.
+   */
+  markSurveyVersion() {
+    const currentSurvey = Services.prefs.getIntPref("app.survey.version", 1);
+    Services.prefs.setIntPref("app.survey.version.viewed", currentSurvey);
   },
 };
 
