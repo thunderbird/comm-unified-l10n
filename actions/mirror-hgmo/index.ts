@@ -108,6 +108,17 @@ async function mirrorHgRepo(repoDir: string, hgURL: string, hgBookmarks: string,
     core.setOutput("git-rev", hash)
 }
 
+async function doGHCLIAuth(dir: string, gitScheme: string, gitDomain: string) {
+    if (!process.env["GH_TOKEN"]) {
+        throw new Error("GH_TOKEN not set in job environment.")
+    }
+    const ghCli = await io.which('gh', true)
+    if (!ghCli) {
+        throw new Error("gh_cli not found.")
+    }
+    await utils.execOut(ghCli, ["auth", "setup-git"], false, dir)
+}
+
 async function main() {
     const _githubWorkspacePath = process.env['GITHUB_WORKSPACE']
     if (!_githubWorkspacePath) {
@@ -125,8 +136,6 @@ async function main() {
     const forcePush = core.getBooleanInput('force-push', {required: false})
     const repoDir = core.getInput('path', {required: true})
 
-    const gitToken = core.getInput('destination-git-personal-token', { required: true })
-    core.setSecret(gitToken)
 
     const reValidStrInput = /^[-a-zA-Z0-9_:\/\.@ ]+$/
     const checkInputs = {
@@ -135,7 +144,6 @@ async function main() {
         'destination-git-domain': gitDomain,
         'destination-git-repo-owner': gitRepoOwner,
         'destination-git-repo-name': gitRepoName,
-        'destination-git-personal-token': gitToken,
         'path': repoDir,
     }
     let invalid = false
@@ -149,7 +157,9 @@ async function main() {
         return
     }
 
-    const gitRepoURL = `${gitScheme}://${gitRepoOwner}:${gitToken}@${gitDomain}/${gitRepoOwner}/${gitRepoName}.git`
+    await doGHCLIAuth(githubWorkspacePath, gitScheme, gitDomain)
+
+    const gitRepoURL = `${gitScheme}://${gitDomain}/${gitRepoOwner}/${gitRepoName}.git`
 
     await installGitRemoteHg(githubWorkspacePath)
     await mirrorHgRepo(repoDir, hgRepoURL, hgSourceBookmarks, gitRepoURL, forcePush)

@@ -5,6 +5,9 @@ on:
     # schedule:
     #    - cron: "03 */8 * * *"
 
+permissions:
+    contents: write
+
 env:
     GIT_SSH_COMMAND: ssh -v
 
@@ -15,7 +18,7 @@ jobs:
             contents: read
 
         steps:
-            - name: Checkout
+            - name: Checkout main
               uses: actions/checkout@v4
               with:
                   path: "."
@@ -38,12 +41,13 @@ jobs:
 
             - name: mirror https://hg.mozilla.org/comm-unified
               uses: ./.github/actions/mirror-hgmo
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               with:
                   source-hg-repo-url: 'https://hg.mozilla.org/comm-unified'
                   source-hg-bookmarks: 'comm comm-beta comm-release comm-esr115'
-                  destination-git-repo-owner: 'jfx2006'
-                  destination-git-repo-name: 'comm-unified'
-                  destination-git-personal-token: '${{ secrets.PUSH_TOKEN }}'
+                  destination-git-repo-owner: 'thunderbird'
+                  destination-git-repo-name: 'comm-unified-l10n'
                   path: hg_repo
 
             - name: Save hgmo cache

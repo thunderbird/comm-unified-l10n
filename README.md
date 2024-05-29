@@ -1,8 +1,8 @@
-# job-mirror-unified
+# comm-unified-l10n
 
-A job to mirror hg repos via github action.
+A minimal mirror of hg.mozilla.org/comm-unified used for localization cross-channel.
 
-* https://hg.mozilla.org/comm-unified --> https://github.com/thunderbird/l10n-comm-unified
+* https://hg.mozilla.org/comm-unified --> https://github.com/thunderbird/comm-unified-l10n
 
 The action code is designed with Mercurial repositories such as Mozilla's
 [mozilla-unified](https://hg.mozilla.org/mozilla-unified) and
@@ -14,9 +14,11 @@ mirroring of comm-unified to Github.
 
 # Description
 
-This project sets up a Github action under .github/actions/mirror-hgmo. The
-source code is under actions/mirror-hgmo, and was originally forked from
-[mirror-hg-repo](https://github.com/mozillazg/mirror-hg-repo).
+The one-way mirror is performed by a Github action under .github/actions/mirror-hgmo.
+The source code is under actions/mirror-hgmo, and was originally forked from
+[mirror-hg-repo](https://github.com/mozillazg/mirror-hg-repo). The action code is
+in the `main` branch, and it pushes to separate Git branches named after their
+respective hgmo repositories.
 
 The action is triggered in the main workflow (.github/workflows/main.yml) either
 manually or by cron scheduling.
@@ -26,8 +28,9 @@ the actual mirroring. It is simply included in this repository from
 https://github.com/mnauw/git-remote-hg rather than utilizing the copy used
 by upstream.
 
-Like the original, a Github Personal Token with push access to the Github 
-destination repository is needed.
+Since the mirroring is done back to the same repository, access is controlled
+by Github's automatic token authentication using ${{ secrets.GITHUB_TOKEN }}. 
+Set GH_TOKEN in the job environment.
 
 This project also caches the working copy that it creates using `actions/cache`.
 

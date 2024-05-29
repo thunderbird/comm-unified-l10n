@@ -26277,6 +26277,18 @@ function mirrorHgRepo(repoDir, hgURL, hgBookmarks, gitURL, forcePush) {
         core.setOutput("git-rev", hash);
     });
 }
+function doGHCLIAuth(dir, gitScheme, gitDomain) {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (!process.env["GH_TOKEN"]) {
+            throw new Error("GH_TOKEN not set in job environment.");
+        }
+        const ghCli = yield io.which('gh', true);
+        if (!ghCli) {
+            throw new Error("gh_cli not found.");
+        }
+        yield utils.execOut(ghCli, ["auth", "setup-git"], false, dir);
+    });
+}
 function main() {
     return __awaiter(this, void 0, void 0, function* () {
         const _githubWorkspacePath = process.env['GITHUB_WORKSPACE'];
@@ -26293,8 +26305,6 @@ function main() {
         const gitRepoName = core.getInput('destination-git-repo-name', { required: true });
         const forcePush = core.getBooleanInput('force-push', { required: false });
         const repoDir = core.getInput('path', { required: true });
-        const gitToken = core.getInput('destination-git-personal-token', { required: true });
-        core.setSecret(gitToken);
         const reValidStrInput = /^[-a-zA-Z0-9_:\/\.@ ]+$/;
         const checkInputs = {
             'source-hg-repo-url': hgRepoURL,
@@ -26302,7 +26312,6 @@ function main() {
             'destination-git-domain': gitDomain,
             'destination-git-repo-owner': gitRepoOwner,
             'destination-git-repo-name': gitRepoName,
-            'destination-git-personal-token': gitToken,
             'path': repoDir,
         };
         let invalid = false;
@@ -26315,7 +26324,8 @@ function main() {
         if (invalid) {
             return;
         }
-        const gitRepoURL = `${gitScheme}://${gitRepoOwner}:${gitToken}@${gitDomain}/${gitRepoOwner}/${gitRepoName}.git`;
+        yield doGHCLIAuth(githubWorkspacePath, gitScheme, gitDomain);
+        const gitRepoURL = `${gitScheme}://${gitDomain}/${gitRepoOwner}/${gitRepoName}.git`;
         yield installGitRemoteHg(githubWorkspacePath);
         yield mirrorHgRepo(repoDir, hgRepoURL, hgSourceBookmarks, gitRepoURL, forcePush);
     });
