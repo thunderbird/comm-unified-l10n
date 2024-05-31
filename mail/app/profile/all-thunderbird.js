@@ -1416,11 +1416,6 @@ pref("app.donation.eoy.version", 5);
 pref("app.donation.eoy.version.viewed", 0);
 pref("app.donation.eoy.url", "https://www.thunderbird.net/thunderbird/115.0/spring24/");
 
-// Survey
-pref("app.survey.version", 1);
-pref("app.survey.version.viewed", 0);
-pref("app.survey.url", "https://www.thunderbird.net/survey/?utm_campaign=survey-May_24");
-
 // IMAP-JS disabled, Bug 1707547.
 pref("mailnews.imap.jsmodule", false);
 
