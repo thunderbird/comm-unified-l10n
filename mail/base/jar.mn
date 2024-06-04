@@ -72,6 +72,7 @@ messenger.jar:
     content/messenger/printUtils.js                 (content/printUtils.js)
     content/messenger/protovis-r2.6-modded.js       (content/protovis-r2.6-modded.js)
     content/messenger/quickFilterBar.js             (content/quickFilterBar.js)
+    content/messenger/release-candidate.html        (content/release-candidate.html)
     content/messenger/sanitize.js                   (content/sanitize.js)
     content/messenger/sanitize.xhtml                (content/sanitize.xhtml)
     content/messenger/sanitizeDialog.js             (content/sanitizeDialog.js)

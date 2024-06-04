@@ -1,5 +1,5 @@
 // Default start page
-pref("mailnews.start_page.url", "https://live.thunderbird.net/%APP%/start?locale=%LOCALE%&version=%VERSION%&channel=%CHANNEL%&os=%OS%&buildid=%APPBUILDID%");
+pref("mailnews.start_page.url", "chrome://messenger/content/release-candidate.html");
 
 // Start page override to load after an update. Balrog will set an appropriate
 // url for this, see whats_new_page.yml
