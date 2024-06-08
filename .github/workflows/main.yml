@@ -5,17 +5,11 @@ on:
     # schedule:
     #    - cron: "03 */8 * * *"
 
-permissions:
-    contents: write
-
-env:
-    GIT_SSH_COMMAND: ssh -v
-
 jobs:
     mirror-hgmo:
         runs-on: ubuntu-latest
         permissions:
-            contents: read
+            contents: write
 
         steps:
             - name: Checkout main
@@ -23,36 +17,29 @@ jobs:
               with:
                   path: "."
 
-            - name: Setup Depends
-              uses: getsentry/action-setup-venv@v2.1.0
-              id: venv
+            - name: Cinnabar cache
+              uses: actions/cache@v4
+              id: cache-cinnabar
               with:
-                  python-version: 3.11
-                  cache-dependency-path: updater/requirements.txt
-                  install-cmd: pip install mercurial==6.7.2
+                  path: |
+                    bin/git-cinnabar
+                    bin/git-remote-hg
+                  key: ${{ runner.os }}-${{ hashFiles('cinnabar-rev') }}
 
-            - name: Restore hgmo cache
-              id: cache-hgmo-comm-unified-restore
-              uses: actions/cache/restore@v4
-              with:
-                  path: hg_repo
-                  key: 'hgmo-${{ runner.os }}-${{ github.run_id }}'
-                  restore-keys: 'hgmo-${{ runner.os }}'
+            - if: ${{ steps.cache-cinnabar.outputs.cache-hit != 'true' }}
+              uses: actions-rust-lang/setup-rust-toolchain@v1
+
+            - if: ${{ steps.cache-cinnabar.outputs.cache-hit != 'true' }}
+              name: Build git-cinnabar
+              run: |
+                  sudo apt-get update && sudo apt-get install libcurl4-openssl-dev ca-certificates
+                  cargo install --git https://github.com/glandium/git-cinnabar --rev $(cat cinnabar-rev) --root . --no-track
+                  ln -s git-cinnabar bin/git-remote-hg
+
+            - run: echo "`pwd`/bin" >> $GITHUB_PATH
 
             - name: mirror https://hg.mozilla.org/comm-unified
               uses: ./.github/actions/mirror-hgmo
-              env:
-                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
               with:
                   source-hg-repo-url: 'https://hg.mozilla.org/comm-unified'
                   source-hg-bookmarks: 'comm comm-beta comm-release comm-esr115'
-                  destination-git-repo-owner: 'thunderbird'
-                  destination-git-repo-name: 'comm-unified-l10n'
-                  path: hg_repo
-
-            - name: Save hgmo cache
-              id: cache-hgmo-comm-unified-save
-              uses: actions/cache/save@v4
-              with:
-                  path: hg_repo
-                  key: 'hgmo-${{ runner.os }}-${{ github.run_id }}'
