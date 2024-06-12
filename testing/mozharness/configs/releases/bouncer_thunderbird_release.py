@@ -32,13 +32,13 @@ config = {
                 "win64",
             ],
         },
-        "msix": {
-            "product-name": "Thunderbird-%(version)s-msix-SSL",
-            "platforms": [
-                "win",
-                "win64",
-            ],
-        },
+#        "msix": {
+#            "product-name": "Thunderbird-%(version)s-msix-SSL",
+#            "platforms": [
+#                "win",
+#                "win64",
+#            ],
+#        },
         "complete-mar": {
             "product-name": "Thunderbird-%(version)s-Complete",
             "platforms": [
