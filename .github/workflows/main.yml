@@ -42,4 +42,4 @@ jobs:
               uses: ./.github/actions/mirror-hgmo
               with:
                   source-hg-repo-url: 'https://hg.mozilla.org/comm-unified'
-                  source-hg-bookmarks: 'comm comm-beta comm-release comm-esr115'
+                  source-hg-bookmarks: 'comm comm-beta comm-release comm-esr115 comm-esr128'
