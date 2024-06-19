@@ -1187,11 +1187,7 @@ async function reportCalendars() {
     telemetryReport
   )) {
     Glean.tb.calendarCount[type.toLowerCase()].set(count);
-    Services.telemetry.keyedScalarSet(
-      "tb.calendar.read_only_calendar_count",
-      type.toLowerCase(),
-      readOnlyCount
-    );
+    Glean.tb.calendarCountReadOnly[type.toLowerCase()].set(readOnlyCount);
   }
 }
 
