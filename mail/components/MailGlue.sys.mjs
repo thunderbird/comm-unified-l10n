@@ -1356,12 +1356,7 @@ function reportPreferences() {
 
   for (const prefName of integerPrefs) {
     const prefValue = Services.prefs.getIntPref(prefName, 0);
-
-    Services.telemetry.keyedScalarSet(
-      "tb.preferences.integer",
-      prefName,
-      prefValue
-    );
+    Glean.tb.preferencesInteger[prefName].set(prefValue);
   }
 }
 
