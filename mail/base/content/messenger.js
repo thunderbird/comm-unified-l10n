@@ -415,6 +415,11 @@ var gMailInit = {
       // Add a timeout to prevent opening the browser immediately at startup.
       setTimeout(this.showEOYDonationAppeal, 2000);
     }
+
+    if (AppConstants.platform == "win" && this.shouldShowBetaAppeal()) {
+      // A little later than donation appeal.
+      setTimeout(() => this.showBetaAppeal(), 5000);
+    }
   },
 
   /**
@@ -476,6 +481,74 @@ var gMailInit = {
 
     let currentEOY = Services.prefs.getIntPref("app.donation.eoy.version", 1);
     Services.prefs.setIntPref("app.donation.eoy.version.viewed", currentEOY);
+  },
+
+  /**
+   * Check if we can trigger the opening of the beta appeal page.
+   *
+   * @returns {boolean} - True if the beta appeal page should be opened.
+   */
+  shouldShowBetaAppeal() {
+    const currentBetaAppeal = Services.prefs.getIntPref(
+      "app.beta_appeal.version",
+      1
+    );
+    const viewedBetaAppeal = Services.prefs.getIntPref(
+      "app.beta_appeal.version.viewed",
+      0
+    );
+
+    // True if the user never saw the beta appeal, this is not a new
+    // profile, and we're not running tests.
+    const applicable =
+      viewedBetaAppeal < currentBetaAppeal &&
+      !specialTabs.shouldShowPolicyNotification() &&
+      !Cu.isInAutomation;
+    if (!applicable) {
+      return false;
+    }
+
+    // Check expiry date.
+    const now = Math.floor(Date.now() / 1000);
+    const expiry = Services.prefs.getIntPref("app.beta_appeal.expiry", now);
+
+    // Never shown, filter to 50% of users.
+    const factor = Math.random() * 100;
+    if (factor > 50 || now > expiry) {
+      this.markBetaAppealVersion();
+      return false;
+    }
+
+    return true;
+  },
+
+  /**
+   * Open the beta appeal in a new window to ensure the user can download it
+   * correctly.
+   */
+  showBetaAppeal() {
+    const url = Services.urlFormatter.formatURLPref("app.beta_appeal.url");
+    const protocolSvc = Cc[
+      "@mozilla.org/uriloader/external-protocol-service;1"
+    ].getService(Ci.nsIExternalProtocolService);
+    protocolSvc.loadURI(Services.io.newURI(url));
+
+    this.markBetaAppealVersion();
+  },
+
+  /**
+   * Mark the viewed version of the beta appeal as the latest version
+   * stored in the schema.
+   */
+  markBetaAppealVersion() {
+    const currentBetaAppeal = Services.prefs.getIntPref(
+      "app.beta_appeal.version",
+      1
+    );
+    Services.prefs.setIntPref(
+      "app.beta_appeal.version.viewed",
+      currentBetaAppeal
+    );
   },
 };
 
