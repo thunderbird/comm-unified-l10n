@@ -1416,13 +1416,6 @@ pref("app.donation.eoy.version", 5);
 pref("app.donation.eoy.version.viewed", 0);
 pref("app.donation.eoy.url", "https://www.thunderbird.net/thunderbird/115.0/spring24/");
 
-// Beta appeal
-pref("app.beta_appeal.version", 2);
-pref("app.beta_appeal.version.viewed", 0);
-pref("app.beta_appeal.url", "https://www.thunderbird.net/thunderbird/115.0/beta-appeal/?locale=%LOCALE%&version=%VERSION%&channel=%CHANNEL%&os=%OS%&buildid=%APPBUILDID%");
-// June 21st expiry.
-pref("app.beta_appeal.expiry", 1718902800);
-
 // IMAP-JS disabled, Bug 1707547.
 pref("mailnews.imap.jsmodule", false);
 
