@@ -21,9 +21,6 @@ const { PromiseTestUtils } = ChromeUtils.importESModule(
 const { SmimeUtils } = ChromeUtils.importESModule(
   "resource://testing-common/mailnews/SmimeUtils.sys.mjs"
 );
-const { TelemetryTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/TelemetryTestUtils.sys.mjs"
-);
 const { OpenPGPTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/mail/OpenPGPTestUtils.sys.mjs"
 );
@@ -57,7 +54,7 @@ add_setup(async function () {
  * Check that we're counting secure mails read.
  */
 add_task(async function test_secure_mails_read() {
-  Services.telemetry.clearScalars();
+  Services.fog.testResetFOG();
 
   const NUM_PLAIN_MAILS = 4;
   const headers = { from: "alice@t1.example.com", to: "bob@t2.example.net" };
@@ -117,38 +114,42 @@ add_task(async function test_secure_mails_read() {
       const event = await eventPromise;
       info(`Seen ${eventName} event for message at index ${i}`);
 
-      // Check if telemetry for encrypted messages are correctly skipped on the
-      // additional runs.
-      if (i < NUM_SECURE_MAILS) {
-        const { skipped } = event.detail;
-        if (run == 1) {
-          Assert.equal(
-            false,
-            skipped,
-            `Telemetry data for the first run should not be skipped`
-          );
-        } else {
-          Assert.equal(
-            true,
-            skipped,
-            `Telemetry data for additional runs should be skipped`
-          );
-        }
-      }
-    }
+  let events = Glean.tb.mailsReadSecure.testGetValue();
+  Assert.equal(
+    events.filter(e => e.extra.security == "S/MIME" && e.extra.is_encrypted)
+      ?.length,
+    NUM_SMIME_MAILS,
+    "Count of S/MIME encrypted mails read should be correct"
+  );
+  Assert.equal(
+    events.filter(e => e.extra.security == "OpenPGP" && e.extra.is_encrypted)
+      ?.length,
+    NUM_OPENPGP_MAILS,
+    "Count of OpenPGP encrypted mails read should be correct"
+  );
 
-    const scalars = TelemetryTestUtils.getProcessScalars("parent", true);
-    Assert.equal(
-      scalars["tb.mails.read_secure"]["encrypted-smime"],
-      smimeFiles.length,
-      `Count of smime encrypted mails read should be correct in run ${run}.`
-    );
-    Assert.equal(
-      scalars["tb.mails.read_secure"]["encrypted-openpgp"],
-      openpgpFiles.length,
-      `Count of openpgp encrypted mails read should be correct in run ${run}.`
-    );
+  // Select all added mails again should not change read statistics.
+  for (
+    let i = 0;
+    i < NUM_PLAIN_MAILS + NUM_SMIME_MAILS + NUM_OPENPGP_MAILS;
+    i++
+  ) {
+    await select_click_row(i);
   }
+
+  events = Glean.tb.mailsReadSecure.testGetValue();
+  Assert.equal(
+    events.filter(e => e.extra.security == "S/MIME" && e.extra.is_encrypted)
+      ?.length,
+    NUM_SMIME_MAILS,
+    "Count of S/MIME encrypted mails read should still be the same"
+  );
+  Assert.equal(
+    events.filter(e => e.extra.security == "OpenPGP" && e.extra.is_encrypted)
+      ?.length,
+    NUM_OPENPGP_MAILS,
+    "Count of OpenPGP encrypted mails read should still be the same"
+  );
 });
 
 var smimeMessage = [
