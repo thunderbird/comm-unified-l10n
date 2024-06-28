@@ -1401,10 +1401,8 @@ function reportUIConfiguration() {
     if (folderTreeCompact === "true") {
       folderTreeMode += " (compact)";
     }
-    Services.telemetry.scalarSet(
-      "tb.ui.configuration.folder_tree_modes",
-      folderTreeMode
-    );
+
+    Glean.tb.uiConfigurationFolderTreeModes.set(folderTreeMode.split(","));
   }
 
   let headerLayout = lazy.XULStoreUtils.getValue(
