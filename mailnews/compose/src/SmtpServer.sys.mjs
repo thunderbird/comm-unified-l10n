@@ -662,7 +662,7 @@ export class SmtpServer {
     };
     client.ondone = () => {
       if (!AppConstants.MOZ_SUITE) {
-        Services.telemetry.scalarAdd("tb.mails.sent", 1);
+        Glean.tb.mailsSent.add(1);
       }
 
       requestObserver?.onStopRequest(request, Cr.NS_OK);
