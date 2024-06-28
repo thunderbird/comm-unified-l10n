@@ -1138,11 +1138,7 @@ function reportAddressBookTypes() {
 
   for (const [type, { count, contactCount }] of Object.entries(report)) {
     Glean.tb.addressbookCount[type].set(count);
-    Services.telemetry.keyedScalarSet(
-      "tb.addressbook.contact_count",
-      type,
-      contactCount
-    );
+    Glean.tb.addressbookContactCount[type].set(contactCount);
   }
 }
 
