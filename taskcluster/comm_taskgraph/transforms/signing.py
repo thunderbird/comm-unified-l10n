@@ -86,26 +86,3 @@ def check_for_no_formats(config, jobs):
 
                         payload["upstreamArtifacts"].remove(artifact)
         yield job
-
-
-@transforms.add
-def rewrite_authenticode2_format(config, jobs):
-    """
-    Rewrite any signing payloads with 'autograph_authenticode_sha2' as a requested
-    format to 'autograph_authenticode_202404'. This function can be removed for
-    Thunderbird 115.13.0
-    """
-    for job in jobs:
-        task = job["task"]
-        payload = task["payload"]
-
-        if "upstreamArtifacts" in payload:
-            for artifact in payload["upstreamArtifacts"]:
-                if "autograph_authenticode_sha2" in artifact.get("formats", []):
-                    artifact["formats"].remove("autograph_authenticode_sha2")
-                    artifact["formats"].append("autograph_authenticode_202404")
-                if "autograph_authenticode_sha2_stub" in artifact.get("formats", []):
-                    artifact["formats"].remove("autograph_authenticode_sha2_stub")
-                    artifact["formats"].append("autograph_authenticode_202404_stub")
-
-        yield job

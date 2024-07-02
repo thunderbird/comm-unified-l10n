@@ -8,7 +8,6 @@ transforms:
     - gecko_taskgraph.transforms.name_sanity:transforms
     - gecko_taskgraph.transforms.repackage_signing:transforms
     - gecko_taskgraph.transforms.task:transforms
-    - comm_taskgraph.transforms.signing:transforms
 
 kind-dependencies:
     - repackage-msi
