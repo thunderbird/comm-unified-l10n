@@ -1,5 +1,5 @@
 /*-
- * Copyright (c) 2021-2023 Ribose Inc.
+ * Copyright (c) 2021 Ribose Inc.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -94,10 +94,8 @@ pgp_cipher_cfb_start(pgp_crypt_t *  crypt,
 
     const EVP_CIPHER *cipher = EVP_get_cipherbyname(cipher_name);
     if (!cipher) {
-        /* LCOV_EXCL_START */
         RNP_LOG("Cipher %s is not supported by OpenSSL.", cipher_name);
         return false;
-        /* LCOV_EXCL_END */
     }
 
     crypt->alg = alg;
@@ -106,11 +104,9 @@ pgp_cipher_cfb_start(pgp_crypt_t *  crypt,
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
     int             res = EVP_EncryptInit_ex(ctx, cipher, NULL, key, iv);
     if (res != 1) {
-        /* LCOV_EXCL_START */
         RNP_LOG("Failed to initialize cipher.");
         EVP_CIPHER_CTX_free(ctx);
         return false;
-        /* LCOV_EXCL_END */
     }
     crypt->cfb.obj = ctx;
 
@@ -135,7 +131,7 @@ int
 pgp_cipher_cfb_finish(pgp_crypt_t *crypt)
 {
     if (!crypt) {
-        return 0; // LCOV_EXCL_LINE
+        return 0;
     }
     if (crypt->cfb.obj) {
         EVP_CIPHER_CTX_free(crypt->cfb.obj);
@@ -153,7 +149,7 @@ pgp_cipher_cfb_encrypt(pgp_crypt_t *crypt, uint8_t *out, const uint8_t *in, size
     uint64_t  buf64[512]; // 4KB - page size
     uint64_t  iv64[2];
     size_t    blocks, blockb;
-    size_t    blsize = crypt->blocksize;
+    unsigned  blsize = crypt->blocksize;
 
     /* encrypting till the block boundary */
     while (bytes && crypt->cfb.remaining) {
@@ -186,7 +182,7 @@ pgp_cipher_cfb_encrypt(pgp_crypt_t *crypt, uint8_t *out, const uint8_t *in, size
                     EVP_EncryptUpdate(
                       crypt->cfb.obj, (uint8_t *) iv64, &outlen, (uint8_t *) iv64, 16);
                     if (outlen != 16) {
-                        RNP_LOG("Bad outlen: must be 16"); // LCOV_EXCL_LINE
+                        RNP_LOG("Bad outlen: must be 16");
                     }
                     *in64 ^= iv64[0];
                     iv64[0] = *in64++;
@@ -200,7 +196,7 @@ pgp_cipher_cfb_encrypt(pgp_crypt_t *crypt, uint8_t *out, const uint8_t *in, size
                     EVP_EncryptUpdate(
                       crypt->cfb.obj, (uint8_t *) iv64, &outlen, (uint8_t *) iv64, 8);
                     if (outlen != 8) {
-                        RNP_LOG("Bad outlen: must be 8"); // LCOV_EXCL_LINE
+                        RNP_LOG("Bad outlen: must be 8");
                     }
                     *in64 ^= iv64[0];
                     iv64[0] = *in64++;
@@ -222,7 +218,7 @@ pgp_cipher_cfb_encrypt(pgp_crypt_t *crypt, uint8_t *out, const uint8_t *in, size
     int outlen = blsize;
     EVP_EncryptUpdate(crypt->cfb.obj, crypt->cfb.iv, &outlen, crypt->cfb.iv, (int) blsize);
     if (outlen != (int) blsize) {
-        RNP_LOG("Bad outlen: must be %zu", blsize); // LCOV_EXCL_LINE
+        RNP_LOG("Bad outlen: must be %u", blsize);
     }
     crypt->cfb.remaining = blsize;
 
@@ -247,7 +243,7 @@ pgp_cipher_cfb_decrypt(pgp_crypt_t *crypt, uint8_t *out, const uint8_t *in, size
     uint64_t  outbuf64[512];
     uint64_t  iv64[2];
     size_t    blocks, blockb;
-    size_t    blsize = crypt->blocksize;
+    unsigned  blsize = crypt->blocksize;
 
     /* decrypting till the block boundary */
     while (bytes && crypt->cfb.remaining) {
@@ -283,7 +279,7 @@ pgp_cipher_cfb_decrypt(pgp_crypt_t *crypt, uint8_t *out, const uint8_t *in, size
                     EVP_EncryptUpdate(
                       crypt->cfb.obj, (uint8_t *) iv64, &outlen, (uint8_t *) iv64, 16);
                     if (outlen != 16) {
-                        RNP_LOG("Bad outlen: must be 16"); // LCOV_EXCL_LINE
+                        RNP_LOG("Bad outlen: must be 16");
                     }
                     *out64++ = *in64 ^ iv64[0];
                     iv64[0] = *in64++;
@@ -297,7 +293,7 @@ pgp_cipher_cfb_decrypt(pgp_crypt_t *crypt, uint8_t *out, const uint8_t *in, size
                     EVP_EncryptUpdate(
                       crypt->cfb.obj, (uint8_t *) iv64, &outlen, (uint8_t *) iv64, 8);
                     if (outlen != 8) {
-                        RNP_LOG("Bad outlen: must be 8"); // LCOV_EXCL_LINE
+                        RNP_LOG("Bad outlen: must be 8");
                     }
                     *out64++ = *in64 ^ iv64[0];
                     iv64[0] = *in64++;
@@ -319,7 +315,7 @@ pgp_cipher_cfb_decrypt(pgp_crypt_t *crypt, uint8_t *out, const uint8_t *in, size
     int outlen = blsize;
     EVP_EncryptUpdate(crypt->cfb.obj, crypt->cfb.iv, &outlen, crypt->cfb.iv, (int) blsize);
     if (outlen != (int) blsize) {
-        RNP_LOG("Bad outlen: must be %zu", blsize); // LCOV_EXCL_LINE
+        RNP_LOG("Bad outlen: must be %u", blsize);
     }
     crypt->cfb.remaining = blsize;
 
@@ -439,18 +435,14 @@ pgp_cipher_aead_init(pgp_crypt_t *  crypt,
     }
     auto cipher = EVP_get_cipherbyname(algname);
     if (!cipher) {
-        /* LCOV_EXCL_START */
         RNP_LOG("Cipher %s is not supported.", algname);
         return false;
-        /* LCOV_EXCL_END */
     }
     /* Create and setup context */
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
     if (!ctx) {
-        /* LCOV_EXCL_START */
         RNP_LOG("Failed to create cipher context: %lu", ERR_peek_last_error());
         return false;
-        /* LCOV_EXCL_END */
     }
 
     crypt->aead.key = new rnp::secure_vector<uint8_t>(key, key + pgp_key_size(ealg));
@@ -518,29 +510,21 @@ pgp_cipher_aead_start(pgp_crypt_t *crypt, const uint8_t *nonce, size_t len)
     assert(len == aead.n_len);
     EVP_CIPHER_CTX_reset(ctx);
     if (EVP_CipherInit_ex(ctx, aead.cipher, NULL, NULL, NULL, enc) != 1) {
-        /* LCOV_EXCL_START */
         RNP_LOG("Failed to initialize cipher: %lu", ERR_peek_last_error());
         return false;
-        /* LCOV_EXCL_END */
     }
     if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_IVLEN, aead.n_len, NULL) != 1) {
-        /* LCOV_EXCL_START */
         RNP_LOG("Failed to set nonce length: %lu", ERR_peek_last_error());
         return false;
-        /* LCOV_EXCL_END */
     }
     if (EVP_CipherInit_ex(ctx, NULL, NULL, aead.key->data(), nonce, enc) != 1) {
-        /* LCOV_EXCL_START */
         RNP_LOG("Failed to start cipher: %lu", ERR_peek_last_error());
         return false;
-        /* LCOV_EXCL_END */
     }
     int adlen = 0;
     if (EVP_CipherUpdate(ctx, NULL, &adlen, aead.ad, aead.ad_len) != 1) {
-        /* LCOV_EXCL_START */
         RNP_LOG("Failed to set AD: %lu", ERR_peek_last_error());
         return false;
-        /* LCOV_EXCL_END */
     }
     return true;
 }
@@ -554,7 +538,7 @@ pgp_cipher_aead_update(pgp_crypt_t *crypt, uint8_t *out, const uint8_t *in, size
     int  out_len = 0;
     bool res = EVP_CipherUpdate(crypt->aead.obj, out, &out_len, in, len) == 1;
     if (!res) {
-        RNP_LOG("Failed to update cipher: %lu", ERR_peek_last_error()); // LCOV_EXCL_LINE
+        RNP_LOG("Failed to update cipher: %lu", ERR_peek_last_error());
     }
     assert(out_len == (int) len);
     return res;
@@ -574,34 +558,26 @@ pgp_cipher_aead_finish(pgp_crypt_t *crypt, uint8_t *out, const uint8_t *in, size
     if (aead.decrypt) {
         assert(len >= aead.taglen);
         if (len < aead.taglen) {
-            /* LCOV_EXCL_START */
             RNP_LOG("Invalid state: too few input bytes.");
             return false;
-            /* LCOV_EXCL_END */
         }
         size_t data_len = len - aead.taglen;
         int    out_len = 0;
         if (EVP_CipherUpdate(ctx, out, &out_len, in, data_len) != 1) {
-            /* LCOV_EXCL_START */
             RNP_LOG("Failed to update cipher: %lu", ERR_peek_last_error());
             return false;
-            /* LCOV_EXCL_END */
         }
         uint8_t tag[PGP_AEAD_MAX_TAG_LEN] = {0};
         memcpy(tag, in + data_len, aead.taglen);
         if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_SET_TAG, aead.taglen, tag) != 1) {
-            /* LCOV_EXCL_START */
             RNP_LOG("Failed to set tag: %lu", ERR_peek_last_error());
             return false;
-            /* LCOV_EXCL_END */
         }
         int out_len2 = 0;
         if (EVP_CipherFinal_ex(ctx, out + out_len, &out_len2) != 1) {
             /* Zero value if auth tag is incorrect */
             if (ERR_peek_last_error()) {
-                /* LCOV_EXCL_START */
                 RNP_LOG("Failed to finish AEAD decryption: %lu", ERR_peek_last_error());
-                /* LCOV_EXCL_END */
             }
             return false;
         }
@@ -609,24 +585,18 @@ pgp_cipher_aead_finish(pgp_crypt_t *crypt, uint8_t *out, const uint8_t *in, size
     } else {
         int out_len = 0;
         if (EVP_CipherUpdate(ctx, out, &out_len, in, len) != 1) {
-            /* LCOV_EXCL_START */
             RNP_LOG("Failed to update cipher: %lu", ERR_peek_last_error());
             return false;
-            /* LCOV_EXCL_END */
         }
         int out_len2 = 0;
         if (EVP_CipherFinal_ex(ctx, out + out_len, &out_len2) != 1) {
-            /* LCOV_EXCL_START */
             RNP_LOG("Failed to finish AEAD encryption: %lu", ERR_peek_last_error());
             return false;
-            /* LCOV_EXCL_END */
         }
         assert(out_len + out_len2 == (int) len);
         if (EVP_CIPHER_CTX_ctrl(ctx, EVP_CTRL_AEAD_GET_TAG, aead.taglen, out + len) != 1) {
-            /* LCOV_EXCL_START */
             RNP_LOG("Failed to get tag: %lu", ERR_peek_last_error());
             return false;
-            /* LCOV_EXCL_END */
         }
     }
     return true;

@@ -35,12 +35,14 @@ int
 LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 #endif
 {
-    rnp_input_t input = NULL;
-    rnp_ffi_t   ffi = NULL;
+    rnp_input_t  input = NULL;
+    rnp_result_t ret = 0;
+    rnp_ffi_t    ffi = NULL;
 
-    (void) rnp_input_from_memory(&input, data, size, false);
-    (void) rnp_ffi_create(&ffi, "KBX", "G10");
-    (void) rnp_load_keys(ffi, "KBX", input, RNP_LOAD_SAVE_PUBLIC_KEYS);
+    ret = rnp_input_from_memory(&input, data, size, false);
+
+    ret = rnp_ffi_create(&ffi, "KBX", "G10");
+    ret = rnp_load_keys(ffi, "KBX", input, RNP_LOAD_SAVE_PUBLIC_KEYS);
 
     rnp_input_destroy(input);
     rnp_ffi_destroy(ffi);

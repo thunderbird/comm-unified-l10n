@@ -31,24 +31,16 @@ find_package(ZLIB REQUIRED)
 
 # required packages
 find_package(JSON-C 0.11 REQUIRED)
-if (CRYPTO_BACKEND_BOTAN3)
-  find_package(Botan 3.0.0 REQUIRED)
-elseif (CRYPTO_BACKEND_BOTAN)
-  find_package(Botan 2.14.0 REQUIRED)
-  if(BOTAN_VERSION VERSION_GREATER_EQUAL 3.0.0)
-    set(CRYPTO_BACKEND_BOTAN3 1)
-  endif()
+if (CRYPTO_BACKEND_BOTAN)
+  find_package(Botan2 2.14.0 REQUIRED)
 endif()
 if (CRYPTO_BACKEND_OPENSSL)
+  include(FindOpenSSL)
   find_package(OpenSSL 1.1.1 REQUIRED)
   include(FindOpenSSLFeatures)
   if("${OPENSSL_VERSION}" VERSION_GREATER_EQUAL "3.0.0")
     set(CRYPTO_BACKEND_OPENSSL3 1)
   endif()
-endif()
-
-if(CRYPTO_BACKEND_BOTAN3)
-  set(CMAKE_CXX_STANDARD 20)
 endif()
 
 # generate a config.h
@@ -83,7 +75,7 @@ function(backend_has_feature FEATURE RESULT_VARNAME)
   if (CRYPTO_BACKEND_LOWERCASE STREQUAL "botan")
     check_cxx_symbol_exists("BOTAN_HAS_${FEATURE}" botan/build.h ${RESULT_VARNAME})
   else()
-    message(STATUS "Looking for OpenSSL feature ${FEATURE}")
+  message(STATUS "Looking for OpenSSL feature ${FEATURE}")
     OpenSSLHasFeature(${FEATURE} ${RESULT_VARNAME})
     if (${RESULT_VARNAME})
       message(STATUS "Looking for OpenSSL feature ${FEATURE} - found")
@@ -108,7 +100,7 @@ function(resolve_feature_state RNP_FEATURE BACKEND_FEATURES)
 
   foreach(feature ${BACKEND_FEATURES})
     backend_has_feature("${feature}" _has_${feature})
-    if (NOT _has_${feature})
+    if (NOT ${_has_${feature}})
       set(${RNP_FEATURE} Off CACHE STRING "Autodetected" FORCE)
       message(${MESSAGE_TYPE} "${RNP_FEATURE} requires ${CRYPTO_BACKEND} feature which is missing: ${feature}. ${OUTCOME}.")
       return()
@@ -137,7 +129,7 @@ endfunction()
 
 if(CRYPTO_BACKEND_BOTAN)
   # check botan's enabled features
-  set(CMAKE_REQUIRED_INCLUDES "${BOTAN_INCLUDE_DIRS}")
+  set(CMAKE_REQUIRED_INCLUDES "${BOTAN2_INCLUDE_DIRS}")
   set(_botan_required_features
       # base
       BIGINT FFI HEX_CODEC PGP_S2K
@@ -150,17 +142,12 @@ if(CRYPTO_BACKEND_BOTAN)
       # hash
       CRC24 HASH MD5 SHA1 SHA2_32 SHA2_64 SHA3
       # public-key core
-      DL_GROUP ECC_GROUP ECC_PUBLIC_KEY_CRYPTO PUBLIC_KEY_CRYPTO # Botan-2: DL_PUBLIC_KEY_FAMILY Botan-3: DL_SCHEME, see switch below
+      DL_GROUP DL_PUBLIC_KEY_FAMILY ECC_GROUP ECC_PUBLIC_KEY_CRYPTO PUBLIC_KEY_CRYPTO
       # public-key algs
       CURVE_25519 DSA ECDH ECDSA ED25519 ELGAMAL RSA
       # public-key operations etc
       EME_PKCS1v15 EMSA_PKCS1 EMSA_RAW KDF_BASE RFC3394_KEYWRAP SP800_56A
   )
-  if(BOTAN_VERSION VERSION_LESS 3.0.0)
-    set(_botan_required_features ${_botan_required_features} DL_PUBLIC_KEY_FAMILY)
-  else()
-    set(_botan_required_features ${_botan_required_features} DL_SCHEME RAW_HASH_FN)
-  endif()
   foreach(feature ${_botan_required_features})
     check_cxx_symbol_exists("BOTAN_HAS_${feature}" botan/build.h _botan_has_${feature})
     if (NOT _botan_has_${feature})
@@ -194,26 +181,19 @@ if(CRYPTO_BACKEND_OPENSSL)
     RSAENCRYPTION DSAENCRYPTION DHKEYAGREEMENT ID-ECPUBLICKEY X25519 ED25519
   )
   foreach(feature ${_openssl_required_features})
-    backend_has_feature("${feature}" _openssl_has_${feature})
+    message(STATUS "Looking for OpenSSL feature ${feature}")
+    OpenSSLHasFeature("${feature}" _openssl_has_${feature})
     if (NOT _openssl_has_${feature})
       message(FATAL_ERROR "A required OpenSSL feature is missing: ${feature}")
     endif()
+    message(STATUS "Looking for OpenSSL feature ${feature} - found")
   endforeach()
 
-  if (CRYPTO_BACKEND_OPENSSL3)
-    backend_has_feature("LEGACY" CRYPTO_BACKEND_OPENSSL3_LEGACY)
-  endif()
-
   resolve_feature_state(ENABLE_BRAINPOOL "BRAINPOOLP256R1;BRAINPOOLP384R1;BRAINPOOLP512R1")
-  # Not all of the OpenSSL installations have legacy crypto provider
-  resolve_feature_state(ENABLE_IDEA "IDEA-ECB;IDEA-CBC;LEGACY")
-  resolve_feature_state(ENABLE_BLOWFISH "BF-ECB;LEGACY")
-  resolve_feature_state(ENABLE_CAST5 "CAST5-ECB;LEGACY")
-  if("${OPENSSL_VERSION}" VERSION_GREATER_EQUAL "3.0.7")
-    resolve_feature_state(ENABLE_RIPEMD160 "RIPEMD160")
-  else()
-    resolve_feature_state(ENABLE_RIPEMD160 "RIPEMD160;LEGACY")
-  endif()
+  resolve_feature_state(ENABLE_IDEA "IDEA-ECB;IDEA-CBC")
+  resolve_feature_state(ENABLE_BLOWFISH "BF-ECB")
+  resolve_feature_state(ENABLE_CAST5 "CAST5-ECB")
+  resolve_feature_state(ENABLE_RIPEMD160 "RIPEMD160")
   resolve_feature_state(ENABLE_AEAD "AES-128-OCB;AES-192-OCB;AES-256-OCB")
   openssl_nope(ENABLE_SM2 "it's on our roadmap, see https://github.com/rnpgp/rnp/issues/1877")
   #resolve_feature_state(ENABLE_SM2 "SM2;SM3;SM4-ECB")
@@ -340,16 +320,15 @@ target_include_directories(librnp-obj
   PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}"
     "${PROJECT_SOURCE_DIR}/src"
-    "${SEXPP_INCLUDE_DIRS}"
 )
 target_link_libraries(librnp-obj PRIVATE JSON-C::JSON-C)
 if (CRYPTO_BACKEND_BOTAN)
-  target_link_libraries(librnp-obj PRIVATE Botan::Botan)
+  target_link_libraries(librnp-obj PRIVATE Botan2::Botan2)
 elseif (CRYPTO_BACKEND_OPENSSL)
   target_link_libraries(librnp-obj PRIVATE OpenSSL::Crypto)
 endif()
 
-target_link_libraries(librnp-obj PRIVATE sexpp)
+target_link_libraries(librnp-obj PRIVATE sexp)
 
 set_target_properties(librnp-obj PROPERTIES CXX_VISIBILITY_PRESET hidden)
 if (TARGET BZip2::BZip2)
@@ -405,7 +384,7 @@ foreach (prop LINK_LIBRARIES INTERFACE_LINK_LIBRARIES INCLUDE_DIRECTORIES INTERF
   get_target_property(val librnp-obj ${prop})
   if (BUILD_SHARED_LIBS)
     set_property(TARGET librnp-static PROPERTY ${prop} ${val})
-    list(REMOVE_ITEM val "$<LINK_ONLY:sexpp>")
+    list(REMOVE_ITEM val "$<LINK_ONLY:sexp>")
     set_property(TARGET librnp PROPERTY ${prop} ${val})
   else()
     set_property(TARGET librnp PROPERTY ${prop} ${val})
@@ -435,14 +414,15 @@ else()
 endif()
 
 # add these to the rnp-targets export
-# On Unix like systems we will build/install/pack either shared library librnp.so or static  librnp.a
-# On Windows we will build/install/pack either dynamic and import libraries rnp.dll, rnp.lib or static library rnp-static.lib
+# On Unix like systems we will build/install/pack shared and static libraries librnp.so and librnp.a
+# On Windows we will build/install/pack dynamic, import and  static libraries rnp.dll, rnp.lib and rnp-static.lib
 
-# If a client application uses shared rnp library, sexpp is statically linked to librnp.so and libsexpp.a is not installed
-# If a client application uses static rnp library, it still needs libsexpp.a and it is installed
+# If a client application uses shared rnp library, sexp is statically linked to librnp.so
+# If a client application uses static rnp library, it still needs libsexp.a
 
 if (BUILD_SHARED_LIBS)
-  install(TARGETS librnp
+# both static and shared libraries
+install(TARGETS librnp
     EXPORT rnp-targets
     LIBRARY
       DESTINATION  "${CMAKE_INSTALL_LIBDIR}"
@@ -453,33 +433,30 @@ if (BUILD_SHARED_LIBS)
       COMPONENT development
   )
 
-# install dll only for windows
-  if (WIN32)
-    install(TARGETS librnp
-      RUNTIME
-        DESTINATION "${CMAKE_INSTALL_BINDIR}"
-        COMPONENT runtime
-    )
-  endif(WIN32)
-else(BUILD_SHARED_LIBS)
-# static libraries
-# install libsexpp unless system-installed libsexpp is used
-  if (SYSTEM_LIBSEXPP)
-    install(TARGETS librnp
-      EXPORT rnp-targets
-      ARCHIVE
-        DESTINATION  "${CMAKE_INSTALL_LIBDIR}"
-        COMPONENT development
-    )
-  else (SYSTEM_LIBSEXPP)
-    install(TARGETS librnp sexpp
+  install(TARGETS librnp-static sexp
     EXPORT rnp-targets
     ARCHIVE
       DESTINATION  "${CMAKE_INSTALL_LIBDIR}"
       COMPONENT development
-    )
-  endif (SYSTEM_LIBSEXPP)
+  )
+else(BUILD_SHARED_LIBS)
+# static libraries only
+install(TARGETS librnp sexp
+    EXPORT rnp-targets
+    ARCHIVE
+      DESTINATION  "${CMAKE_INSTALL_LIBDIR}"
+      COMPONENT development
+)
 endif(BUILD_SHARED_LIBS)
+
+# install dll only for windows
+if (WIN32)
+  install(TARGETS librnp
+    RUNTIME
+      DESTINATION "${CMAKE_INSTALL_BINDIR}"
+      COMPONENT runtime
+  )
+endif(WIN32)
 
 # install headers
 install(

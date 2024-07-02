@@ -139,13 +139,6 @@ typedef uint32_t rnp_result_t;
 #define RNP_VERIFY_ALLOW_HIDDEN_RECIPIENT (1U << 2)
 
 /**
- * Key feature flags.
- */
-#define RNP_KEY_FEATURE_MDC (1U << 0)
-#define RNP_KEY_FEATURE_AEAD (1U << 1)
-#define RNP_KEY_FEATURE_V5 (1U << 2)
-
-/**
  * Return a constant string describing the result code
  */
 RNP_API const char *rnp_result_to_string(rnp_result_t result);
@@ -312,8 +305,8 @@ typedef bool (*rnp_password_cb)(rnp_ffi_t        ffi,
 
 /** callback used to signal the application that a key is needed
  *
- *  The application should use the appropriate functions (rnp_load_keys() or
- *  rnp_import_keys()) to load the requested key.
+ *  The application should use the appropriate functions (rnp_load_public_keys, etc)
+ *  to load the requested key.
  *
  *  This may be called multiple times for the same key. For example, if attempting
  *  to verify a signature, the signer's keyid may be used first to request the key.
@@ -330,7 +323,7 @@ typedef bool (*rnp_password_cb)(rnp_ffi_t        ffi,
  *     the keyrings.
  *
  *  @param ffi
- *  @param app_ctx provided by application in rnp_ffi_set_key_provider()
+ *  @param app_ctx provided by application in rnp_keyring_open
  *  @param identifier_type the type of identifier ("userid", "keyid", "grip")
  *  @param identifier the identifier for locating the key
  *  @param secret true if a secret key is being requested
@@ -1449,9 +1442,6 @@ RNP_API rnp_result_t rnp_signature_get_creation(rnp_signature_handle_t sig, uint
  */
 RNP_API rnp_result_t rnp_signature_get_expiration(rnp_signature_handle_t sig,
                                                   uint32_t *             expires);
-
-RNP_API rnp_result_t rnp_signature_get_features(rnp_signature_handle_t sig,
-                                                uint32_t *             features);
 
 /** Get signer's key id from the signature.
  *  Note: if key id is not available from the signature then NULL value will
