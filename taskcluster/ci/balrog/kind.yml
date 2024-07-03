@@ -7,7 +7,7 @@ loader: gecko_taskgraph.loader.single_dep:loader
 transforms:
     - gecko_taskgraph.transforms.name_sanity:transforms
     - gecko_taskgraph.transforms.balrog_submit:transforms
-    - gecko_taskgraph.transforms.scriptworker:add_balrog_scopes
+    - comm_taskgraph.transforms.scriptworker:add_balrog_scopes
     - gecko_taskgraph.transforms.task:transforms
 
 kind-dependencies:
