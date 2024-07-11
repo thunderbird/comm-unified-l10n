@@ -59,7 +59,8 @@ tasks:
                     release:
                         - comm/testing/mozharness/configs/releases/bouncer_thunderbird_release.py
                     esr.*:
-                        - comm/testing/mozharness/configs/releases/bouncer_thunderbird_esr.py
+                        # - comm/testing/mozharness/configs/releases/bouncer_thunderbird_esr.py
+                        - comm/testing/mozharness/configs/releases/bouncer_thunderbird_release.py
                     default:
                         - comm/testing/mozharness/configs/releases/bouncer_thunderbird_beta.py
         treeherder:
