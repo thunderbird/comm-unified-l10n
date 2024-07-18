@@ -3680,6 +3680,25 @@ export var RNP = {
     return email;
   },
 
+  /**
+   * Test if the given array appears to contain an OpenPGP ASCII Armored
+   * data block. This is done by checking the initial bytes of the array
+   * contain the -----BEGIN string. This check should be sufficient to
+   * distinguish it from a data block that contains a binary encoding
+   * of OpenPGP data packets.
+   *
+   * @param {TypedArray} typedArray - It's assumed this parameter
+   *   was created by obtaining a memory buffer from js-ctypes, casting
+   *   it to ctypes.uint8_t.array, and calling readTypedArray().
+   * @returns {boolean} - Returns true if the block looks ASCII armored
+   */
+  isASCIIArmored(typedArray) {
+    const armorBegin = "-----BEGIN";
+    return lazy.MailStringUtils.uint8ArrayToByteString(
+      typedArray.slice(0, armorBegin.length)
+    ).startsWith(armorBegin);
+  },
+
   async encryptAndOrSign(plaintext, args, resultStatus) {
     let signedInner;
 
@@ -3703,6 +3722,12 @@ export var RNP = {
         const orgEncrypt = args.encrypt;
         args.encrypt = false;
         signedInner = await lazy.GPGME.sign(plaintext, args, resultStatus);
+        // Despite our request to produce binary data, GPGME.sign might
+        // have produce ASCII armored encoding, e.g. if the user has
+        // a configuration file that enables it.
+        if (this.isASCIIArmored(signedInner)) {
+          signedInner = this.deArmorTypedArray(signedInner);
+        }
         args.encrypt = orgEncrypt;
       } else {
         // We aren't asked to encrypt, but sign only. That means the
