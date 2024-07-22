@@ -91,12 +91,16 @@ var GPGME = {
     return GPGMELib.exportKeys(email, false, keyFilterFunction);
   },
 
-  async decrypt(encrypted, enArmorCB) {
+  async decrypt(encrypted_string, enArmorCB) {
+    const arr = encrypted_string.split("").map(e => e.charCodeAt());
+    const encrypted_array = lazy.ctypes.uint8_t.array()(arr);
+    return this.decryptArray(encrypted_array, enArmorCB);
+  },
+
+  async decryptArray(encrypted_array, enArmorCB) {
     let result = {};
     result.decryptedData = "";
 
-    let arr = encrypted.split("").map(e => e.charCodeAt());
-    let encrypted_array = lazy.ctypes.uint8_t.array()(arr);
     let tmp_array = lazy.ctypes.cast(
       encrypted_array,
       lazy.ctypes.char.array(encrypted_array.length)
