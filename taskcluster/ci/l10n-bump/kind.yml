@@ -19,19 +19,24 @@ job-defaults:
         ignore-closed-tree: false
         push:
             by-project:
-                comm-(central|beta): true
+                comm-beta: true
+                comm-central: false
                 default: false
         source-repo:
             by-release-type:
                 beta: https://hg.mozilla.org/releases/comm-beta
+                nightly: https://hg.mozilla.org/comm-central
                 default: https://hg.mozilla.org/comm-central
         l10n-bump-info:
             by-release-type:
+                # Whenever the `beta` config changes, make sure to make
+                #     the corresponding change in merge-automation/kind.yml
                 beta:
                     - name: Thunderbird l10n changesets
                       path: mail/locales/l10n-changesets.json
                       version-path: mail/config/version.txt
-                      l10n-repo-url: "https://hg.mozilla.org/projects/comm-l10n/json-pushes?version=2&tipsonly=1"
+                      l10n-repo-url: "https://github.com/thunderbird/thunderbird-l10n"
+                      l10n-repo-target-branch: main
                       ignore-config:
                           ja:
                               - macosx64
@@ -53,8 +58,9 @@ job-defaults:
                 default:
                     - name: Thunderbird l10n changesets
                       path: mail/locales/l10n-changesets.json
+                      l10n-repo-url: "https://github.com/thunderbird/thunderbird-l10n"
+                      l10n-repo-target-branch: main
                       version-path: mail/config/version.txt
-                      l10n-repo-url: "https://hg.mozilla.org/projects/comm-l10n/json-pushes?version=2&tipsonly=1"
                       ignore-config:
                           ja:
                               - macosx64
