@@ -19,8 +19,7 @@ job-defaults:
         ignore-closed-tree: false
         push:
             by-project:
-                comm-beta: true
-                comm-central: false
+                comm-(central|beta): true
                 default: false
         source-repo:
             by-release-type:
