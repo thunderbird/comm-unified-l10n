@@ -40,7 +40,7 @@ job-defaults:
         comm-checkout: true
         actions:
             - clone-gecko-locales
-            - clone-monorepo
+            - clone-comm-locales
             - merge-repos
             - pack-merged
             - gen-changesets
