@@ -3016,8 +3016,7 @@ var folderPane = {
   },
 
   _onDragOver(event) {
-    const copyKey =
-      AppConstants.platform == "macosx" ? event.altKey : event.ctrlKey;
+    const systemDropEffect = event.dataTransfer.dropEffect;
 
     event.dataTransfer.dropEffect = "none";
     event.preventDefault();
@@ -3047,7 +3046,8 @@ var folderPane = {
           return;
         }
       }
-      event.dataTransfer.dropEffect = copyKey ? "copy" : "move";
+      event.dataTransfer.dropEffect =
+        systemDropEffect == "copy" ? "copy" : "move";
     } else if (types.includes("text/x-moz-folder")) {
       // If cannot create subfolders then don't allow drop here.
       if (!targetFolder.canCreateSubfolders) {
@@ -3064,7 +3064,10 @@ var folderPane = {
           return;
         }
         // Don't copy within same server.
-        if (sourceFolder.server == targetFolder.server && copyKey) {
+        if (
+          sourceFolder.server == targetFolder.server &&
+          systemDropEffect == "copy"
+        ) {
           return;
         }
         // Don't allow immediate child to be dropped onto its parent.
@@ -3092,7 +3095,8 @@ var folderPane = {
           return;
         }
       }
-      event.dataTransfer.dropEffect = copyKey ? "copy" : "move";
+      event.dataTransfer.dropEffect =
+        systemDropEffect == "copy" ? "copy" : "move";
     } else if (types.includes("application/x-moz-file")) {
       if (targetFolder.isServer || !targetFolder.canFileMessages) {
         return;
