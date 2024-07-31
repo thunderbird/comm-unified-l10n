@@ -18,7 +18,6 @@ from typing import Union
 from mozpack.copier import FileCopier
 from mozpack.files import FileFinder
 from mozversioncontrol import get_tool_path
-from mozversioncontrol.repoupdate import update_mercurial_repo
 
 COMM_PATH = (Path(__file__).parent / "../../..").resolve()
 GECKO_PATH = COMM_PATH.parent
@@ -26,7 +25,6 @@ COMM_PYTHON_L10N = os.path.join(COMM_PATH, "python/l10n")
 sys.path.insert(1, COMM_PYTHON_L10N)
 
 from tbxchannel.l10n_merge import (
-    COMM_L10N,
     COMM_STRINGS_PATTERNS,
     FIREFOX_L10N,
     GECKO_STRINGS_PATTERNS,
@@ -79,9 +77,9 @@ def get_strings_repos(locale, destination):
         central_revision = get_revision("browser", locale)
         update_git_repo(FIREFOX_L10N, firefox_l10n_path, revision=central_revision)
 
-        comm_l10n = Path(tmproot) / "comm-l10n"
+        thunderbird_l10n_path = Path(tmproot) / "thunderbird-l10n"
         comm_revision = get_revision("mail", locale)
-        update_mercurial_repo("hg", COMM_L10N, comm_l10n, revision=comm_revision)
+        update_git_repo(THUNDERBIRD_L10N, thunderbird_l10n_path, revision=comm_revision)
 
         file_copier = FileCopier()
 
@@ -92,7 +90,7 @@ def get_strings_repos(locale, destination):
                     file_copier.add(_filepath, _fileobj)
 
         add_to_registry(firefox_l10n_path, GECKO_STRINGS_PATTERNS)
-        add_to_registry(comm_l10n, COMM_STRINGS_PATTERNS)
+        add_to_registry(thunderbird_l10n_path, COMM_STRINGS_PATTERNS)
 
         file_copier.copy(str(destination))
 
