@@ -6796,13 +6796,9 @@ commandController.registerCallback(
       );
     }
     commandController._navigate(Ci.nsMsgNavigationType.toggleThreadKilled);
-    // Delaying to an animation frame to avoid synchronously flushing from the
-    // context menu.
-    window.requestAnimationFrame(() => {
-      // Invalidation should be unnecessary but the back end doesn't notify us
-      // properly and resists attempts to fix this.
-      threadTree.reset();
-    });
+    // Invalidation should be unnecessary but the back end doesn't notify us
+    // properly and resists attempts to fix this.
+    threadTree.reset();
   },
   () => gDBView?.numSelected >= 1 && gFolder && !gViewWrapper.isMultiFolder
 );
@@ -6817,13 +6813,9 @@ commandController.registerCallback(
       );
     }
     commandController._navigate(Ci.nsMsgNavigationType.toggleSubthreadKilled);
-    // Delaying to an animation frame to avoid synchronously flushing from the
-    // context menu.
-    window.requestAnimationFrame(() => {
-      // Invalidation should be unnecessary but the back end doesn't notify us
-      // properly and resists attempts to fix this.
-      threadTree.reset();
-    });
+    // Invalidation should be unnecessary but the back end doesn't notify us
+    // properly and resists attempts to fix this.
+    threadTree.reset();
   },
   () => gDBView?.numSelected >= 1 && gFolder && !gViewWrapper.isMultiFolder
 );
