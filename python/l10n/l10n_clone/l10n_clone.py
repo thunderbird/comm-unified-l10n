@@ -28,6 +28,7 @@ from tbxchannel.l10n_merge import (
     COMM_STRINGS_PATTERNS,
     FIREFOX_L10N,
     GECKO_STRINGS_PATTERNS,
+    THUNDERBIRD_L10N,
 )
 
 ALL_LOCALES = [l.rstrip() for l in (COMM_PATH / "mail/locales/all-locales").open().readlines()]
