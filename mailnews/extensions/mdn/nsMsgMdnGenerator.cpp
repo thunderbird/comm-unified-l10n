@@ -759,9 +759,7 @@ nsresult nsMsgMdnGenerator::SendMdnMsg() {
   rv = outgoingServerService->GetServerByIdentity(
       m_identity, getter_AddRefs(outgoingServer));
   NS_ENSURE_SUCCESS(rv, rv);
-  NS_ASSERTION(
-      outgoingServer,
-      "there should be an outgoing server configured (or set as default)");
+  NS_ENSURE_TRUE(outgoingServer, NS_ERROR_NULL_POINTER);
 
   outgoingServer->SendMailMessage(m_file, m_dntRrt, m_identity, identEmail,
                                   ""_ns, nullptr, false, ""_ns, this);
