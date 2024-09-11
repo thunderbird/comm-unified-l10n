@@ -286,7 +286,7 @@ add_task(async function testOpenForwardedEncrypted() {
   );
 
   await BrowserTestUtils.closeWindow(msgc);
-}).skip(); // TODO: broken functionality - bug 1837247
+});
 
 /**
  * Test that opening a message that is signed by a verified key shows as such.
