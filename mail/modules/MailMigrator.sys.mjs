@@ -28,7 +28,7 @@ export var MailMigrator = {
   _migrateUI() {
     // The code for this was ported from
     // mozilla/browser/components/nsBrowserGlue.js
-    const UI_VERSION = 43;
+    const UI_VERSION = 44;
     const MESSENGER_DOCURL = "chrome://messenger/content/messenger.xhtml";
     const MESSENGERCOMPOSE_DOCURL =
       "chrome://messenger/content/messengercompose/messengercompose.xhtml";
@@ -272,6 +272,21 @@ export var MailMigrator = {
         serverKeys.forEach(key => {
           Services.prefs.setCharPref(`mail.smtpserver.${key}.type`, "smtp");
         });
+      }
+
+      if (currentUIVersion < 44) {
+        // Upgrade all (former) tryStartTLS (==1) uses to alwaysStartTLS.
+        for (const account of MailServices.accounts.accounts) {
+          const server = account.incomingServer;
+          if (server.socketType == 1) {
+            server.socketType = Ci.nsMsgSocketType.alwaysSTARTTLS;
+          }
+        }
+        for (const server of MailServices.outgoingServer.servers) {
+          if (server.socketType == 1) {
+            server.socketType = Ci.nsMsgSocketType.alwaysSTARTTLS;
+          }
+        }
       }
 
       // Migration tasks that may take a long time are not run immediately, but
