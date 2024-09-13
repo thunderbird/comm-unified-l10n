@@ -535,15 +535,42 @@ nsMsgAccountManager::RemoveIncomingServer(nsIMsgIncomingServer* aServer,
   return rv;
 }
 
-/*
- * create a server when you know the key and the type
+/**
+ * Create a server when you know the key and the type
  */
 nsresult nsMsgAccountManager::createKeyedServer(
     const nsACString& key, const nsACString& username,
-    const nsACString& hostname, const nsACString& type,
+    const nsACString& hostnameIn, const nsACString& type,
     nsIMsgIncomingServer** aServer) {
   nsresult rv;
   *aServer = nullptr;
+
+  nsAutoCString hostname(hostnameIn);
+  if (hostname.Equals("Local Folders") || hostname.Equals("smart mailboxes")) {
+    // Allow these special hostnames, but only for "none" servers.
+    if (type != "none") {
+      return NS_ERROR_MALFORMED_URI;
+    }
+  } else if (hostname.Equals("Local%20Folders") ||
+             hostname.Equals("smart%20mailboxes")) {
+    // Don't allow these %-encoded special hostnames.
+    return NS_ERROR_MALFORMED_URI;
+  } else {
+    // Check the hostname is valid.
+    nsAutoCString unused;
+    rv = NS_DomainToASCII(hostname, unused);
+    if (NS_SUCCEEDED(rv)) {
+      nsCOMPtr<nsIURL> url;
+      rv = NS_MutateURI(NS_STANDARDURLMUTATOR_CONTRACTID)
+               .SetSpec("imap://"_ns + hostname)
+               .Finalize(url);
+    }
+    if (NS_FAILED(rv)) {
+      // In case of failure, use a <key>.invalid hostname instead
+      // so that access to the account is not lost.
+      hostname = key + ".invalid"_ns;
+    }
+  }
 
   // construct the contractid
   nsAutoCString serverContractID("@mozilla.org/messenger/server;1?type=");
