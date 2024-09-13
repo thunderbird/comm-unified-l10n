@@ -4866,6 +4866,8 @@ var threadPane = {
           --tag-contrast-color: ${contrast};
         }`
       );
+      document.body.style.setProperty(`--tag-${key}-backcolor`, color);
+      document.body.style.setProperty(`--tag-${key}-forecolor`, contrast);
     }
   },
 
