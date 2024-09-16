@@ -264,7 +264,7 @@ add_task(async function testOpenForwardedEncrypted() {
   );
 
   close_window(mc);
-}).skip(); // TODO can't open message attachments yet
+});
 
 /**
  * Test that opening a message that is signed by a verified key shows as such.

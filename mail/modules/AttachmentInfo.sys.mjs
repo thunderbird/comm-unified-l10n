@@ -202,7 +202,9 @@ export class AttachmentInfo {
 
       let { name, url } = this;
 
+      url += url.includes("?") ? "&outputformat=raw" : "?outputformat=raw";
       let sourceURI = Services.io.newURI(url);
+
       async function saveToFile(path, isTmp = false) {
         let buffer = await new Promise((resolve, reject) => {
           lazy.NetUtil.asyncFetch(

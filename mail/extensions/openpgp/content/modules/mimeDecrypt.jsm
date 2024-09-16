@@ -198,6 +198,9 @@ MimeDecryptHandler.prototype = {
         "mimeDecrypt.jsm: onStartRequest: uri='" + this.uri.spec + "'\n"
       );
     }
+
+    this.outputRaw = this.uri && /[&?]outputformat=raw/.test(this.uri.spec);
+
     this.pipe = null;
     this.closePipe = false;
     this.exitCode = null;
@@ -274,6 +277,11 @@ MimeDecryptHandler.prototype = {
 
     if (count > 0) {
       var data = this.inStream.read(count);
+
+      if (this.outputRaw) {
+        this.cacheData(data);
+        return;
+      }
 
       if (this.mimePartCount == 0 && this.dataIsBase64 === null) {
         // try to determine if this could be a base64 encoded message part
@@ -379,6 +387,11 @@ MimeDecryptHandler.prototype = {
     LOCAL_DEBUG("mimeDecrypt.jsm: onStopRequest\n");
     --gNumProc;
     if (!this.initOk) {
+      return;
+    }
+
+    if (this.outputRaw) {
+      this.returnData(this.outQueue);
       return;
     }
 
