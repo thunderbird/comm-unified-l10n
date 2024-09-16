@@ -577,7 +577,10 @@ void nsImapServerResponseParser::response_data() {
           if (!fNextToken)
             SetSyntaxError(true);
           else {
-            fMailAccountUrl.Adopt(CreateAstring());
+            char* str = CreateAstring();
+            if (str) {
+              fMailAccountUrl.Adopt(str);
+            }
             AdvanceToNextToken();
           }
         } else
@@ -785,7 +788,10 @@ void nsImapServerResponseParser::mailbox(nsImapMailboxSpec* boxSpec) {
     if (xlistInbox) PR_Free(CreateAstring());
     AdvanceToNextToken();
   } else {
-    boxname = nsDependentCString(CreateAstring());
+    char* name = CreateAstring();
+    if (name) {
+      boxname.Adopt(name);
+    }
     AdvanceToNextToken();
   }
 
@@ -2090,7 +2096,9 @@ void nsImapServerResponseParser::myrights_data(bool unsolicited) {
       mailboxName = strdup(fSelectedMailboxName);
     } else {
       mailboxName = CreateAstring();
-      if (mailboxName) AdvanceToNextToken();
+      if (mailboxName) {
+        AdvanceToNextToken();
+      }
     }
     if (mailboxName) {
       if (ContinueParse()) {
@@ -2162,7 +2170,11 @@ void nsImapServerResponseParser::quota_data() {
     nsCString quotaroot;
     AdvanceToNextToken();
     while (ContinueParse() && !fAtEndOfLine) {
-      quotaroot.Adopt(CreateAstring());
+      char* root = CreateAstring();
+      if (!root) {
+        break;
+      }
+      quotaroot.Adopt(root);
       AdvanceToNextToken();
     }
     // Invalidate any previously stored quota data. Updated QUOTA data follows.
@@ -2173,7 +2185,10 @@ void nsImapServerResponseParser::quota_data() {
     AdvanceToNextToken();
     if (ContinueParse()) {
       nsCString quotaroot;
-      quotaroot.Adopt(CreateAstring());
+      char* root = CreateAstring();
+      if (root) {
+        quotaroot.Adopt(root);
+      }
       nsCString resource;
       AdvanceToNextToken();
       if (fNextToken) {
@@ -2185,7 +2200,11 @@ void nsImapServerResponseParser::quota_data() {
         // STORAGE in KBytes. A mailbox can have multiple quotaroots but
         // typically only one and with a single resource.
         while (ContinueParse() && !fAtEndOfLine) {
-          resource.Adopt(CreateAstring());
+          char* res = CreateAstring();
+          if (!res) {
+            break;
+          }
+          resource.Adopt(res);
           AdvanceToNextToken();
           usage = atoll(fNextToken);
           AdvanceToNextToken();
