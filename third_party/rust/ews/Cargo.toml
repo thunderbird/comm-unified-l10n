@@ -13,7 +13,16 @@
 edition = "2021"
 name = "ews"
 version = "0.1.0"
+build = false
+autobins = false
+autoexamples = false
+autotests = false
+autobenches = false
 readme = "README.md"
+
+[lib]
+name = "ews"
+path = "src/lib.rs"
 
 [dependencies]
 serde_path_to_error = "0.1.11"
