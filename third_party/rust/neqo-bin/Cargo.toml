@@ -15,11 +15,6 @@ rust-version = "1.76.0"
 name = "neqo-bin"
 version = "0.8.2"
 authors = ["The Neqo Authors <necko@mozilla.com>"]
-build = false
-autobins = false
-autoexamples = false
-autotests = false
-autobenches = false
 description = "A basic QUIC HTTP/0.9 and HTTP/3 client and server."
 homepage = "https://github.com/mozilla/neqo/"
 readme = "../README.md"
@@ -39,8 +34,6 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/mozilla/neqo/"
 
 [lib]
-name = "neqo_bin"
-path = "src/lib.rs"
 bench = false
 
 [[bin]]
@@ -55,7 +48,6 @@ bench = false
 
 [[bench]]
 name = "main"
-path = "benches/main.rs"
 harness = false
 required-features = ["bench"]
 

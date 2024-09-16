@@ -15,7 +15,6 @@ rust-version = "1.47.0"
 name = "unicode-bidi"
 version = "0.3.15"
 authors = ["The Servo Project Developers"]
-build = false
 exclude = [
     "benches/**",
     "data/**",
@@ -23,10 +22,6 @@ exclude = [
     "tests/**",
     "tools/**",
 ]
-autobins = false
-autoexamples = false
-autotests = false
-autobenches = false
 description = "Implementation of the Unicode Bidirectional Algorithm"
 documentation = "https://docs.rs/unicode-bidi/"
 readme = "README.md"
@@ -47,7 +42,11 @@ repository = "https://github.com/servo/unicode-bidi"
 
 [lib]
 name = "unicode_bidi"
-path = "src/lib.rs"
+
+[[test]]
+name = "conformance_tests"
+path = "tests/conformance_tests.rs"
+required-features = ["hardcoded-data"]
 
 [dependencies.flame]
 version = "0.2"

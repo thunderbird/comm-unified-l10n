@@ -15,11 +15,6 @@ rust-version = "1.76.0"
 name = "neqo-transport"
 version = "0.8.2"
 authors = ["The Neqo Authors <necko@mozilla.com>"]
-build = "build.rs"
-autobins = false
-autoexamples = false
-autotests = false
-autobenches = false
 description = "Neqo, the Mozilla implementation of QUIC in Rust."
 homepage = "https://github.com/mozilla/neqo/"
 readme = "../README.md"
@@ -39,45 +34,20 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/mozilla/neqo/"
 
 [lib]
-name = "neqo_transport"
-path = "src/lib.rs"
 bench = false
 
-[[test]]
-name = "conn_vectors"
-path = "tests/conn_vectors.rs"
-
-[[test]]
-name = "connection"
-path = "tests/connection.rs"
-
-[[test]]
-name = "network"
-path = "tests/network.rs"
-
-[[test]]
-name = "retry"
-path = "tests/retry.rs"
-
-[[test]]
-name = "server"
-path = "tests/server.rs"
-
 [[bench]]
-name = "range_tracker"
-path = "benches/range_tracker.rs"
+name = "transfer"
 harness = false
 required-features = ["bench"]
 
 [[bench]]
 name = "rx_stream_orderer"
-path = "benches/rx_stream_orderer.rs"
 harness = false
 required-features = ["bench"]
 
 [[bench]]
-name = "transfer"
-path = "benches/transfer.rs"
+name = "range_tracker"
 harness = false
 required-features = ["bench"]
 
