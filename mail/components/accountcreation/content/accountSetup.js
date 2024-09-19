@@ -2420,11 +2420,17 @@ var gAccountSetup = {
           successfulConfig.incoming.username;
         self._currentConfig.outgoing.username =
           successfulConfig.outgoing.username;
-        self._currentConfig.incoming.oauthSettings =
-          successfulConfig.incoming.oauthSettings;
-        self._currentConfig.outgoing.oauthSettings =
-          successfulConfig.outgoing.oauthSettings;
 
+        // We loaded dynamic client registration, fill this data back in to the
+        // config set.
+        if (successfulConfig.incoming.oauthSettings) {
+          self._currentConfig.incoming.oauthSettings =
+            successfulConfig.incoming.oauthSettings;
+        }
+        if (successfulConfig.outgoing.oauthSettings) {
+          self._currentConfig.outgoing.oauthSettings =
+            successfulConfig.outgoing.oauthSettings;
+        }
         self.finish(configFilledIn);
 
         Services.telemetry.keyedScalarAdd(
@@ -2598,20 +2604,6 @@ var gAccountSetup = {
    */
   async fetchAddressBooks() {
     this.addressBooks = [];
-
-    // Bail out if Google OAuth was used and Contacts scope wasn't granted.
-    if (this._currentConfig.incoming.oauthSettings) {
-      const grantedScope = this._currentConfig.incoming.oauthSettings.scope;
-      if (
-        grantedScope.includes("google") &&
-        !grantedScope
-          .split(" ")
-          .includes("https://www.googleapis.com/auth/carddav")
-      ) {
-        return;
-      }
-    }
-
     try {
       this.addressBooks = await CardDAVUtils.detectAddressBooks(
         this._email,
@@ -2735,20 +2727,6 @@ var gAccountSetup = {
    */
   async fetchCalendars() {
     this.calendars = {};
-
-    // Bail out if Google OAuth was used and Calendars scope wasn't granted.
-    if (this._currentConfig.incoming.oauthSettings) {
-      const grantedScope = this._currentConfig.incoming.oauthSettings.scope;
-      if (
-        grantedScope.includes("google") &&
-        !grantedScope
-          .split(" ")
-          .includes("https://www.googleapis.com/auth/calendar")
-      ) {
-        return;
-      }
-    }
-
     try {
       this.calendars = await cal.provider.detection.detect(
         this._email,
