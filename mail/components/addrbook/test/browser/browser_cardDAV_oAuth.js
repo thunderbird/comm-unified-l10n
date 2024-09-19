@@ -83,14 +83,7 @@ async function handleOAuthDialog(expectedHint) {
   info("oauth2 window shown");
   await SpecialPowers.spawn(
     oAuthWindow.getBrowser(),
-    [
-      {
-        expectedHint,
-        expectedScope: SCOPE,
-        username: USERNAME,
-        password: PASSWORD,
-      },
-    ],
+    [{ expectedHint, username: USERNAME, password: PASSWORD }],
     OAuth2TestUtils.submitOAuthLogin
   );
 }
