@@ -1477,7 +1477,7 @@ const char* kMessageCharSetColumnName = "msgCharSet";
 const char* kThreadParentColumnName = "threadParent";
 const char* kThreadRootColumnName = "threadRoot";
 const char* kThreadNewestMsgDateColumnName = "threadNewestMsgDate";
-const char* kOfflineMsgOffsetColumnName = "msgOffset";
+const char* kOfflineMsgOffsetColumnName = "msgOffset";  // Obsolete.
 const char* kOfflineMsgSizeColumnName = "offlineMsgSize";
 struct mdbOid gAllMsgHdrsTableOID;
 struct mdbOid gAllThreadsTableOID;
