@@ -1538,7 +1538,7 @@ ItipOpListener.prototype = {
   mExtResponse: null,
 
   onOperationComplete(aCalendar, aStatus, aOperationType, aId, aDetail) {
-    lazy.cal.ASSERT(Components.isSuccessCode(aStatus), "error on iTIP processing");
+    lazy.cal.ASSERT(Components.isSuccessCode(aStatus), `iTIP processing failed: ${aDetail}`);
     if (Components.isSuccessCode(aStatus)) {
       itip.checkAndSend(aOperationType, aDetail, this.mOldItem, this.mExtResponse);
     }
@@ -2050,7 +2050,7 @@ ItipItemFinder.prototype = {
                       e =>
                         opListener.onOperationComplete(
                           item.calendar,
-                          e.result,
+                          e.result || Cr.NS_ERROR_FAILURE,
                           Ci.calIOperationListener.DELETE,
                           item.id,
                           e
@@ -2072,7 +2072,7 @@ ItipItemFinder.prototype = {
                     e =>
                       opListener.onOperationComplete(
                         item.calendar,
-                        e.result,
+                        e.result || Cr.NS_ERROR_FAILURE,
                         Ci.calIOperationListener.DELETE,
                         item.id,
                         e
@@ -2143,7 +2143,7 @@ ItipItemFinder.prototype = {
                 e =>
                   listener.onOperationComplete(
                     newItem.calendar,
-                    e.result,
+                    e.result || Cr.NS_ERROR_FAILURE,
                     Ci.calIOperationListener.ADD,
                     newItem.id,
                     e
@@ -2155,7 +2155,7 @@ ItipItemFinder.prototype = {
           }
           case "CANCEL": // has already been processed
           case "REPLY": // item has been previously removed from the calendar
-          case "COUNTER": // the item has been previously removed form the calendar
+          case "COUNTER": // the item has been previously removed from the calendar
             break;
           default:
             rc = Cr.NS_ERROR_NOT_IMPLEMENTED;
