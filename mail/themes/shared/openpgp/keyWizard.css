@@ -75,6 +75,14 @@ description {
   height: 16px;
 }
 
+#wizardCreateKey.in-subdialog {
+  /*
+   * Prevent the subdialog from growing too tall if the section doesn't have
+   * an initial height.
+   */
+  height: 1px;
+}
+
 /* Import key list */
 
 #keyListCount {
@@ -159,4 +167,8 @@ description {
   & input:not([type="number"],[type="color"]) {
     flex: 1;
   }
+}
+
+menupopup[needsgutter] > :is(menu, menuitem)::before {
+  display: none;
 }
