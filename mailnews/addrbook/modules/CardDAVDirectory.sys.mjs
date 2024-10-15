@@ -547,10 +547,7 @@ export class CardDAVDirectory extends SQLiteDirectory {
     // A map of all existing hrefs and etags. If the etag for an href matches
     // what we already have, we won't fetch it.
     const currentHrefs = new Map(
-      Array.from(
-        this.cards.values().filter(c => c.get("_href")),
-        c => [c.get("_href"), c.get("_etag")]
-      )
+      Array.from(this.cards.values(), c => [c.get("_href"), c.get("_etag")])
     );
 
     const hrefsToFetch = [];
@@ -829,7 +826,7 @@ export class CardDAVDirectory extends SQLiteDirectory {
 
     if (response.status == 400) {
       log.warn(
-        `Server ${this._serverURL} responded with: ${response.status} ${response.statusText}`
+        `Server responded with: ${response.status} ${response.statusText}`
       );
       await this.fetchAllFromServer();
       return;
