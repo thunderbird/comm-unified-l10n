@@ -1128,3 +1128,186 @@ calendar-notifications-setting {
     vertical-align: sub;
   }
 }
+
+/* QR Export for Mobile */
+
+#qrExportContent {
+  --qr-legend-icon-gap: 6px;
+  --qr-gap: 12px;
+  --qr-inset-margin: calc(16px + var(--qr-legend-icon-gap));
+
+  h2 {
+    font-weight: 500;
+    font-size: 1.2rem;
+  }
+
+  h3 {
+    font-weight: 600;
+    font-size: 1.2rem;
+    margin: 0;
+  }
+
+  h4 {
+    font-weight: normal;
+    font-size: 1.2rem;
+    margin: 0;
+    margin-bottom: var(--qr-gap);
+  }
+
+  .qr-panel {
+    background: light-dark(#f7f7f7, #262d3b);
+    border: 1px solid light-dark(#e4e4e7, #303a4a);
+    border-radius: 6px;
+    padding-inline: 32px;
+    padding-block: 24px 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+
+    section {
+      padding-inline: var(--qr-gap);
+    }
+  }
+
+  .qr-small {
+    font-size: 0.85rem;
+    line-height: 1.5rem;
+  }
+
+  .qr-subpanel {
+    background: light-dark(#feffff, #1a202c);
+    border-radius: 3px;
+    padding: var(--qr-gap);
+
+    header {
+      display: flex;
+      justify-content: space-between;
+    }
+  }
+
+  .qr-warn {
+    font-weight: bold;
+  }
+
+  .qr-nav {
+    display: flex;
+    justify-content: space-between;
+
+    .end {
+      margin-inline-start: auto;
+    }
+  }
+
+  .inset {
+    margin-inline-start: var(--qr-inset-margin);
+  }
+
+  .inset-icon::before {
+    margin-inline-start: calc(-1 * var(--qr-inset-margin));
+    margin-inline-end: var(--qr-legend-icon-gap);
+    -moz-context-properties: fill, stroke;
+    fill: color-mix(in srgb, currentColor 20%, transparent);
+    stroke: currentColor;
+    vertical-align: middle;
+  }
+}
+
+#qrExportAccountsLegend::before {
+  content: var(--icon-mail);
+}
+
+#qrExportSecurityLegend::before {
+  content: var(--icon-lock);
+}
+
+#qrExportOauthWarning::before {
+  content: var(--icon-warning);
+}
+
+#qrExportSecurityHint::before {
+  content: var(--icon-info);
+  margin-inline-end: var(--qr-legend-icon-gap);
+  -moz-context-properties: fill, stroke;
+  fill: color-mix(in srgb, currentColor 20%, transparent);
+  stroke: currentColor;
+  vertical-align: middle;
+  margin-inline-start: calc(-1 * (16px + var(--qr-legend-icon-gap)));
+}
+
+#qrExportAccountsList {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid: auto-flow / repeat(2, 1fr);
+  column-gap: var(--qr-gap);
+
+  & li {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: block ruby;
+  }
+}
+
+#qrExportSelectAll {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  border-radius: 3px;
+  background: light-dark(#1373d9, #58c9ff);
+  color: light-dark(#feffff, #1a202c);
+  padding: 4px 9px;
+  border: 1px solid light-dark(#175fb6, #32aeff);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.25);
+  font-weight: 700;
+
+  &:enabled:hover {
+    background: light-dark(#175fb6, #32aeff);
+  }
+}
+
+qr-code-wizard {
+  text-align: center;
+
+  figure {
+    margin: 0;
+  }
+
+  figcaption {
+    font-weight: 600;
+    color: light-dark(#4c4d58, #d9d9de);
+    margin-block-end: var(--qr-gap);
+  }
+
+  img {
+    max-width: 420px;
+    /* QR code background for contrast. */
+    background: white;
+  }
+}
+
+#qrExportSummaryList {
+  padding: 0;
+  margin: 0;
+  list-style-position: inside;
+  line-height: 2rem;
+
+  & > li > ul {
+    list-style-type: disc;
+    display: grid;
+
+    & li {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+}
+
+#qrExportSummary h2 {
+  font-size: 1em;
+  font-weight: normal;
+  margin: 0;
+}
+
+#qrExportRestart {
+  margin-block-start: 24px;
+}
