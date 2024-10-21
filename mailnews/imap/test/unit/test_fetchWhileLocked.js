@@ -129,7 +129,7 @@ add_task(async function () {
   );
   Assert.equal(
     messages[2].storeToken,
-    mbox.lastIndexOf("\r\nFrom - ", indexOfSubject) + 2,
+    mbox.lastIndexOf("\r\nFrom \r\n", indexOfSubject) + 2,
     "there should be a store token and it should point to the message"
   );
 });

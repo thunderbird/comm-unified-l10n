@@ -24,7 +24,7 @@ add_task(async function testStoreToken() {
   // they actually match what's in the mbox file.
 
   const mbox = await IOUtils.readUTF8(testFolder.filePath.path);
-  const fromLineLength = "From - Tue Oct 08 23:23:39 2024\r\n".length;
+  const fromLineLength = "From \r\n".length;
   const emptyLinesLength = "\r\n\r\n".length;
 
   const [message1, message2] = [...testFolder.messages];
@@ -36,7 +36,7 @@ add_task(async function testStoreToken() {
   );
   Assert.equal(
     mbox.slice(message1.storeToken, Number(message1.storeToken) + 7),
-    "From - ",
+    "From \r\n",
     "first message storeToken value points to a From line"
   );
 
@@ -60,7 +60,7 @@ add_task(async function testStoreToken() {
   );
   Assert.equal(
     mbox.slice(message2.storeToken, Number(message2.storeToken) + 7),
-    "From - ",
+    "From \r\n",
     "second message storeToken value points to a From line"
   );
 
