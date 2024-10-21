@@ -210,6 +210,7 @@ function test_replaceVariables() {
     "<socketType>STARTTLS</socketType>" +
     "<username>%EMAILADDRESS%</username>" +
     "<authentication>plain</authentication>" +
+    "<addThisServer>true</addThisServer>" +
     "<useGlobalPreferredServer>false</useGlobalPreferredServer>" +
     "</outgoingServer>" +
     "</emailProvider>" +
