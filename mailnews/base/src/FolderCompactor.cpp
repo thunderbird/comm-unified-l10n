@@ -28,6 +28,7 @@
 #include "nsTStringHasher.h"  // IWYU pragma: keep, for mozilla::DefaultHasher<nsCString>
 #include "mozilla/Components.h"
 #include "mozilla/Logging.h"
+#include "mozilla/ProfilerMarkers.h"
 #include "mozilla/RefCounted.h"
 #include "mozilla/Services.h"
 #include "mozilla/ScopeExit.h"
@@ -372,6 +373,11 @@ NS_IMETHODIMP FolderCompactor::OnCompactionBegin() {
 
   MOZ_LOG(gCompactLog, LogLevel::Verbose, ("OnCompactionBegin()"));
   mStart = mozilla::TimeStamp::Now();
+
+  PROFILER_MARKER_TEXT(
+      "FolderCompactor", OTHER,
+      mozilla::MarkerOptions(mozilla::MarkerTiming::IntervalStart()),
+      mFolder->URI());
   return NS_OK;
 }
 
@@ -502,6 +508,10 @@ NS_IMETHODIMP FolderCompactor::OnCompactionComplete(nsresult status,
         mozilla::Telemetry::TB_COMPACT_DURATION, mStart,
         mozilla::TimeStamp::Now());
   }
+  PROFILER_MARKER_TEXT(
+      "FolderCompactor", OTHER,
+      mozilla::MarkerOptions(mozilla::MarkerTiming::IntervalEnd()),
+      mFolder->URI());
 
   if (NS_SUCCEEDED(status)) {
     // Commit all the changes.
