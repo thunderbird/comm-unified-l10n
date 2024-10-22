@@ -77,3 +77,10 @@ viaduct = { git = "https://github.com/mozilla/application-services", rev = "7c27
 webext-storage = { git = "https://github.com/mozilla/application-services", rev = "7c275b9088557abcbc8f3c2834f9aaa9064ca5e4" }
 mio_0_8 = { package = "mio", git = "https://github.com/glandium/mio", rev = "9a2ef335c366044ffe73b1c4acabe50a1daefe05" }
 gpu-descriptor = { git = "https://github.com/zakarumych/gpu-descriptor", rev = "7b71a4e47c81903ad75e2c53deb5ab1310f6ff4d" }
+
+[patch."https://github.com/mozilla/neqo"]
+neqo-common = { path = "../third_party/rust/neqo-common" }
+neqo-crypto = { path = "../third_party/rust/neqo-crypto" }
+neqo-http3 = { path = "../third_party/rust/neqo-http3" }
+neqo-qpack = { path = "../third_party/rust/neqo-qpack" }
+neqo-transport = { path = "../third_party/rust/neqo-transport" }
