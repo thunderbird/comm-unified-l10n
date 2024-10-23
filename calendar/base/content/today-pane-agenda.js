@@ -13,8 +13,6 @@
 
   customElements.whenDefined("tree-listbox").then(() => {
     class Agenda extends CalendarFilteredViewMixin(customElements.get("tree-listbox")) {
-      _showsToday = false;
-
       constructor() {
         super();
 
@@ -69,7 +67,7 @@
         super.connectedCallback();
 
         const metronomeCallback = () => {
-          if (!this.showsToday) {
+          if (!TodayPane.showsToday) {
             return;
           }
 
@@ -154,15 +152,11 @@
        * @param {calIDateTime} date
        */
       async update(date) {
-        const today = cal.dtz.now();
-
         this.startDate = date.clone();
         this.startDate.isDate = true;
 
         this.endDate = this.startDate.clone();
-        this._showsToday =
-          date.year == today.year && date.month == today.month && date.day == today.day;
-        if (this._showsToday) {
+        if (TodayPane.showsToday) {
           this.endDate.day += this.numberOfDays;
         } else {
           this.endDate.day++;
@@ -175,15 +169,6 @@
           await this.activate();
         }
         this.selectedIndex = 0;
-      }
-
-      /**
-       * If the agenda is showing today (true), or any other day (false).
-       *
-       * @type {boolean}
-       */
-      get showsToday() {
-        return this._showsToday;
       }
 
       /**
@@ -616,7 +601,7 @@
       // These conditions won't change in the lifetime of an AgendaListItem,
       // so let's avoid any further work and return immediately.
       if (
-        !TodayPane.agenda.showsToday ||
+        !TodayPane.showsToday ||
         this.item.startDate.isDate ||
         this.classList.contains("agenda-listitem-end")
       ) {
