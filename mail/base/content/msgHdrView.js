@@ -3815,7 +3815,7 @@ var gMessageNotificationBar = {
           aCanOverride ? buttons : []
         )
         .then(notification => {
-          notification.buttonContainer.firstElementChild.classList.add(
+          notification.buttonContainer.firstElementChild?.classList.add(
             "button-menu-list"
           );
         }, console.warn);
