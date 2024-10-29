@@ -4934,7 +4934,6 @@ async function ComposeStartup() {
   if (
     gComposeType != Ci.nsIMsgCompType.Draft &&
     gComposeType != Ci.nsIMsgCompType.Template &&
-    gEncryptedURIService &&
     gEncryptedURIService.isEncrypted(gMsgCompose.originalMsgURI)
   ) {
     gIsRelatedToEncryptedOriginal = true;
