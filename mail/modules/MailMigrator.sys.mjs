@@ -29,7 +29,7 @@ export var MailMigrator = {
   _migrateUI() {
     // The code for this was ported from
     // mozilla/browser/components/nsBrowserGlue.js
-    const UI_VERSION = 45;
+    const UI_VERSION = 46;
     const MESSENGER_DOCURL = "chrome://messenger/content/messenger.xhtml";
     const MESSENGERCOMPOSE_DOCURL =
       "chrome://messenger/content/messengercompose/messengercompose.xhtml";
@@ -328,6 +328,13 @@ export var MailMigrator = {
           Promise.all(migrations).then(() => {
             lazy.MailUtils.restartApplication();
           });
+        }
+      }
+
+      if (currentUIVersion < 46) {
+        // Clean out an old default value that got stuck in a lot of profiles.
+        if (Services.prefs.getIntPref("mail.purge_threshhold_mb") == 20) {
+          Services.prefs.clearUserPref("mail.purge_threshhold_mb");
         }
       }
 

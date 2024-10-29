@@ -77,9 +77,7 @@ static PRTime gtimeOfLastPurgeCheck;  // variable to know when to check for
                                       // purge threshold
 
 #define PREF_MAIL_PROMPT_PURGE_THRESHOLD "mail.prompt_purge_threshhold"
-#define PREF_MAIL_PURGE_THRESHOLD "mail.purge_threshhold"
 #define PREF_MAIL_PURGE_THRESHOLD_MB "mail.purge_threshhold_mb"
-#define PREF_MAIL_PURGE_MIGRATED "mail.purge_threshold_migrated"
 #define PREF_MAIL_PURGE_ASK "mail.purge.ask"
 #define PREF_MAIL_WARN_FILTER_CHANGED "mail.warn_filter_changed"
 
@@ -1753,19 +1751,8 @@ nsresult nsMsgDBFolder::GetPurgeThreshold(int32_t* aThreshold) {
   nsCOMPtr<nsIPrefBranch> prefBranch =
       do_GetService(NS_PREFSERVICE_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv) && prefBranch) {
-    int32_t thresholdMB = 200;
-    bool thresholdMigrated = false;
+    int32_t thresholdMB = 500;
     prefBranch->GetIntPref(PREF_MAIL_PURGE_THRESHOLD_MB, &thresholdMB);
-    prefBranch->GetBoolPref(PREF_MAIL_PURGE_MIGRATED, &thresholdMigrated);
-    if (!thresholdMigrated) {
-      *aThreshold = 20480;
-      (void)prefBranch->GetIntPref(PREF_MAIL_PURGE_THRESHOLD, aThreshold);
-      if (*aThreshold / 1024 != thresholdMB) {
-        thresholdMB = std::max(1, *aThreshold / 1024);
-        prefBranch->SetIntPref(PREF_MAIL_PURGE_THRESHOLD_MB, thresholdMB);
-      }
-      prefBranch->SetBoolPref(PREF_MAIL_PURGE_MIGRATED, true);
-    }
     *aThreshold = thresholdMB * 1024;
   }
   return rv;
