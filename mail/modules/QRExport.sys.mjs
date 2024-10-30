@@ -7,6 +7,7 @@ import { MailServices } from "resource:///modules/MailServices.sys.mjs";
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   default: "resource:///modules/qrcode.mjs",
+  MailStringUtils: "resource:///modules/MailStringUtils.sys.mjs",
 });
 ChromeUtils.defineLazyGetter(lazy, "console", () =>
   console.createInstance({
@@ -210,7 +211,10 @@ export const QRExport = {
     const qrOptions = {
       errorCorrectionLevel: lazy.default.ErrorCorrectionLevel.L,
     };
-    const matrix = lazy.default.generate(data, qrOptions);
+    const matrix = lazy.default.generate(
+      lazy.MailStringUtils.stringToByteString(data),
+      qrOptions
+    );
     return lazy.default.render("svg-uri", matrix);
   },
 
