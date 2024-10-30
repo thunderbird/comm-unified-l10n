@@ -1426,9 +1426,3 @@ pref("mail.dark-reader.enabled", true);
 #else
 pref("mail.dark-reader.enabled", false);
 #endif
-
-#ifdef NIGHTLY_BUILD
-pref("mail.dark-reader.enabled", true);
-#else
-pref("mail.dark-reader.enabled", false);
-#endif
