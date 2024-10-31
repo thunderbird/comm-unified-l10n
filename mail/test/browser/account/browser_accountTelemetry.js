@@ -123,17 +123,18 @@ add_task(async function test_account_sizes() {
     false
   );
   const other = await create_folder("TestAccountSize");
+
+  let expectInboxSize = 0;
   for (let i = 0; i < NUM_INBOX; i++) {
-    await add_message_to_folder(
-      [inbox],
-      msgGen.makeMessage({ body: { body: `test inbox ${i}` } })
-    );
+    const synMsg = msgGen.makeMessage({ body: { body: `test inbox ${i}` } });
+    expectInboxSize += synMsg.toMessageString().length;
+    await add_message_to_folder([inbox], synMsg);
   }
+  let expectOtherSize = 0;
   for (let i = 0; i < NUM_OTHER; i++) {
-    await add_message_to_folder(
-      [other],
-      msgGen.makeMessage({ body: { body: `test other ${i}` } })
-    );
+    const synMsg = msgGen.makeMessage({ body: { body: `test other ${i}` } });
+    expectOtherSize += synMsg.toMessageString().length;
+    await add_message_to_folder([other], synMsg);
   }
 
   MailTelemetryForTests.reportAccountSizes();
@@ -156,28 +157,45 @@ add_task(async function test_account_sizes() {
     "Number of messages in all folders must be correct"
   );
 
-  // The folder sizes on Windows are not exactly the same with Linux/macOS.
-  function checkSize(actual, expected, message) {
-    Assert.ok(Math.abs(actual - expected) < 10, message);
-  }
+  // Rough stab at per-message mbox size overhead.
+  const fromOverhead = "From MAILER-DAEMON Fri Jul  8 12:08:34 2011".length;
+
   // Check if we count size on disk correctly.
-  // These sizes all assume mbox implementation uses a bare-bones "From "
-  // separator without sender/timestamp.
-  checkSize(
-    scalars["tb.account.size_on_disk"].Inbox,
-    818,
-    "Size of Inbox must be correct"
+  const gotInboxSize = scalars["tb.account.size_on_disk"].Inbox;
+  Assert.greaterOrEqual(
+    gotInboxSize,
+    expectInboxSize,
+    "Inbox size >= minimum expected"
   );
-  checkSize(
-    scalars["tb.account.size_on_disk"].Other,
-    575,
-    "Size of other folders must be correct"
+  const expectInboxSizeUpper = expectInboxSize + fromOverhead * NUM_INBOX;
+  Assert.less(
+    gotInboxSize,
+    expectInboxSizeUpper,
+    "Inbox size < maximum expected"
   );
-  checkSize(
-    scalars["tb.account.size_on_disk"].Total,
-    818 + 575,
-    "Size of all folders must be correct"
+
+  const gotOtherSize = scalars["tb.account.size_on_disk"].Other;
+  Assert.greaterOrEqual(
+    gotOtherSize,
+    expectOtherSize,
+    "Other size >= minimum expected"
   );
+  const expectOtherSizeUpper = expectOtherSize + fromOverhead * NUM_OTHER;
+  Assert.less(
+    gotOtherSize,
+    expectOtherSizeUpper,
+    "Other size < maximum expected"
+  );
+
+  const expectTotal = expectInboxSize + expectOtherSize;
+  const expectTotalUpper = expectInboxSizeUpper + expectOtherSizeUpper;
+  const gotTotal = scalars["tb.account.size_on_disk"].Total;
+  Assert.greaterOrEqual(
+    gotTotal,
+    expectTotal,
+    "Total size >= minimum expected"
+  );
+  Assert.less(gotTotal, expectTotalUpper, "Total size < maximum expected");
 });
 
 /**
