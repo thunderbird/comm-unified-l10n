@@ -1505,7 +1505,6 @@
         "context",
         this.calendarView.getAttribute("item-context") || this.calendarView.getAttribute("context")
       );
-      itemBox.setAttribute("draggable", "true");
 
       if (eventItem.hashId in this.calendarView.mFlashingEvents) {
         itemBox.setAttribute("flashing", "true");
