@@ -174,10 +174,7 @@ add_task(async function testIMAPSubscribe() {
   // Check our subscriptions changed.
 
   await TestUtils.waitForCondition(
-    () =>
-      !folderPane.getRowForFolder(`${imapRootFolder.URI}/Baz`) &&
-      folderPane.getRowForFolder(`${imapRootFolder.URI}/Foo`) &&
-      folderPane.getRowForFolder(`${imapRootFolder.URI}/Foo/Subfoo`),
+    () => imapRootRow.querySelectorAll("li").length == 3,
     "waiting for folder tree to update"
   );
 
