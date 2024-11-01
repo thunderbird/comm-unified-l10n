@@ -4600,10 +4600,14 @@ var threadPane = {
       return;
     }
 
+    let messageURIs = gDBView.getURIsForSelection();
     if (!threadTree.selectedIndices.includes(row.index)) {
-      threadTree.selectedIndex = row.index;
+      if (gViewWrapper.isGroupedByHeaderAtIndex(row.index)) {
+        event.preventDefault();
+        return;
+      }
+      messageURIs = [gDBView.getURIForViewIndex(row.index)];
     }
-    const messageURIs = gDBView.getURIsForSelection();
 
     let noSubjectString = messengerBundle.GetStringFromName(
       "defaultSaveMessageAsFileName"

@@ -38,11 +38,6 @@ add_setup(async function () {
       .makeMessages({ count: 15 })
       .map(message => message.toMessageString())
   );
-  sourceFolder.addMessageBatch(
-    generator
-      .makeMessages({ count: 3, msgsPerThread: 3 })
-      .map(message => message.toMessageString())
-  );
 
   registerCleanupFunction(() => {
     MailServices.accounts.removeAccount(account, false);
@@ -103,14 +98,12 @@ add_task(async function testDragMessageSource() {
         messageURL,
         `application/x-moz-file-promise-url of item ${index}`
       );
-      Assert.stringMatches(
+      Assert.equal(
         dataTransfer.mozGetDataAt(
           "application/x-moz-file-promise-dest-filename",
           index
         ),
-        `^${header.flags & Ci.nsMsgMessageFlags.HasRe ? "Re[:_ ]? " : ""}${
-          header.subject
-        }(-\\d)?\.eml$`,
+        `${header.subject}.eml`,
         `application/x-moz-file-promise-dest-filename of item ${index}`
       );
       const flavorDataProvider = dataTransfer.mozGetDataAt(
@@ -166,9 +159,7 @@ add_task(async function testDragMessageSource() {
       const fileContent = await IOUtils.readUTF8(tempFile.path);
       Assert.stringContains(
         fileContent,
-        `Subject: ${header.flags & Ci.nsMsgMessageFlags.HasRe ? "Re: " : ""}${
-          header.subject
-        }\r\n`,
+        `Subject: ${header.subject}\r\n`,
         "message written to file"
       );
     }
@@ -280,38 +271,9 @@ add_task(async function testDragMessageSource() {
     "msgsMoveCopyCompleted"
   );
   [, dataTransfer] = beginDrag(1);
-  Assert.equal(
-    threadTree.selectedIndex,
-    1,
-    "Source message should now be selected"
-  );
   await checkDataTransfer([sourceMessages[4]]);
   endDrag();
   checkMove(await movePromise, [sourceMessageIDs[4]]);
-
-  info("Dragging an unselected collapsed thread");
-
-  movePromise = new PromiseTestUtils.promiseFolderNotification(
-    destFolder,
-    "msgsMoveCopyCompleted"
-  );
-  [, dataTransfer] = beginDrag(8);
-  Assert.equal(
-    threadTree.selectedIndex,
-    8,
-    "Source messages should now be selected"
-  );
-  await checkDataTransfer([
-    sourceMessages[15],
-    sourceMessages[16],
-    sourceMessages[17],
-  ]);
-  endDrag();
-  checkMove(await movePromise, [
-    sourceMessageIDs[15],
-    sourceMessageIDs[16],
-    sourceMessageIDs[17],
-  ]);
 });
 
 /**
