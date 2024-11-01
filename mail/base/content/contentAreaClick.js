@@ -38,7 +38,7 @@ var { openLinkExternally } = ChromeUtils.importESModule(
  *
  * @returns [href, linkText] the url and the text for the link being clicked.
  */
-function hRefForClickEvent(aEvent) {
+function hRefForClickEvent(aEvent, aDontCheckInputElement) {
   const target =
     aEvent.type == "command"
       ? document.commandDispatcher.focusedElement
@@ -64,11 +64,13 @@ function hRefForClickEvent(aEvent) {
       linkText = gatherTextUnder(target);
     }
   } else if (
+    !aDontCheckInputElement &&
     (HTMLInputElement.isInstance(target) ||
-      HTMLButtonElement.isInstance(target)) &&
-    target.form?.action
+      HTMLButtonElement.isInstance(target))
   ) {
-    href = target.form.action;
+    if (target.form && target.form.action) {
+      href = target.form.action;
+    }
   } else {
     // We may be nested inside of a link node.
     let linkNode = aEvent.target;
