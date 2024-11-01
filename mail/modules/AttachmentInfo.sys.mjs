@@ -195,15 +195,11 @@ export class AttachmentInfo {
         }
       }
 
+      // Just use the old method for handling messages, it works.
+
       let { name, url } = this;
 
-      if (
-        this.contentType == "message/rfc822" ||
-        /[?&]filename=.*\.eml(&|$)/.test(url)
-      ) {
-        url += url.includes("?") ? "&outputformat=raw" : "?outputformat=raw";
-      }
-
+      url += url.includes("?") ? "&outputformat=raw" : "?outputformat=raw";
       const sourceURI = Services.io.newURI(url);
 
       async function saveToFile(path, isTmp = false) {
