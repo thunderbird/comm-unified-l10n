@@ -267,7 +267,9 @@ export const qrExportPane = {
    */
   async showCodes(accountKeys, includePasswords) {
     if (includePasswords) {
-      includePasswords = await this.requestAuthorizationToIncludePasswords();
+      if (!(await this.requestAuthorizationToIncludePasswords())) {
+        return;
+      }
     }
     const wizard = document.getElementById("qrCodeWizard");
     wizard.initializeQRCodes(accountKeys, includePasswords);
