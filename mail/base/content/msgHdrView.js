@@ -3233,7 +3233,8 @@ const gMessageHeader = {
   openListURL(event) {
     const url = event.target.value;
     if (url.startsWith("mailto:")) {
-      top.composeEmailTo(url, MailUtils.getIdentityForHeader(gMessage));
+      const [identity] = MailUtils.getIdentityForHeader(gMessage);
+      top.composeEmailTo(url, identity);
       return;
     }
     openUILink(url, event);
