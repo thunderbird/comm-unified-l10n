@@ -773,7 +773,8 @@ nsMsgDBFolder::GetMsgInputStream(nsIMsgDBHdr* aMsgHdr,
   failsafeSize += failsafeSize / 10;
   failsafeSize = std::max((uint32_t)512, failsafeSize);
 
-  rv = msgStore->GetMsgInputStream(this, storeToken, failsafeSize, aInputStream);
+  rv =
+      msgStore->GetMsgInputStream(this, storeToken, failsafeSize, aInputStream);
 
   if (NS_FAILED(rv)) {
     NS_WARNING(nsPrintfCString(

@@ -46,7 +46,8 @@ class MboxMsgInputStream : public nsIInputStream {
    * given number. This is useful if the mbox stream doesn't contain the
    * expected sepatarors.
    */
-  explicit MboxMsgInputStream(nsIInputStream* mboxStream, uint32_t maxAllowedSize);
+  explicit MboxMsgInputStream(nsIInputStream* mboxStream,
+                              uint32_t maxAllowedSize);
 
   MboxMsgInputStream() = delete;
 
