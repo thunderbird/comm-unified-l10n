@@ -604,3 +604,19 @@ tb.ui.interaction:
     release_channel_collection: opt-out
     record_in_processes:
       - "main"
+
+tb.compact:
+  result:
+    bug_numbers:
+      - 1926152
+    description:
+      Counts the number of folder compactions that happen and how they ended.
+    expires: never
+    products:
+      - 'thunderbird'
+    kind: uint
+    keyed: true
+    notification_emails:
+      - "telemetry-client-dev@thunderbird.net"
+    record_in_processes:
+      - 'main'
