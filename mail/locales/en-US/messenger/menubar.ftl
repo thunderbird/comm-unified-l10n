@@ -114,7 +114,7 @@ menu-view-repair-text-encoding =
 
 menu-view-folders-toggle-header =
     .label = Folder Pane Header
-    .accesskey = F
+    .accesskey = P
 
 ## View / Layout
 
