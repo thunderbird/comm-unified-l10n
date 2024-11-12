@@ -86,6 +86,8 @@
         while (this.lastChild) {
           this.lastChild.remove();
         }
+
+        delete this._lastRemovedID;
       }
 
       /**
@@ -109,6 +111,8 @@
             setTimeout(() => (this.selectedIndex = this.rows.indexOf(startItem)));
           }
         }
+
+        delete this._lastRemovedID;
       }
 
       /**
@@ -117,6 +121,8 @@
        * @param {calIItemBase[]} items
        */
       removeItems(items) {
+        delete this._lastRemovedID;
+
         for (const item of items) {
           const startItem = document.getElementById(`agenda-listitem-${item.hashId}`);
           if (!startItem) {
@@ -125,7 +131,9 @@
           }
 
           this.removeListItem(startItem);
-          this._lastRemovedID = startItem.id;
+          if (this.selectedRow == startItem) {
+            this._lastRemovedID = startItem.id;
+          }
         }
       }
 
@@ -143,6 +151,8 @@
             li.remove();
           }
         }
+
+        delete this._lastRemovedID;
       }
 
       /**
