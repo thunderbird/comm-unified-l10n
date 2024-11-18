@@ -618,5 +618,6 @@ tb.compact:
     keyed: true
     notification_emails:
       - "telemetry-client-dev@thunderbird.net"
+    release_channel_collection: opt-out
     record_in_processes:
       - 'main'
