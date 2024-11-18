@@ -786,25 +786,6 @@ Enigmail.hdrView = {
   },
 
   headerPane: {
-    isCurrentMessage(uriParam) {
-      // FIXME: it would be nicer to just be able to compare the URI specs.
-      // That does currently not work for all cases, e.g.
-      // mailbox:///...data/eml/signed-encrypted-autocrypt-gossip.eml?type=application/x-message-display&number=0 vs.
-      // file:///...data/eml/signed-encrypted-autocrypt-gossip.eml?type=application/x-message-display
-
-      const uri = Services.io
-        .newURI(uriParam.spec)
-        .QueryInterface(Ci.nsIMsgMessageUrl);
-      const uri2 = EnigmailFuncs.getUrlFromUriSpec(gMessageURI);
-      if (uri.host != uri2.host) {
-        return false;
-      }
-
-      const id = EnigmailURIs.msgIdentificationFromUrl(uri);
-      const id2 = EnigmailURIs.msgIdentificationFromUrl(uri2);
-      return id.folder === id2.folder && id.msgNum === id2.msgNum;
-    },
-
     /**
      * Determine if a given MIME part number is a multipart/related message or a child thereof
      *
@@ -983,7 +964,7 @@ Enigmail.hdrView = {
 
       let uriSpec = uri ? uri.spec : null;
 
-      if (this.isCurrentMessage(uri)) {
+      if (EnigmailFuncs.isCurrentMessage(gMessageURI, uriSpec)) {
         if (statusFlags & EnigmailConstants.DECRYPTION_OKAY) {
           if (gEncryptedURIService) {
             // remember encrypted message URI to enable TB prevention against EFAIL attack
@@ -1035,7 +1016,7 @@ Enigmail.hdrView = {
       if (!msg) {
         return;
       }
-      if (!this.isCurrentMessage(uri)) {
+      if (!EnigmailFuncs.isCurrentMessage(gMessageURI, uri.spec)) {
         return;
       }
 
@@ -1074,7 +1055,7 @@ Enigmail.hdrView = {
       }
 
       let msg = uri.messageHeader;
-      if (!msg && this.isCurrentMessage(uri)) {
+      if (!msg && EnigmailFuncs.isCurrentMessage(gMessageURI, uri.spec)) {
         // .eml messages opened from file://
         msg = gMessage;
       }
@@ -1130,7 +1111,7 @@ Enigmail.hdrView = {
         // the message here, because we'd run into an endless loop.
         return;
       }
-      if (this.isCurrentMessage(uri)) {
+      if (EnigmailFuncs.isCurrentMessage(gMessageURI, uri.spec)) {
         EnigmailVerify.unregisterPGPMimeHandler();
         Enigmail.msg.messageReload(false);
       }

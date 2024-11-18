@@ -18,6 +18,10 @@ var gSMIMEBundle = null;
 var gSignatureStatusForURI = null;
 var gEncryptionStatusForURI = null;
 
+XPCOMUtils.defineLazyModuleGetters(this, {
+  EnigmailFuncs: "chrome://openpgp/content/modules/funcs.jsm",
+});
+
 // Get the necko URL for the message URI.
 function neckoURLForMessageURI(aMessageURI) {
   let msgSvc = MailServices.messageServiceFromURI(aMessageURI);
@@ -202,7 +206,7 @@ var smimeHeaderSink = {
       return;
     }
 
-    if (aMsgNeckoURL != this.getSelectedMessageURI()) {
+    if (!EnigmailFuncs.isCurrentMessage(gMessageURI, aMsgNeckoURL)) {
       // Status isn't for selected message.
       return;
     }
@@ -290,7 +294,7 @@ var smimeHeaderSink = {
       return;
     }
 
-    if (aMsgNeckoURL != this.getSelectedMessageURI()) {
+    if (!EnigmailFuncs.isCurrentMessage(gMessageURI, aMsgNeckoURL)) {
       // Status isn't for selected message.
       return;
     }
