@@ -260,7 +260,7 @@ NS_IMETHODIMP EwsFolder::CopyFileMessage(
 
   auto ewsMsgListener = RefPtr(new MessageOperationCallbacks(this, msgWindow));
   return client->SaveMessage(ewsId, isDraftOrTemplate, inputStream,
-                               copyListener, ewsMsgListener);
+                             copyListener, ewsMsgListener);
 }
 
 nsresult EwsFolder::GetEwsId(nsACString& ewsId) {
