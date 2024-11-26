@@ -1138,6 +1138,7 @@ add_task(async function test_list_table_layout() {
   await TestUtils.waitForCondition(
     () => !cardsHeader.querySelector(`[id="addrbook"]`).hidden
   );
+  await new Promise(resolve => abWindow.requestAnimationFrame(resolve));
 
   // Check for the contact that the column is shown.
   Assert.ok(
@@ -1201,6 +1202,7 @@ add_task(async function test_list_all_address_book() {
   await TestUtils.waitForCondition(
     () => !cardsHeader.querySelector(`[id="addrbook"]`).hidden
   );
+  await new Promise(resolve => abWindow.requestAnimationFrame(resolve));
 
   Assert.ok(
     cardsList
