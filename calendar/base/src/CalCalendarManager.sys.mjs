@@ -747,7 +747,6 @@ calMgrCalendarObserver.prototype = {
   },
 
   changeCalendarCache(aCalendar, aName, aValue, aOldValue) {
-    const cICM = Ci.calICalendarManager;
     aOldValue = aOldValue || false;
     aValue = aValue || false;
 
@@ -773,7 +772,7 @@ calMgrCalendarObserver.prototype = {
       // it so the registerCalendar call can wrap/unwrap the
       // calCachedCalendar facade saving the user the need to
       // restart Thunderbird and making sure a new Id is used.
-      this.calMgr.removeCalendar(aCalendar, cICM.REMOVE_NO_DELETE);
+      this.calMgr.removeCalendar(aCalendar, Ci.calICalendarManager.REMOVE_NO_DELETE);
       const newCal = this.calMgr.createCalendar(aCalendar.type, aCalendar.uri);
       newCal.name = aCalendar.name;
 
@@ -783,6 +782,7 @@ calMgrCalendarObserver.prototype = {
       const propsToCopy = [
         "color",
         "disabled",
+        "forceEmailScheduling",
         "auto-enabled",
         "cache.enabled",
         "refreshInterval",
