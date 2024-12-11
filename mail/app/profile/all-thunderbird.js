@@ -1412,9 +1412,9 @@ pref("services.sync.engine.prefs", false);
 #endif
 
 // Donation appeal.
-pref("app.donation.eoy.version", 8);
+pref("app.donation.eoy.version", 7);
 pref("app.donation.eoy.version.viewed", 0);
-pref("app.donation.eoy.url", "https://updates.thunderbird.net/thunderbird/128.0/dec24/");
+pref("app.donation.eoy.url", "https://updates.thunderbird.net/thunderbird/115.0/nov24/");
 
 // Beta appeal
 pref("app.beta_appeal.version", 3);
