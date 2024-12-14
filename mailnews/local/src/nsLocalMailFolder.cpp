@@ -3471,3 +3471,10 @@ NS_IMETHODIMP nsMsgLocalMailFolder::UpdateNewMsgHdr(nsIMsgDBHdr* aOldHdr,
 
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsMsgLocalMailFolder::GetDownloadInProgress(bool* downloadInProgress) {
+  NS_ENSURE_ARG_POINTER(downloadInProgress);
+  *downloadInProgress = mDownloadInProgress;
+  return NS_OK;
+}
