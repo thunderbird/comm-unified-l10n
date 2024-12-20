@@ -479,5 +479,5 @@ function onUseDefaultRetentionSettings() {
 }
 
 function RebuildSummaryInformation() {
-  window.arguments[0].rebuildSummaryCallback();
+  window.arguments[0].rebuildSummaryCallback(gMsgFolder);
 }
