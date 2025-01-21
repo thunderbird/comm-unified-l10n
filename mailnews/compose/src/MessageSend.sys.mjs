@@ -80,7 +80,6 @@ export class MessageSend {
     this._sendListener = listener;
     this._parentWindow = parentWindow;
     this._originalMsgURI = originalMsgURI;
-    this._compType = compType;
     this._shouldRemoveMessageFile = true;
 
     this._sendReport = Cc[
@@ -1135,28 +1134,14 @@ export class MessageSend {
     this._setStatusMessage(
       this._composeBundle.GetStringFromName("sendingMessage")
     );
-
-    // Turn the `to` and `cc` comp fields (which are both strings) into one
-    // continuous string, filtering out either of them if it's empty.
-    const visibleRecipients = [this._compFields.to, this._compFields.cc]
-      .filter(Boolean)
-      .join(",");
-
-    const parsedVisibleRecipients =
-      MailServices.headerParser.parseEncodedHeaderW(visibleRecipients);
-
-    // Parse the `bcc` comp field (a string) into a parsed array of
-    // `msgIAddressObject`.
-    let parsedBccRecipients = [];
-    if (this._compFields.bcc) {
-      parsedBccRecipients = MailServices.headerParser.parseEncodedHeaderW(
-        this._compFields.bcc
-      );
-    }
-
-    // Collect all recipients into the address book at once.
-    this._collectAddressesToAddressBook(
-      [...parsedVisibleRecipients, ...parsedBccRecipients].filter(Boolean)
+    const recipients = [
+      this._compFields.to,
+      this._compFields.cc,
+      this._compFields.bcc,
+    ].filter(Boolean);
+    this._collectAddressesToAddressBook(recipients);
+    const converter = Cc["@mozilla.org/messenger/mimeconverter;1"].getService(
+      Ci.nsIMimeConverter
     );
     const encodedRecipients = converter.encodeMimePartIIStr_UTF8(
       recipients.join(","),
@@ -1215,33 +1200,19 @@ export class MessageSend {
   /**
    * Collect outgoing addresses to address book.
    *
-   * @param {msgIAddressObject[]} addresses - Outgoing addresses including to/cc/bcc.
+   * @param {string[]} recipients - Outgoing addresses including to/cc/bcc.
    */
-  _collectAddressesToAddressBook(addresses) {
+  _collectAddressesToAddressBook(recipients) {
     const createCard = Services.prefs.getBoolPref(
       "mail.collect_email_address_outgoing",
       false
     );
+
     const addressCollector = Cc[
       "@mozilla.org/addressbook/services/addressCollector;1"
     ].getService(Ci.nsIAbAddressCollector);
-
-    for (const addr of addresses) {
-      let displayName = addr.name;
-      // If we know this is a list, or it seems likely, don't collect the
-      // displayName which may contain the sender's name instead of the (only)
-      // name of the list.
-      if (
-        this._compType == Ci.nsIMsgCompType.ReplyToList ||
-        addr.name.includes(" via ")
-      ) {
-        displayName = "";
-      }
-      addressCollector.collectSingleAddress(
-        addr.email,
-        displayName,
-        createCard
-      );
+    for (const recipient of recipients) {
+      addressCollector.collectAddress(recipient, createCard);
     }
   }
 
