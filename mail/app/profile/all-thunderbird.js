@@ -1428,3 +1428,6 @@ pref("mail.dark-reader.enabled", true);
 #else
 pref("mail.dark-reader.enabled", false);
 #endif
+
+// Enable the new account setup (starting from the second account)
+pref("mail.accounthub.enabled", false);
