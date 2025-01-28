@@ -9,12 +9,14 @@ const {
   create_folder,
   be_in_folder,
   create_message,
-  create_encrypted_smime_message,
-  create_encrypted_openpgp_message,
   add_message_to_folder,
   select_click_row,
+  smimeUtils_loadPEMCertificate,
 } = ChromeUtils.importESModule(
   "resource://testing-common/mail/FolderDisplayHelpers.sys.mjs"
+);
+const { PromiseTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/mailnews/PromiseTestUtils.sys.mjs"
 );
 const { SmimeUtils } = ChromeUtils.importESModule(
   "resource://testing-common/mailnews/SmimeUtils.sys.mjs"
@@ -22,12 +24,32 @@ const { SmimeUtils } = ChromeUtils.importESModule(
 const { TelemetryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
+const { OpenPGPTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/mail/OpenPGPTestUtils.sys.mjs"
+);
+const { MailServices } = ChromeUtils.importESModule(
+  "resource:///modules/MailServices.sys.mjs"
+);
 
-add_setup(function () {
+add_setup(async function () {
   SmimeUtils.ensureNSS();
+  smimeUtils_loadPEMCertificate(
+    new FileUtils.File(getTestFilePath("../smime/data/TestCA.pem")),
+    Ci.nsIX509Cert.CA_CERT
+  );
   SmimeUtils.loadCertificateAndKey(
-    new FileUtils.File(getTestFilePath("../openpgp/data/smime/Bob.p12")),
+    new FileUtils.File(getTestFilePath("../smime/data/Bob.p12")),
     "nss"
+  );
+
+  // Set up the alice's private key.
+  await OpenPGPTestUtils.importPrivateKey(
+    window,
+    new FileUtils.File(
+      getTestFilePath(
+        "../openpgp/data/keys/alice@openpgp.example-0xf231550c4f47e38e-secret.asc"
+      )
+    )
   );
 });
 
@@ -38,12 +60,9 @@ add_task(async function test_secure_mails_read() {
   Services.telemetry.clearScalars();
 
   const NUM_PLAIN_MAILS = 4;
-  const NUM_SMIME_MAILS = 2;
-  const NUM_OPENPGP_MAILS = 3;
   const headers = { from: "alice@t1.example.com", to: "bob@t2.example.net" };
   const folder = await create_folder("secure-mail");
 
-  // normal message should not be counted
   for (let i = 0; i < NUM_PLAIN_MAILS; i++) {
     await add_message_to_folder(
       [folder],
@@ -52,68 +71,59 @@ add_task(async function test_secure_mails_read() {
       })
     );
   }
-  for (let i = 0; i < NUM_SMIME_MAILS; i++) {
-    await add_message_to_folder(
-      [folder],
-      create_encrypted_smime_message({
-        to: "Bob@example.com",
-        body: {
-          body: smimeMessage,
-        },
-      })
+
+  const smimeFiles = [
+    "../smime/data/alice.sig.SHA256.opaque.env.eml",
+    "../smime/data/alice.dsig.SHA256.multipart.env.eml",
+  ];
+  const openpgpFiles = [
+    "../openpgp/data/eml/signed-by-0x3099ff1238852b9f-encrypted-to-0xf231550c4f47e38e.eml",
+  ];
+
+  // Copy over all the openpgp/smime mails into the folder.
+  for (const msgFile of smimeFiles.concat(openpgpFiles)) {
+    const theFile = new FileUtils.File(getTestFilePath(msgFile));
+    const copyListener = new PromiseTestUtils.PromiseCopyListener();
+    MailServices.copy.copyFileMessage(
+      theFile,
+      folder,
+      null,
+      false,
+      0,
+      "",
+      copyListener,
+      null
     );
-  }
-  for (let i = 0; i < NUM_OPENPGP_MAILS; i++) {
-    await add_message_to_folder(
-      [folder],
-      create_encrypted_openpgp_message({
-        clobberHeaders: headers,
-      })
-    );
+    await copyListener.promise;
   }
 
-  // Select (read) all added mails.
   await be_in_folder(folder);
-  for (
-    let i = 0;
-    i < NUM_PLAIN_MAILS + NUM_SMIME_MAILS + NUM_OPENPGP_MAILS;
-    i++
-  ) {
-    await select_click_row(i);
+  let run = 1;
+  while (run < 3) {
+    info(`Checking security; run=#${run}`);
+    for (
+      let i = 0;
+      i < NUM_PLAIN_MAILS + smimeFiles.length + openpgpFiles.length;
+      i++
+    ) {
+      await select_click_row(i);
+    }
+
+    let scalars = TelemetryTestUtils.getProcessScalars("parent", true);
+    Assert.equal(
+      scalars["tb.mails.read_secure"]["encrypted-smime"],
+      smimeFiles.length,
+      `Count of smime encrypted mails read should be correct in run ${run}.`
+    );
+    Assert.equal(
+      scalars["tb.mails.read_secure"]["encrypted-openpgp"],
+      openpgpFiles.length,
+      `Count of openpgp encrypted mails read should be correct in run ${run}.`
+    );
+
+    // Select all added mails again should not change read statistics.
+    run++;
   }
-
-  let scalars = TelemetryTestUtils.getProcessScalars("parent", true);
-  Assert.equal(
-    scalars["tb.mails.read_secure"]["encrypted-smime"],
-    NUM_SMIME_MAILS,
-    "Count of smime encrypted mails read must be correct."
-  );
-  Assert.equal(
-    scalars["tb.mails.read_secure"]["encrypted-openpgp"],
-    NUM_OPENPGP_MAILS,
-    "Count of openpgp encrypted mails read must be correct."
-  );
-
-  // Select all added mails again should not change read statistics.
-  for (
-    let i = 0;
-    i < NUM_PLAIN_MAILS + NUM_SMIME_MAILS + NUM_OPENPGP_MAILS;
-    i++
-  ) {
-    await select_click_row(i);
-  }
-
-  scalars = TelemetryTestUtils.getProcessScalars("parent", true);
-  Assert.equal(
-    scalars["tb.mails.read_secure"]["encrypted-smime"],
-    NUM_SMIME_MAILS,
-    "Count of smime encrypted mails read must still be correct."
-  );
-  Assert.equal(
-    scalars["tb.mails.read_secure"]["encrypted-openpgp"],
-    NUM_OPENPGP_MAILS,
-    "Count of openpgp encrypted mails read must still be correct."
-  );
 });
 
 var smimeMessage = [
