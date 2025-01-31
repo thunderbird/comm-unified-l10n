@@ -234,7 +234,10 @@ static nsresult GetDisplayNameInAddressBook(const nsACString& emailAddress,
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIAbCard> cardForAddress;
-  abManager->CardForEmailAddress(emailAddress, getter_AddRefs(cardForAddress));
+  rv = abManager->CardForEmailAddress(emailAddress,
+                                      getter_AddRefs(cardForAddress));
+  NS_ENSURE_SUCCESS(rv, rv);
+
   if (cardForAddress) {
     rv = cardForAddress->GetDisplayName(displayName);
   }

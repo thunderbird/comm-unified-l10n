@@ -6,7 +6,6 @@ import { MailServices } from "resource:///modules/MailServices.sys.mjs";
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
-  collectSingleAddress: "resource:///modules/AddressCollector.sys.mjs",
   MailUtils: "resource:///modules/MailUtils.sys.mjs",
   MimeMessage: "resource:///modules/MimeMessage.sys.mjs",
   MsgUtils: "resource:///modules/MimeMessageUtils.sys.mjs",
@@ -1253,6 +1252,9 @@ export class MessageSend {
       "mail.collect_email_address_outgoing",
       false
     );
+    const addressCollector = Cc[
+      "@mozilla.org/addressbook/services/addressCollector;1"
+    ].getService(Ci.nsIAbAddressCollector);
 
     for (const addr of addresses) {
       let displayName = addr.name;
@@ -1265,7 +1267,11 @@ export class MessageSend {
       ) {
         displayName = "";
       }
-      lazy.collectSingleAddress(addr.email, displayName, createCard);
+      addressCollector.collectSingleAddress(
+        addr.email,
+        displayName,
+        createCard
+      );
     }
   }
 
