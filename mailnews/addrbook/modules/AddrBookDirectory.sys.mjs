@@ -89,10 +89,6 @@ export class AddrBookDirectory {
     );
   }
 
-  /**
-   * @param {string} uid
-   * @returns {nsIAbCard}
-   */
   getCard(uid) {
     const card = new lazy.AddrBookCard();
     card.directoryUID = this.UID;
@@ -115,11 +111,8 @@ export class AddrBookDirectory {
       Cr.NS_ERROR_NOT_IMPLEMENTED
     );
   }
-  /**
-   * @abstract
-   * @param {string} _uid
-   */
-  deleteCard(_uid) {
+  /** @abstract */
+  deleteCard() {
     throw new Components.Exception(
       `${this.constructor.name} does not implement deleteCard.`,
       Cr.NS_ERROR_NOT_IMPLEMENTED
@@ -132,11 +125,8 @@ export class AddrBookDirectory {
       Cr.NS_ERROR_NOT_IMPLEMENTED
     );
   }
-  /**
-   * @abstract
-   * @param {string} _uid
-   */
-  deleteList(_uid) {
+  /** @abstract */
+  deleteList() {
     throw new Components.Exception(
       `${this.constructor.name} does not implement deleteList.`,
       Cr.NS_ERROR_NOT_IMPLEMENTED
