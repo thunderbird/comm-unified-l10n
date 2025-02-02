@@ -15,6 +15,11 @@ rust-version = "1.74"
 name = "wgpu-hal"
 version = "0.20.0"
 authors = ["gfx-rs developers"]
+build = "build.rs"
+autobins = false
+autoexamples = false
+autotests = false
+autobenches = false
 description = "WebGPU hardware abstraction layer"
 homepage = "https://wgpu.rs/"
 readme = "README.md"
@@ -43,13 +48,21 @@ targets = [
 ]
 
 [lib]
+name = "wgpu_hal"
+path = "src/lib.rs"
 
 [[example]]
 name = "halmark"
+path = "examples/halmark/main.rs"
 
 [[example]]
 name = "raw-gles"
+path = "examples/raw-gles.rs"
 required-features = ["gles"]
+
+[[example]]
+name = "ray-traced-triangle"
+path = "examples/ray-traced-triangle/main.rs"
 
 [dependencies]
 arrayvec = "0.7"
@@ -92,8 +105,8 @@ features = ["wgsl-in"]
 version = "0.29"
 features = ["android-native-activity"]
 
-[build-dependencies]
-cfg_aliases = "0.1"
+[build-dependencies.cfg_aliases]
+version = "0.1"
 
 [features]
 device_lost_panic = []
@@ -143,11 +156,11 @@ vulkan = [
 ]
 windows_rs = ["dep:gpu-allocator"]
 
-[target."cfg(all(target_arch = \"wasm32\", not(target_os = \"emscripten\")))".dependencies]
+[target.'cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))'.dependencies]
 js-sys = "0.3.69"
 wasm-bindgen = "0.2.87"
 
-[target."cfg(all(target_arch = \"wasm32\", not(target_os = \"emscripten\")))".dependencies.web-sys]
+[target.'cfg(all(target_arch = "wasm32", not(target_os = "emscripten")))'.dependencies.web-sys]
 version = "0.3.69"
 features = [
     "Window",
@@ -156,66 +169,66 @@ features = [
     "OffscreenCanvas",
 ]
 
-[target."cfg(any(target_os=\"macos\", target_os=\"ios\"))".dependencies]
+[target.'cfg(any(target_os="macos", target_os="ios"))'.dependencies]
 core-graphics-types = "0.1"
 objc = "0.2.5"
 
-[target."cfg(any(target_os=\"macos\", target_os=\"ios\"))".dependencies.block]
+[target.'cfg(any(target_os="macos", target_os="ios"))'.dependencies.block]
 version = "0.1"
 optional = true
 
-[target."cfg(any(target_os=\"macos\", target_os=\"ios\"))".dependencies.metal]
+[target.'cfg(any(target_os="macos", target_os="ios"))'.dependencies.metal]
 version = "0.28.0"
 
-[target."cfg(not(target_arch = \"wasm32\"))".dependencies.ash]
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies.ash]
 version = "0.38.0"
 optional = true
 
-[target."cfg(not(target_arch = \"wasm32\"))".dependencies.gpu-alloc]
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies.gpu-alloc]
 version = "0.6"
 optional = true
 
-[target."cfg(not(target_arch = \"wasm32\"))".dependencies.gpu-descriptor]
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies.gpu-descriptor]
 version = "0.3"
 optional = true
 
-[target."cfg(not(target_arch = \"wasm32\"))".dependencies.khronos-egl]
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies.khronos-egl]
 version = "6"
 features = ["dynamic"]
 optional = true
 
-[target."cfg(not(target_arch = \"wasm32\"))".dependencies.libloading]
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies.libloading]
 version = ">=0.7, <0.9"
 optional = true
 
-[target."cfg(not(target_arch = \"wasm32\"))".dependencies.renderdoc-sys]
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies.renderdoc-sys]
 version = "1.1.0"
 optional = true
 
-[target."cfg(not(target_arch = \"wasm32\"))".dependencies.smallvec]
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies.smallvec]
 version = "1"
 features = ["union"]
 optional = true
 
-[target."cfg(not(target_arch = \"wasm32\"))".dev-dependencies]
+[target.'cfg(not(target_arch = "wasm32"))'.dev-dependencies]
 glutin = "0.29.1"
 
-[target."cfg(target_os = \"android\")".dependencies.android_system_properties]
+[target.'cfg(target_os = "android")'.dependencies.android_system_properties]
 version = "0.1.1"
 optional = true
 
-[target."cfg(target_os = \"android\")".dependencies.ndk-sys]
+[target.'cfg(target_os = "android")'.dependencies.ndk-sys]
 version = "0.5.0"
 optional = true
 
-[target."cfg(target_os = \"emscripten\")".dependencies.khronos-egl]
+[target.'cfg(target_os = "emscripten")'.dependencies.khronos-egl]
 version = "6"
 features = [
     "static",
     "no-pkg-config",
 ]
 
-[target."cfg(target_os = \"emscripten\")".dependencies.libloading]
+[target.'cfg(target_os = "emscripten")'.dependencies.libloading]
 version = ">=0.7, <0.9"
 optional = true
 

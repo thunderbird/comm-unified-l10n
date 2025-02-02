@@ -18,6 +18,7 @@ authors = [
     "Thomas de Zeeuw <thomasdezeeuw@gmail.com>",
     "Tokio Contributors <team@tokio.rs>",
 ]
+build = false
 include = [
     "Cargo.toml",
     "LICENSE",
@@ -26,6 +27,10 @@ include = [
     "src/**/*.rs",
     "examples/**/*.rs",
 ]
+autobins = false
+autoexamples = false
+autotests = false
+autobenches = false
 description = "Lightweight non-blocking I/O."
 homepage = "https://github.com/tokio-rs/mio"
 readme = "README.md"
@@ -65,15 +70,21 @@ features = [
     "net",
 ]
 
+[lib]
+name = "mio"
+path = "src/lib.rs"
+
 [[example]]
-name = "tcp_server"
+name = "tcp_listenfd_server"
+path = "examples/tcp_listenfd_server.rs"
 required-features = [
     "os-poll",
     "net",
 ]
 
 [[example]]
-name = "tcp_listenfd_server"
+name = "tcp_server"
+path = "examples/tcp_server.rs"
 required-features = [
     "os-poll",
     "net",
@@ -81,6 +92,7 @@ required-features = [
 
 [[example]]
 name = "udp_server"
+path = "examples/udp_server.rs"
 required-features = [
     "os-poll",
     "net",
@@ -107,7 +119,7 @@ os-ext = [
 ]
 os-poll = []
 
-[target."cfg(target_os = \"wasi\")".dependencies]
+[target.'cfg(target_os = "wasi")'.dependencies]
 libc = "0.2.121"
 wasi = "0.11.0"
 
