@@ -6090,10 +6090,6 @@ dependencies = [
 ]
 
 [[patch.unused]]
-name = "neqo-bin"
-version = "0.7.9"
-
-[[patch.unused]]
 name = "any_all_workaround"
 version = "0.1.0"
 source = "git+https://github.com/hsivonen/any_all_workaround?rev=7fb1b7034c9f172aade21ee1c8554e8d8a48af80#7fb1b7034c9f172aade21ee1c8554e8d8a48af80"
@@ -6134,3 +6130,7 @@ version = "0.48.999"
 [[patch.unused]]
 name = "zip"
 version = "0.6.4"
+
+[[patch.unused]]
+name = "neqo-bin"
+version = "0.7.9"
