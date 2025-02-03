@@ -14,11 +14,6 @@ edition = "2018"
 name = "d3d12"
 version = "0.20.0"
 authors = ["gfx-rs developers"]
-build = false
-autobins = false
-autoexamples = false
-autotests = false
-autobenches = false
 description = "Low level D3D12 API wrapper"
 documentation = "https://docs.rs/d3d12"
 readme = "README.md"
@@ -37,10 +32,6 @@ repository = "https://github.com/gfx-rs/wgpu/tree/trunk/d3d12"
 
 [package.metadata.docs.rs]
 targets = ["x86_64-pc-windows-msvc"]
-
-[lib]
-name = "d3d12"
-path = "src/lib.rs"
 
 [features]
 implicit-link = []
