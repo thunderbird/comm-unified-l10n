@@ -15,8 +15,15 @@ rust-version = "1.74"
 name = "wgpu-types"
 version = "0.20.0"
 authors = ["gfx-rs developers"]
+build = false
+autolib = false
+autobins = false
+autoexamples = false
+autotests = false
+autobenches = false
 description = "WebGPU types"
 homepage = "https://wgpu.rs/"
+readme = false
 keywords = ["graphics"]
 license = "MIT OR Apache-2.0"
 repository = "https://github.com/gfx-rs/wgpu"
@@ -35,6 +42,8 @@ targets = [
 ]
 
 [lib]
+name = "wgpu_types"
+path = "src/lib.rs"
 
 [dependencies]
 bitflags = "2"
@@ -55,10 +64,10 @@ features = ["serde_derive"]
 fragile-send-sync-non-atomic-wasm = []
 strict_asserts = []
 
-[target."cfg(target_arch = \"wasm32\")".dependencies]
+[target.'cfg(target_arch = "wasm32")'.dependencies]
 js-sys = "0.3.69"
 
-[target."cfg(target_arch = \"wasm32\")".dependencies.web-sys]
+[target.'cfg(target_arch = "wasm32")'.dependencies.web-sys]
 version = "0.3.69"
 features = [
     "ImageBitmap",
