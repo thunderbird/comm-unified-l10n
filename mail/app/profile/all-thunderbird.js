@@ -1425,3 +1425,6 @@ pref("browser.theme.dark-private-windows", true);
 
 // In-app notifications are disabled while the feature is being implemented.
 pref("mail.inappnotifications.enabled", false);
+
+// Export to mobile logging level.
+pref("mail.qrexport.loglevel", "Warn");
