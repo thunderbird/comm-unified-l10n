@@ -44,3 +44,15 @@ def update_scopes(config, jobs):
         )
 
         yield job
+
+@transforms.add
+def increase_max_run_time(config, jobs):
+    # If no balrog release history, then don't run
+    if not config.params.get("release_history"):
+        return
+
+    for job in jobs:
+        task = job["task"]
+        task["worker"]["max-run-time"] = 3600
+
+        yield job
