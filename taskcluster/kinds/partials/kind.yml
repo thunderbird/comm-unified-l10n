@@ -8,6 +8,7 @@ transforms:
     - taskgraph.transforms.from_deps
     - gecko_taskgraph.transforms.name_sanity
     - gecko_taskgraph.transforms.partials
+    - comm_taskgraph.transforms.partials_timeout
     - gecko_taskgraph.transforms.task
     - comm_taskgraph.transforms.partials
 
