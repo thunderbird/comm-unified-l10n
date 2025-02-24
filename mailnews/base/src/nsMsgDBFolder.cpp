@@ -669,7 +669,7 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(bool force) {
           NS_ENSURE_SUCCESS(rv, rv);
           if (hasnew) db->SortNewKeysIfNeeded();
         }
-        if (weOpenedDB) CloseDBIfFolderNotOpen(false);
+        if (weOpenedDB) CloseDB();
       }
     } else {
       // we tried to open DB but failed - don't keep trying.
@@ -1954,7 +1954,7 @@ nsMsgDBFolder::GetStringProperty(const char* propertyName,
       rv = GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
       if (NS_SUCCEEDED(rv))
         rv = folderInfo->GetCharProperty(propertyName, propertyValue);
-      if (weOpenedDB) CloseDBIfFolderNotOpen(false);
+      if (weOpenedDB) CloseDB();
       if (NS_SUCCEEDED(rv)) {
         // Now that we have the value, store it in our cache.
         if (cacheElement) {
@@ -4372,7 +4372,7 @@ nsresult nsMsgDBFolder::ApplyRetentionSettings(bool deleteViaFolder) {
   // we don't want applying retention settings to keep the db open, because
   // if we try to purge a bunch of folders, that will leave the dbs all open.
   // So if we opened the db, close it.
-  if (weOpenedDB) CloseDBIfFolderNotOpen(false);
+  if (weOpenedDB) CloseDB();
   return rv;
 }
 
@@ -4842,9 +4842,8 @@ NS_IMETHODIMP nsMsgDBFolder::NotifyCompactCompleted() {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsMsgDBFolder::CloseDBIfFolderNotOpen(bool aForceClosed) {
+NS_IMETHODIMP nsMsgDBFolder::CloseDB() {
   if (!(mFlags & (nsMsgFolderFlags::Trash | nsMsgFolderFlags::Inbox))) {
-    if (aForceClosed && mDatabase) mDatabase->ForceClosed();
     SetMsgDatabase(nullptr);
   }
   return NS_OK;
