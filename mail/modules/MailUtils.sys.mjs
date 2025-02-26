@@ -767,17 +767,13 @@ export var MailUtils = {
     // Search in folder.
     if (!folder.isServer) {
       try {
-        const weOpenedDB = !folder.databaseOpen;
         msgHdr = folder.msgDatabase.getMsgHdrForMessageID(msgId);
         if (msgHdr) {
           return msgHdr;
         }
-        if (weOpenedDB) {
-          folder.msgDatabase.forceClosed();
-          folder.msgDatabase = null;
-        }
+        folder.closeDBIfFolderNotOpen(true);
       } catch (ex) {
-        console.error(`Database for ${folder.URI} not accessible`);
+        console.error(`Database for ${folder.name} not accessible`);
       }
     }
 
