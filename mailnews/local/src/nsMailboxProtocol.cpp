@@ -71,48 +71,45 @@ nsresult nsMailboxProtocol::Initialize(nsIURI* aURL) {
         mProgressEventSink = nullptr;
       }
 
-      nsMsgKey msgKey;
-      m_runningUrl->GetMessageKey(&msgKey);
-      if (msgKey == 0) {
-        // This appears to be an .eml file. Be sure not to call
-        // nsMailboxUrl::GetMessageHeader in this case, as it would
-        // loop through all folders unsuccessfully looking for a database
-        // with a matching file path, with potentially huge performance
-        // implications.
-        rv = OpenFileSocket(aURL);
-      } else {
-        nsCOMPtr<nsIMsgMessageUrl> msgUrl =
-            do_QueryInterface(m_runningUrl, &rv);
-        if (NS_SUCCEEDED(rv)) {
-          nsCOMPtr<nsIMsgFolder> folder;
-          nsCOMPtr<nsIMsgDBHdr> msgHdr;
-          rv = msgUrl->GetMessageHeader(getter_AddRefs(msgHdr));
+      nsCOMPtr<nsIMsgMessageUrl> msgUrl = do_QueryInterface(m_runningUrl, &rv);
+      if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsIMsgFolder> folder;
+        nsCOMPtr<nsIMsgDBHdr> msgHdr;
+        rv = msgUrl->GetMessageHeader(getter_AddRefs(msgHdr));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        if (msgHdr) {
+          uint32_t msgSize = 0;
+          msgHdr->GetMessageSize(&msgSize);
+          m_runningUrl->SetMessageSize(msgSize);
+
+          SetContentLength(msgSize);
+          mailnewsUrl->SetMaxProgress(msgSize);
+
+          rv = msgHdr->GetFolder(getter_AddRefs(folder));
           NS_ENSURE_SUCCESS(rv, rv);
-
-          if (msgHdr) {
-            uint32_t msgSize = 0;
-            msgHdr->GetMessageSize(&msgSize);
-            m_runningUrl->SetMessageSize(msgSize);
-
-            SetContentLength(msgSize);
-            mailnewsUrl->SetMaxProgress(msgSize);
-
-            rv = msgHdr->GetFolder(getter_AddRefs(folder));
+          if (folder) {
+            nsCOMPtr<nsIInputStream> stream;
+            rv = folder->GetLocalMsgStream(msgHdr, getter_AddRefs(stream));
             NS_ENSURE_SUCCESS(rv, rv);
-            if (folder) {
-              nsCOMPtr<nsIInputStream> stream;
-              rv = folder->GetLocalMsgStream(msgHdr, getter_AddRefs(stream));
-              NS_ENSURE_SUCCESS(rv, rv);
-              // create input stream transport
-              nsCOMPtr<nsIStreamTransportService> sts =
-                  do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
-              if (NS_FAILED(rv)) return rv;
-              rv = sts->CreateInputTransport(stream, true,
-                                             getter_AddRefs(m_transport));
+            // create input stream transport
+            nsCOMPtr<nsIStreamTransportService> sts =
+                do_GetService(NS_STREAMTRANSPORTSERVICE_CONTRACTID, &rv);
+            if (NS_FAILED(rv)) return rv;
+            m_readCount = -1;  // We'll be reading the entire stream.
+            // Always close the sliced stream when done, we still have the
+            // original.
+            rv = sts->CreateInputTransport(stream, true,
+                                           getter_AddRefs(m_transport));
 
-              m_socketIsOpen = false;
-            }
+            m_socketIsOpen = false;
           }
+        } else {
+          nsMsgKey msgKey;
+          m_runningUrl->GetMessageKey(&msgKey);
+          NS_ENSURE_TRUE(msgKey == 0, NS_ERROR_FAILURE);
+          // This appears to be an .eml file.
+          rv = OpenFileSocket(aURL, 0, -1);
         }
       }
     }
