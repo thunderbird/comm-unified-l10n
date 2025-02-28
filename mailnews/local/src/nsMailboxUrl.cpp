@@ -209,13 +209,6 @@ nsresult nsMailboxUrl::GetMsgHdrForKey(nsMsgKey msgKey, nsIMsgDBHdr** msgHdr) {
   NS_ENSURE_ARG_POINTER(msgHdr);
   NS_ENSURE_TRUE(m_filePath, NS_ERROR_NULL_POINTER);
 
-  if (msgKey == 0) {
-    // This appears to be an .eml file. Just return without error instead of
-    // looping through all folders unsuccessfully looking for a database with
-    // a matching file path, with potentially huge performance implications.
-    return NS_OK;
-  }
-
   nsresult rv;
   nsCOMPtr<nsIMsgDatabase> mailDB;
   nsCOMPtr<nsIMsgDBService> msgDBService =
@@ -262,7 +255,8 @@ nsresult nsMailboxUrl::GetMsgHdrForKey(nsMsgKey msgKey, nsIMsgDBHdr** msgHdr) {
     return mailDB->GetMsgHdrForKey(msgKey, msgHdr);
   }
 
-  return NS_ERROR_UNEXPECTED;
+  // This may be an .eml file.
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMailboxUrl::GetMessageHeader(nsIMsgDBHdr** aMsgHdr) {
