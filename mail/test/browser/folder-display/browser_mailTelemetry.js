@@ -109,7 +109,7 @@ add_task(async function test_secure_mails_read() {
       await select_click_row(i);
     }
 
-    let scalars = TelemetryTestUtils.getProcessScalars("parent", true);
+    const scalars = TelemetryTestUtils.getProcessScalars("parent", true);
     Assert.equal(
       scalars["tb.mails.read_secure"]["encrypted-smime"],
       smimeFiles.length,
