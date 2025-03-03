@@ -74,24 +74,20 @@ struct CollectionData {
 pub struct RemoteSettingsClient<C = ViaductApiClient> {
     // This is immutable, so it can be outside the mutex
     collection_name: String,
+    #[cfg(feature = "jexl")]
+    jexl_filter: JexlFilter,
     inner: Mutex<RemoteSettingsClientInner<C>>,
 }
 
 struct RemoteSettingsClientInner<C> {
     storage: Storage,
     api_client: C,
-    #[cfg(feature = "jexl")]
-    jexl_filter: JexlFilter,
 }
 
 // Add your local packaged data you want to work with here
-//
-// To download the dump, run:
-//   $ cargo remote-settings dump-get --bucket main --collection-name <collection name>
 impl<C: ApiClient> RemoteSettingsClient<C> {
     // One line per bucket + collection
     packaged_collections! {
-        ("main", "search-config-v2"),
         ("main", "search-telemetry-v2"),
         ("main", "regions"),
     }
@@ -123,11 +119,11 @@ impl<C: ApiClient> RemoteSettingsClient<C> {
     ) -> Self {
         Self {
             collection_name,
+            #[cfg(feature = "jexl")]
+            jexl_filter,
             inner: Mutex::new(RemoteSettingsClientInner {
                 storage,
                 api_client,
-                #[cfg(feature = "jexl")]
-                jexl_filter,
             }),
         }
     }
@@ -149,16 +145,12 @@ impl<C: ApiClient> RemoteSettingsClient<C> {
 
     /// Filters records based on the presence and evaluation of `filter_expression`.
     #[cfg(feature = "jexl")]
-    fn filter_records(
-        &self,
-        records: Vec<RemoteSettingsRecord>,
-        inner: &RemoteSettingsClientInner<C>,
-    ) -> Vec<RemoteSettingsRecord> {
+    fn filter_records(&self, records: Vec<RemoteSettingsRecord>) -> Vec<RemoteSettingsRecord> {
         records
             .into_iter()
             .filter(|record| match record.fields.get("filter_expression") {
                 Some(serde_json::Value::String(filter_expr)) => {
-                    inner.jexl_filter.evaluate(filter_expr).unwrap_or(false)
+                    self.jexl_filter.evaluate(filter_expr).unwrap_or(false)
                 }
                 _ => true, // Include records without a valid filter expression by default
             })
@@ -166,11 +158,7 @@ impl<C: ApiClient> RemoteSettingsClient<C> {
     }
 
     #[cfg(not(feature = "jexl"))]
-    fn filter_records(
-        &self,
-        records: Vec<RemoteSettingsRecord>,
-        _inner: &RemoteSettingsClientInner<C>,
-    ) -> Vec<RemoteSettingsRecord> {
+    fn filter_records(&self, records: Vec<RemoteSettingsRecord>) -> Vec<RemoteSettingsRecord> {
         records
     }
 
@@ -207,7 +195,7 @@ impl<C: ApiClient> RemoteSettingsClient<C> {
                     packaged_data.timestamp,
                     CollectionMetadata::default(),
                 )?;
-                return Ok(Some(self.filter_records(packaged_data.data, &inner)));
+                return Ok(Some(self.filter_records(packaged_data.data)));
             }
         }
 
@@ -218,7 +206,7 @@ impl<C: ApiClient> RemoteSettingsClient<C> {
             //
             // Note: we should return these even if it's an empty list and `sync_if_empty=true`.
             // The "if empty" part refers to the cache being empty, not the list.
-            (Some(cached_records), _) => Some(self.filter_records(cached_records, &inner)),
+            (Some(cached_records), _) => Some(self.filter_records(cached_records)),
             // Case 3: sync_if_empty=true
             (None, true) => {
                 let changeset = inner.api_client.fetch_changeset(None)?;
@@ -228,7 +216,7 @@ impl<C: ApiClient> RemoteSettingsClient<C> {
                     changeset.timestamp,
                     changeset.metadata,
                 )?;
-                Some(self.filter_records(changeset.changes, &inner))
+                Some(self.filter_records(changeset.changes))
             }
             // Case 4: Nothing to return
             (None, false) => None,
@@ -372,10 +360,9 @@ impl<C: ApiClient> RemoteSettingsClient<C> {
 
     /// Downloads an attachment from [attachment_location]. NOTE: there are no guarantees about a
     /// maximum size, so use care when fetching potentially large attachments.
-    pub fn get_attachment(&self, record: &RemoteSettingsRecord) -> Result<Vec<u8>> {
+    pub fn get_attachment(&self, record: RemoteSettingsRecord) -> Result<Vec<u8>> {
         let metadata = record
             .attachment
-            .as_ref()
             .ok_or_else(|| Error::RecordAttachmentMismatchError("No attachment metadata".into()))?;
 
         let mut inner = self.inner.lock();
@@ -2428,7 +2415,7 @@ mod test_packaged_metadata {
             fields: serde_json::json!({}).as_object().unwrap().clone(),
         };
 
-        let attachment_data = rs_client.get_attachment(&record)?;
+        let attachment_data = rs_client.get_attachment(record)?;
 
         // Verify we got the expected data
         let expected_data = std::fs::read(file_path)?;
@@ -2484,7 +2471,7 @@ mod test_packaged_metadata {
             fields: serde_json::json!({}).as_object().unwrap().clone(),
         };
 
-        let attachment_data = rs_client.get_attachment(&record)?;
+        let attachment_data = rs_client.get_attachment(record)?;
 
         // Verify we got the mock API data, not the packaged data
         assert_eq!(attachment_data, vec![1, 2, 3, 4, 5]);

@@ -29,7 +29,7 @@ pub use ranker::score;
 use error_support::handle_error;
 
 use db::BanditData;
-use std::{collections::HashMap, sync::Arc};
+use std::collections::HashMap;
 
 uniffi::setup_scaffolding!();
 
@@ -46,13 +46,8 @@ impl RelevancyStore {
     /// Construct a new RelevancyStore
     ///
     /// This is non-blocking since databases and other resources are lazily opened.
-    #[uniffi::constructor(default(remote_settings_service=None))]
-    pub fn new(
-        db_path: String,
-        #[allow(unused)] remote_settings_service: Option<
-            Arc<remote_settings::RemoteSettingsService>,
-        >,
-    ) -> Self {
+    #[uniffi::constructor]
+    pub fn new(db_path: String) -> Self {
         Self {
             db: RelevancyDb::new(db_path),
             cache: Mutex::new(BanditCache::new()),
@@ -312,10 +307,8 @@ mod test {
     }
 
     fn setup_store(test_id: &'static str) -> RelevancyStore {
-        let relevancy_store = RelevancyStore::new(
-            format!("file:test_{test_id}_data?mode=memory&cache=shared"),
-            None,
-        );
+        let relevancy_store =
+            RelevancyStore::new(format!("file:test_{test_id}_data?mode=memory&cache=shared"));
         relevancy_store
             .db
             .read_write(|dao| {
