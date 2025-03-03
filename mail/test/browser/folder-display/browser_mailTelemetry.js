@@ -63,6 +63,8 @@ add_task(async function test_secure_mails_read() {
   const headers = { from: "alice@t1.example.com", to: "bob@t2.example.net" };
   const folder = await create_folder("secure-mail");
 
+  const tabmail = document.getElementById("tabmail");
+
   for (let i = 0; i < NUM_PLAIN_MAILS; i++) {
     await add_message_to_folder(
       [folder],
@@ -79,6 +81,7 @@ add_task(async function test_secure_mails_read() {
   const openpgpFiles = [
     "../openpgp/data/eml/signed-by-0x3099ff1238852b9f-encrypted-to-0xf231550c4f47e38e.eml",
   ];
+  const NUM_SECURE_MAILS = smimeFiles.length + openpgpFiles.length;
 
   // Copy over all the openpgp/smime mails into the folder.
   for (const msgFile of smimeFiles.concat(openpgpFiles)) {
@@ -97,19 +100,44 @@ add_task(async function test_secure_mails_read() {
     await copyListener.promise;
   }
 
-  await be_in_folder(folder);
-  let run = 1;
-  while (run < 3) {
+  // Selecting all added mails multiple times should not change read statistics.
+  for (let run = 1; run < 3; run++) {
     info(`Checking security; run=#${run}`);
-    for (
-      let i = 0;
-      i < NUM_PLAIN_MAILS + smimeFiles.length + openpgpFiles.length;
-      i++
-    ) {
+    for (let i = 0; i < NUM_SECURE_MAILS + NUM_PLAIN_MAILS; i++) {
+      await be_in_folder(folder);
+      const eventName =
+        i < NUM_SECURE_MAILS ? "MsgSecurityTelemetryProcessed" : "MsgLoaded";
+      const win = tabmail.currentTabInfo.chromeBrowser.contentWindow;
+      const eventPromise = new Promise(resolve =>
+        win.addEventListener(eventName, resolve, { once: true })
+      );
+      info(`Selecting message at index ${i}`);
       await select_click_row(i);
+      info(`Awaiting ${eventName} event for message at index ${i}`);
+      const event = await eventPromise;
+      info(`Seen ${eventName} event for message at index ${i}`);
+
+      // Check if telemetry for encrypted messages are correctly skipped on the
+      // additional runs.
+      if (i < NUM_SECURE_MAILS) {
+        const { skipped } = event.detail;
+        if (run == 1) {
+          Assert.equal(
+            false,
+            skipped,
+            `Telemetry data for the first run should not be skipped`
+          );
+        } else {
+          Assert.equal(
+            true,
+            skipped,
+            `Telemetry data for additional runs should be skipped`
+          );
+        }
+      }
     }
 
-    let scalars = TelemetryTestUtils.getProcessScalars("parent", true);
+    const scalars = TelemetryTestUtils.getProcessScalars("parent", true);
     Assert.equal(
       scalars["tb.mails.read_secure"]["encrypted-smime"],
       smimeFiles.length,
@@ -120,9 +148,6 @@ add_task(async function test_secure_mails_read() {
       openpgpFiles.length,
       `Count of openpgp encrypted mails read should be correct in run ${run}.`
     );
-
-    // Select all added mails again should not change read statistics.
-    run++;
   }
 });
 
