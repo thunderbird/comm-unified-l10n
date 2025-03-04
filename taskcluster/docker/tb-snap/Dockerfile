@@ -31,7 +31,7 @@ ENV LANG="en_US.UTF-8" \
     SNAP_ARCH="amd64" \
     SNAP_LIST="core22 snapcraft gnome-42-2204" \
     SNAP_VERSION=""
-ENV PATH="$SNAP/bin:$PATH"
+ENV PATH="/snap/bin:$PATH"
 
 # Install required snaps
 COPY install_snap.sh .
