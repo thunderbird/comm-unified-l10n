@@ -7,14 +7,11 @@
  * malformed mboxes in unambiguous cases.
  */
 
-const { MessageGenerator } = ChromeUtils.importESModule(
-  "resource://testing-common/mailnews/MessageGenerator.sys.mjs"
-);
 const { PromiseTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/mailnews/PromiseTestUtils.sys.mjs"
 );
-const { TelemetryTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/TelemetryTestUtils.sys.mjs"
+const { MessageGenerator } = ChromeUtils.importESModule(
+  "resource://testing-common/mailnews/MessageGenerator.sys.mjs"
 );
 
 // Force mbox mailstore.
@@ -71,8 +68,6 @@ add_task(async function test_unescapedMbox() {
  * Test that reading from bad offset fails.
  */
 add_task(async function test_badStoreTokens() {
-  Services.telemetry.clearScalars();
-
   localAccountUtils.loadLocalMailAccount();
   const inbox = localAccountUtils.inboxFolder;
 
@@ -82,16 +77,10 @@ add_task(async function test_badStoreTokens() {
     generator.makeMessages({ count: 10 }).map(m => m.toMessageString())
   );
 
-  // Corrupt the storeTokens in a couple of different ways.
-  let even = true;
+  // Corrupt the storeTokens by adding 3
   for (const msg of inbox.messages) {
-    if (even) {
-      const offset = Number(msg.storeToken) + 3;
-      msg.storeToken = offset.toString();
-    } else {
-      msg.storeToken = "12345678"; // Past end of mbox file.
-    }
-    even = !even;
+    const offset = Number(msg.storeToken) + 3;
+    msg.storeToken = offset.toString();
   }
 
   // Check that message reads fail.
@@ -112,78 +101,6 @@ add_task(async function test_badStoreTokens() {
       );
     }
   }
-
-  // Make sure telemetry counted them
-
-  TelemetryTestUtils.assertKeyedScalar(
-    TelemetryTestUtils.getProcessScalars("parent", true),
-    "tb.mails.mbox_read_errors",
-    "missing_from",
-
-    inbox.getTotalMessages(false)
-  );
-
-  // Clear up.
-  localAccountUtils.clearAll();
-});
-
-/**
- * Test that mbox reading that goes too far beyond the database .messageSize
- * causes unexpected-size errors in the mbox code.
- */
-add_task(async function test_badMessageSizes() {
-  Services.telemetry.clearScalars();
-
-  localAccountUtils.loadLocalMailAccount();
-  const inbox = localAccountUtils.inboxFolder;
-
-  // Add some messages to inbox.
-  // The size sanity check is approximate. There's a threshold of 10% beyond
-  // expected size, and a minimum of 512 bytes.
-  // So make sure our test messages are way larger than 512 bytes.
-  const msgText = "I will not waste chars.\r\n".repeat(500);
-  const generator = new MessageGenerator();
-  inbox.addMessageBatch(
-    generator
-      .makeMessages({
-        count: 10,
-        body: { body: msgText },
-      })
-      .map(m => m.toMessageString())
-  );
-
-  // Sabotage .messageSize to simulate corrupted message.
-  for (const msg of inbox.messages) {
-    msg.messageSize = msg.messageSize / 2;
-  }
-
-  // Check that the size check triggers and the read fails.
-  const NS_MSG_ERROR_UNEXPECTED_SIZE = 0x80550023;
-  for (const msg of inbox.messages) {
-    const streamListener = new PromiseTestUtils.PromiseStreamListener();
-    const uri = inbox.getUriForMsg(msg);
-    const service = MailServices.messageServiceFromURI(uri);
-
-    try {
-      service.streamMessage(uri, streamListener, null, null, false, "", true);
-      await streamListener.promise;
-    } catch (e) {
-      Assert.equal(
-        e,
-        NS_MSG_ERROR_UNEXPECTED_SIZE,
-        "Messages that don't end at expected place should cause NS_MSG_ERROR_UNEXPECTED_SIZE"
-      );
-    }
-  }
-
-  // Make sure telemetry counted them.
-  TelemetryTestUtils.assertKeyedScalar(
-    TelemetryTestUtils.getProcessScalars("parent", true),
-    "tb.mails.mbox_read_errors",
-    "unexpected_size",
-
-    inbox.getTotalMessages(false)
-  );
 
   // Clear up.
   localAccountUtils.clearAll();

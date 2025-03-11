@@ -280,25 +280,6 @@ tb.mails:
     record_in_processes:
       - 'main'
 
-  mbox_read_errors:
-    bug_numbers:
-      - 1926810
-    description:
-      Counts mbox read failures by type.
-    release_channel_collection: opt-out
-    expires: never
-    products:
-      - 'thunderbird'
-    kind: uint
-    keyed: true
-    keys:
-      - missing_from
-      - unexpected_size
-    notification_emails:
-      - 'telemetry-client-dev@thunderbird.net'
-    record_in_processes:
-      - 'main'
-
 tb.preferences:
   boolean:
     bug_numbers:
