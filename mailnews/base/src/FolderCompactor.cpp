@@ -33,8 +33,6 @@
 #include "mozilla/RefCounted.h"
 #include "mozilla/Services.h"
 #include "mozilla/ScopeExit.h"
-#include "mozilla/Telemetry.h"
-#include "nsPrintfCString.h"
 
 mozilla::LazyLogModule gCompactLog("compact");
 using mozilla::LogLevel;
@@ -114,9 +112,6 @@ class FolderCompactor : public nsIStoreCompactListener {
 
   // Running total of kept messages (for progress feedback).
   uint32_t mNumKept{0};
-
-  // Glean timer.
-  mozilla::TimeStamp mStart;
 };
 
 NS_IMPL_ISUPPORTS(FolderCompactor, nsIStoreCompactListener)
@@ -373,7 +368,6 @@ NS_IMETHODIMP FolderCompactor::OnCompactionBegin() {
   }
 
   MOZ_LOG(gCompactLog, LogLevel::Verbose, ("OnCompactionBegin()"));
-  mStart = mozilla::TimeStamp::Now();
 
   PROFILER_MARKER_TEXT(
       "FolderCompactor", OTHER,
@@ -501,19 +495,6 @@ NS_IMETHODIMP FolderCompactor::OnCompactionComplete(nsresult status,
            " newSize=%" PRId64 ")",
            (uint32_t)status, oldSize, newSize));
 
-  nsPrintfCString statusStr("%x", (uint32_t)status);
-  mozilla::Telemetry::ScalarAdd(mozilla::Telemetry::ScalarID::TB_COMPACT_RESULT,
-                                NS_ConvertASCIItoUTF16(statusStr), 1);
-  if (mStart) {
-    mozilla::Telemetry::AccumulateTimeDelta(
-        mozilla::Telemetry::TB_COMPACT_DURATION, mStart,
-        mozilla::TimeStamp::Now());
-  }
-  PROFILER_MARKER_TEXT(
-      "FolderCompactor", OTHER,
-      mozilla::MarkerOptions(mozilla::MarkerTiming::IntervalEnd()),
-      mFolder->URI());
-
   if (NS_SUCCEEDED(status)) {
     // Commit all the changes.
     nsresult rv = mDB->Commit(nsMsgDBCommitType::kCompressCommit);
@@ -529,8 +510,6 @@ NS_IMETHODIMP FolderCompactor::OnCompactionComplete(nsresult status,
         dbFolderInfo->SetExpungedBytes(0);
       }
       mDB->SetSummaryValid(true);
-      mozilla::Telemetry::Accumulate(
-          mozilla::Telemetry::TB_COMPACT_BYTES_RECOVERED, oldSize - newSize);
     } else {
       NS_ERROR("Failed to commit changes to DB!");
       status = rv;  // Make sure our completion fn hears about the failure.

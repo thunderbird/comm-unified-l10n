@@ -14,9 +14,6 @@
 const { PromiseTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/mailnews/PromiseTestUtils.sys.mjs"
 );
-const { TelemetryTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/TelemetryTestUtils.sys.mjs"
-);
 
 Services.prefs.setCharPref(
   "mail.serverDefaultStoreContractID",
@@ -106,8 +103,6 @@ function showMessages(folder, text) {
 }
 
 let gInbox, gFolder2, gFolder3;
-let gInboxSizeBefore;
-const fromLineLength = "\r\nFrom - Tue Oct 08 23:23:39 2024\r\n".length;
 
 add_setup(async function () {
   localAccountUtils.loadLocalMailAccount();
@@ -119,7 +114,6 @@ add_setup(async function () {
   await copyFileMessage(do_get_file("../../../data/draft1"), gInbox, true);
   showMessages(gInbox, "after initial 3 messages copy to inbox");
 
-  gInboxSizeBefore = calculateExpectedMboxSize(gInbox);
   const inboxMessages = [...gInbox.messages];
 
   // Create another folder and copy all the messages to it.
@@ -135,14 +129,6 @@ add_setup(async function () {
 });
 
 add_task(async function testCompactFolder() {
-  Services.telemetry.clearScalars();
-  const duration = TelemetryTestUtils.getAndClearHistogram(
-    "TB_COMPACT_DURATION"
-  );
-  const bytesRecovered = TelemetryTestUtils.getAndClearHistogram(
-    "TB_COMPACT_BYTES_RECOVERED"
-  );
-
   showMessages(gFolder3, "before deleting 1 message");
 
   // Store message keys before deletion and compaction.
@@ -154,8 +140,7 @@ add_task(async function testCompactFolder() {
   showMessages(gFolder3, "after deleting 1 message");
 
   const expectedFolderSize = calculateExpectedMboxSize(gFolder3);
-  const expungedBytes = gFolder3.expungedBytes;
-  Assert.greater(expungedBytes, 0, "folder3 should need compaction");
+  Assert.greater(gFolder3.expungedBytes, 0, "folder3 should need compaction");
 
   const listener = new PromiseTestUtils.PromiseUrlListener();
   gFolder3.compact(listener, null);
@@ -171,36 +156,9 @@ add_task(async function testCompactFolder() {
   );
 
   await verifyMboxSize(gFolder3, expectedFolderSize);
-  Assert.equal(gFolder3.expungedBytes, 0, "folder3 should not need compaction");
-
-  const scalars = TelemetryTestUtils.getProcessScalars("parent", true);
-  TelemetryTestUtils.assertKeyedScalar(
-    scalars,
-    "tb.compact.result",
-    Cr.NS_OK.toString(16),
-    1
-  );
-  Assert.equal(
-    Object.values(duration.snapshot().values).reduce((a, c) => a + c, 0),
-    1,
-    "duration should be recorded in telemetry"
-  );
-  Assert.equal(
-    bytesRecovered.snapshot().sum,
-    expungedBytes + fromLineLength,
-    "bytes saved should be recorded in telemetry"
-  );
 });
 
 add_task(async function testCompactAllFolders() {
-  Services.telemetry.clearScalars();
-  const duration = TelemetryTestUtils.getAndClearHistogram(
-    "TB_COMPACT_DURATION"
-  );
-  const bytesRecovered = TelemetryTestUtils.getAndClearHistogram(
-    "TB_COMPACT_BYTES_RECOVERED"
-  );
-
   showMessages(gFolder2, "before deleting 1 message");
 
   // Store message keys before deletion and compaction.
@@ -220,7 +178,6 @@ add_task(async function testCompactAllFolders() {
   // Folder 3 doesn't need compacting.
   const expectedFolder3Size = calculateExpectedMboxSize(gFolder3);
   Assert.equal(gFolder3.expungedBytes, 0, "folder3 should not need compaction");
-  const expungedBytes = gInbox.expungedBytes + gFolder2.expungedBytes;
 
   const listener = new PromiseTestUtils.PromiseUrlListener();
   gInbox.compactAll(listener, null);
@@ -235,40 +192,11 @@ add_task(async function testCompactAllFolders() {
   );
 
   await verifyMboxSize(gInbox, expectedInboxSize);
-  Assert.equal(gInbox.expungedBytes, 0, "inbox should not need compaction");
   await verifyMboxSize(gFolder2, expectedFolder2Size);
-  Assert.equal(gFolder2.expungedBytes, 0, "folder2 should not need compaction");
   await verifyMboxSize(gFolder3, expectedFolder3Size);
-  Assert.equal(gFolder3.expungedBytes, 0, "folder3 should not need compaction");
-
-  const scalars = TelemetryTestUtils.getProcessScalars("parent", true);
-  TelemetryTestUtils.assertKeyedScalar(
-    scalars,
-    "tb.compact.result",
-    Cr.NS_OK.toString(16),
-    2
-  );
-  Assert.equal(
-    Object.values(duration.snapshot().values).reduce((a, c) => a + c, 0),
-    2,
-    "duration should be recorded in telemetry"
-  );
-  Assert.equal(
-    bytesRecovered.snapshot().sum,
-    expungedBytes + fromLineLength * 3,
-    "bytes saved should be recorded in telemetry"
-  );
 });
 
 add_task(async function testAbortCompactingFolder() {
-  Services.telemetry.clearScalars();
-  const duration = TelemetryTestUtils.getAndClearHistogram(
-    "TB_COMPACT_DURATION"
-  );
-  const bytesRecovered = TelemetryTestUtils.getAndClearHistogram(
-    "TB_COMPACT_BYTES_RECOVERED"
-  );
-
   showMessages(gFolder2, "before deleting 1 message");
 
   const filesBefore = new Set(
@@ -298,25 +226,6 @@ add_task(async function testAbortCompactingFolder() {
   );
 
   await verifyMboxSize(gFolder2, unchangedFolderSize);
-  Assert.greater(gFolder2.expungedBytes, 0, "folder2 should need compaction");
-
-  const scalars = TelemetryTestUtils.getProcessScalars("parent", true);
-  TelemetryTestUtils.assertKeyedScalar(
-    scalars,
-    "tb.compact.result",
-    Cr.NS_ERROR_ABORT.toString(16),
-    1
-  );
-  Assert.equal(
-    Object.values(duration.snapshot().values).reduce((a, c) => a + c, 0),
-    0,
-    "duration should not be recorded in telemetry"
-  );
-  Assert.equal(
-    bytesRecovered.snapshot().sum,
-    0,
-    "bytes saved should not be recorded in telemetry"
-  );
 
   const filesAfter = new Set(
     Array.from(gFolder2.filePath.parent.directoryEntries, f => f.leafName)
