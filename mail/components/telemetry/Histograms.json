@@ -12,7 +12,6 @@
   "TB_COMPOSE_TYPE": {
     "record_in_processes": ["main"],
     "products": ["thunderbird"],
-    "releaseChannelCollection": "opt-out",
     "alert_emails": ["telemetry-client-dev@thunderbird.net"],
     "bug_numbers": [1615996],
     "expires_in_version": "never",
@@ -41,7 +40,6 @@
   "TB_COMPACT_DURATION": {
     "record_in_processes": ["main"],
     "products": ["thunderbird"],
-    "releaseChannelCollection": "opt-out",
     "alert_emails": ["telemetry-client-dev@thunderbird.net"],
     "bug_numbers": [1926152],
     "expires_in_version": "never",
@@ -54,7 +52,6 @@
   "TB_COMPACT_BYTES_RECOVERED": {
     "record_in_processes": ["main"],
     "products": ["thunderbird"],
-    "releaseChannelCollection": "opt-out",
     "alert_emails": ["telemetry-client-dev@thunderbird.net"],
     "bug_numbers": [1926152],
     "expires_in_version": "never",
