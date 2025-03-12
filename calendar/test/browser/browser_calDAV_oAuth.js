@@ -9,12 +9,8 @@ var { CalDavCalendar } = ChromeUtils.importESModule("resource:///modules/CalDavC
 var { CalDavGenericRequest } = ChromeUtils.importESModule(
   "resource:///modules/caldav/CalDavRequest.sys.mjs"
 );
-var { MailTelemetryForTests } = ChromeUtils.importESModule("resource:///modules/MailGlue.sys.mjs");
 var { OAuth2TestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/mailnews/OAuth2TestUtils.sys.mjs"
-);
-var { TelemetryTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/TelemetryTestUtils.sys.mjs"
 );
 
 var LoginInfo = Components.Constructor(
@@ -102,15 +98,9 @@ async function handleOAuthDialog(expectedHint) {
  * @param {object} [newTokenDetails] - If given, re-authentication must happen.
  * @param {string} [newTokenDetails.username] - The new token must be stored with this user name.
  */
-async function subtest(calendarId, newTokenDetails, telemetryLabel) {
+async function subtest(calendarId, newTokenDetails) {
   const calendar = new CalDavCalendar();
   calendar.id = calendarId;
-  calendar.name = calendarId;
-  calendar.uri = Services.io.newURI("http://mochi.test:8888/");
-  calendar.setProperty("disabled", true);
-  cal.manager.registerCalendar(calendar);
-
-  await checkTelemetry(telemetryLabel);
 
   const request = new CalDavGenericRequest(
     calendar.wrappedJSObject.session,
@@ -128,8 +118,6 @@ async function subtest(calendarId, newTokenDetails, telemetryLabel) {
   const headers = JSON.parse(response.text);
 
   Assert.equal(headers.authorization, "Bearer access_token");
-
-  cal.manager.unregisterCalendar(calendar);
 }
 
 /**
@@ -151,23 +139,12 @@ function checkAndClearLogins(expectedLogins) {
   OAuth2TestUtils.forgetObjects();
 }
 
-async function checkTelemetry(expectedLabel) {
-  Services.telemetry.clearScalars();
-  await MailTelemetryForTests.reportCalendars();
-  TelemetryTestUtils.assertKeyedScalar(
-    TelemetryTestUtils.getProcessScalars("parent", true),
-    "tb.calendar.google_token_type",
-    expectedLabel,
-    1
-  );
-}
-
 // Test making a request when there is no matching token stored.
 
 /** No token stored, no username or session ID set. */
 add_task(async function testCalendarOAuth_id_none() {
   const calendarId = "testCalendarOAuth_id_none";
-  await subtest(calendarId, {}, "id_noToken");
+  await subtest(calendarId, {});
   checkAndClearLogins([{ ...defaultLogin, username: calendarId }]);
 });
 
@@ -175,7 +152,7 @@ add_task(async function testCalendarOAuth_id_none() {
 add_task(async function testCalendarOAuth_sessionId_none() {
   const calendarId = "testCalendarOAuth_sessionId_none";
   setPref(calendarId, "sessionId", "test_session");
-  await subtest(calendarId, {}, "session_noToken");
+  await subtest(calendarId, {});
   checkAndClearLogins([{ ...defaultLogin, username: "test_session" }]);
 });
 
@@ -183,7 +160,7 @@ add_task(async function testCalendarOAuth_sessionId_none() {
 add_task(async function testCalendarOAuth_username_none() {
   const calendarId = "testCalendarOAuth_username_none";
   setPref(calendarId, "username", USERNAME);
-  await subtest(calendarId, { username: USERNAME }, "username_noToken");
+  await subtest(calendarId, { username: USERNAME });
   checkAndClearLogins([defaultLogin]);
 });
 
@@ -202,7 +179,7 @@ add_task(async function testCalendarOAuth_id_expired() {
     },
   ];
   await setLogins(logins);
-  await subtest(calendarId, {}, "id_idOrigin");
+  await subtest(calendarId, {});
   logins[0].password = VALID_TOKEN;
   checkAndClearLogins(logins);
 });
@@ -220,7 +197,7 @@ add_task(async function testCalendarOAuth_sessionId_expired() {
   ];
   setPref(calendarId, "sessionId", "test_session");
   await setLogins(logins);
-  await subtest(calendarId, {}, "session_sessionOrigin");
+  await subtest(calendarId, {});
   logins[0].password = VALID_TOKEN;
   checkAndClearLogins(logins);
 });
@@ -238,7 +215,7 @@ add_task(async function testCalendarOAuth_username_expired() {
   ];
   setPref(calendarId, "username", USERNAME);
   await setLogins(logins);
-  await subtest(calendarId, { username: USERNAME }, "username_idOrigin");
+  await subtest(calendarId, { username: USERNAME });
   checkAndClearLogins([logins[0], defaultLogin]);
 });
 
@@ -249,7 +226,7 @@ add_task(async function testCalendarOAuth_id_valid() {
   const calendarId = "testCalendarOAuth_id_valid";
   const logins = [{ ...googleLogin, origin: `oauth:${calendarId}`, username: calendarId }];
   await setLogins(logins);
-  await subtest(calendarId, undefined, "id_idOrigin");
+  await subtest(calendarId);
   checkAndClearLogins(logins);
 });
 
@@ -259,7 +236,7 @@ add_task(async function testCalendarOAuth_sessionId_valid() {
   const logins = [{ ...googleLogin, origin: "oauth:test_session", username: "test_session" }];
   setPref(calendarId, "sessionId", "test_session");
   await setLogins(logins);
-  await subtest(calendarId, undefined, "session_sessionOrigin");
+  await subtest(calendarId);
   checkAndClearLogins(logins);
 });
 
@@ -269,7 +246,7 @@ add_task(async function testCalendarOAuth_username_valid() {
   const logins = [{ ...googleLogin, origin: `oauth:${calendarId}`, username: calendarId }];
   setPref(calendarId, "username", USERNAME);
   await setLogins(logins);
-  await subtest(calendarId, { username: USERNAME }, "username_idOrigin");
+  await subtest(calendarId, { username: USERNAME });
   checkAndClearLogins([logins[0], defaultLogin]);
 });
 
@@ -280,7 +257,7 @@ add_task(async function testCalendarOAuthTB_id_valid() {
   const calendarId = "testCalendarOAuthTB_id_valid";
   const logins = [{ ...defaultLogin, username: calendarId }];
   await setLogins(logins);
-  await subtest(calendarId, undefined, "id_idToken");
+  await subtest(calendarId);
   checkAndClearLogins(logins);
 });
 
@@ -290,7 +267,7 @@ add_task(async function testCalendarOAuthTB_sessionId_valid() {
   const logins = [{ ...defaultLogin, username: "test_session" }];
   setPref(calendarId, "sessionId", "test_session");
   await setLogins(logins);
-  await subtest(calendarId, undefined, "session_sessionToken");
+  await subtest(calendarId);
   checkAndClearLogins(logins);
 });
 
@@ -300,7 +277,7 @@ add_task(async function testCalendarOAuthTB_username_valid() {
   const logins = [{ ...defaultLogin, username: calendarId }];
   setPref(calendarId, "username", USERNAME);
   await setLogins(logins);
-  await subtest(calendarId, { username: USERNAME }, "username_idToken");
+  await subtest(calendarId, { username: USERNAME });
   checkAndClearLogins([logins[0], defaultLogin]);
 });
 
@@ -313,7 +290,7 @@ add_task(async function testCalendarOAuthTB_username_validSingle() {
   ];
   setPref(calendarId, "username", USERNAME);
   await setLogins(logins);
-  await subtest(calendarId, undefined, "username_usernameToken");
+  await subtest(calendarId);
   checkAndClearLogins(logins);
 });
 
@@ -323,6 +300,6 @@ add_task(async function testCalendarOAuthTB_username_validMultiple() {
   const logins = [{ ...defaultLogin, scope: "scope test_scope other_scope" }];
   setPref(calendarId, "username", USERNAME);
   await setLogins(logins);
-  await subtest(calendarId, undefined, "username_usernameToken");
+  await subtest(calendarId);
   checkAndClearLogins(logins);
 });

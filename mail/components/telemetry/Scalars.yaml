@@ -389,35 +389,6 @@ tb.calendar:
     record_in_processes:
       - 'main'
 
-  google_token_type:
-    bug_numbers:
-      - 1927971
-    description:
-      How Google calendar OAuth tokens are stored. There is a variety of old formats we would like
-      to remove, but migration is difficult and may not be worth attempting for some formats.
-      See MailGlue.sys.mjs for a description of each label.
-    release_channel_collection: opt-out
-    expires: '135'
-    products:
-      - 'thunderbird'
-    kind: uint
-    keyed: true
-    keys:
-      - username_usernameToken
-      - username_idToken
-      - username_idOrigin
-      - username_noToken
-      - session_sessionToken
-      - session_sessionOrigin
-      - session_noToken
-      - id_idToken
-      - id_idOrigin
-      - id_noToken
-    notification_emails:
-      - 'telemetry-client-dev@thunderbird.net'
-    record_in_processes:
-      - 'main'
-
 tb.ui.configuration:
   folder_tree_modes:
     bug_numbers:
