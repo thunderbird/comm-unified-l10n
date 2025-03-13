@@ -23,9 +23,6 @@ const { add_message_to_folder, msgGen, get_special_folder, create_folder } =
   ChromeUtils.importESModule(
     "resource://testing-common/mail/FolderDisplayHelpers.sys.mjs"
   );
-const { TelemetryTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/TelemetryTestUtils.sys.mjs"
-);
 
 /**
  * Check that we are counting account types.
@@ -34,7 +31,7 @@ add_task(async function test_account_types() {
   // Collect all added accounts to be cleaned up at the end.
   const addedAccounts = [];
 
-  Services.telemetry.clearScalars();
+  Services.fog.testResetFOG();
 
   const NUM_IMAP = 3;
   const NUM_RSS = 1;
@@ -98,7 +95,7 @@ add_task(async function test_account_types() {
  * Check that we are counting account sizes.
  */
 add_task(async function test_account_sizes() {
-  Services.telemetry.clearScalars();
+  Services.fog.testResetFOG();
 
   const NUM_INBOX = 3;
   const NUM_OTHER = 2;
@@ -110,13 +107,36 @@ add_task(async function test_account_sizes() {
     false
   );
   const other = await create_folder("TestAccountSize");
+  registerCleanupFunction(async () => {
+    await new Promise(resolve => {
+      inbox.deleteMessages(
+        [...inbox.messages],
+        null,
+        true,
+        false,
+        { onStopCopy: resolve },
+        false
+      );
+    });
+    other.deleteSelf(null);
+  });
 
+  Assert.equal(
+    inbox.getTotalMessages(true),
+    0,
+    "inbox should start with 0 msgs"
+  );
   let expectInboxSize = 0;
   for (let i = 0; i < NUM_INBOX; i++) {
     const synMsg = msgGen.makeMessage({ body: { body: `test inbox ${i}` } });
     expectInboxSize += synMsg.toMessageString().length;
     await add_message_to_folder([inbox], synMsg);
   }
+  Assert.equal(
+    other.getTotalMessages(true),
+    0,
+    "other should start with 0 msgs"
+  );
   let expectOtherSize = 0;
   for (let i = 0; i < NUM_OTHER; i++) {
     const synMsg = msgGen.makeMessage({ body: { body: `test other ${i}` } });
@@ -125,21 +145,19 @@ add_task(async function test_account_sizes() {
   }
 
   MailTelemetryForTests.reportAccountSizes();
-  const scalars = TelemetryTestUtils.getProcessScalars("parent", true);
-
   // Check if we count total messages correctly.
   Assert.equal(
-    scalars["tb.account.total_messages"].Inbox,
+    Glean.mail.folderTotalMessages.Inbox.testGetValue(),
     NUM_INBOX,
     "Number of messages in Inbox must be correct"
   );
   Assert.equal(
-    scalars["tb.account.total_messages"].Other,
+    Glean.mail.folderTotalMessages.Other.testGetValue(),
     NUM_OTHER,
     "Number of messages in other folders must be correct"
   );
   Assert.equal(
-    scalars["tb.account.total_messages"].Total,
+    Glean.mail.folderTotalMessages.Total.testGetValue(),
     NUM_INBOX + NUM_OTHER,
     "Number of messages in all folders must be correct"
   );
@@ -148,7 +166,7 @@ add_task(async function test_account_sizes() {
   const fromOverhead = "From MAILER-DAEMON Fri Jul  8 12:08:34 2011".length;
 
   // Check if we count size on disk correctly.
-  const gotInboxSize = scalars["tb.account.size_on_disk"].Inbox;
+  const gotInboxSize = Number(Glean.mail.folderSizeOnDisk.Inbox.testGetValue());
   Assert.greaterOrEqual(
     gotInboxSize,
     expectInboxSize,
@@ -161,7 +179,7 @@ add_task(async function test_account_sizes() {
     "Inbox size < maximum expected"
   );
 
-  const gotOtherSize = scalars["tb.account.size_on_disk"].Other;
+  const gotOtherSize = Number(Glean.mail.folderSizeOnDisk.Other.testGetValue());
   Assert.greaterOrEqual(
     gotOtherSize,
     expectOtherSize,
@@ -176,7 +194,7 @@ add_task(async function test_account_sizes() {
 
   const expectTotal = expectInboxSize + expectOtherSize;
   const expectTotalUpper = expectInboxSizeUpper + expectOtherSizeUpper;
-  const gotTotal = scalars["tb.account.size_on_disk"].Total;
+  const gotTotal = Number(Glean.mail.folderSizeOnDisk.Total.testGetValue());
   Assert.greaterOrEqual(
     gotTotal,
     expectTotal,
