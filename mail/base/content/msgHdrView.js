@@ -1356,6 +1356,7 @@ function UpdateExpandedMessageHeaders() {
 }
 
 function ClearCurrentHeaders() {
+  gSecureMsgProbe = {};
   // eslint-disable-next-line no-global-assign
   currentHeaderData = {};
   // eslint-disable-next-line no-global-assign
@@ -4415,23 +4416,17 @@ var gSecureMsgProbe = {};
  */
 function reportMsgRead({ isNewRead = false, key = null }) {
   if (isNewRead) {
-    gMsgProbe.set("isNewRead", true);
+    gSecureMsgProbe.isNewRead = true;
   }
   if (key) {
     gSecureMsgProbe.key = key;
   }
   if (gSecureMsgProbe.key && gSecureMsgProbe.isNewRead) {
-    // The key is one of:
-    // - 'signed-smime'
-    // - 'signed-openpgp'
-    // - 'encrypted-smime'
-    // - 'encrypted-openpgp'
-    const isSigned = gSecureMsgProbe.key.startsWith("signed-");
-    const isEncrypted = gSecureMsgProbe.key.startsWith("encrypted-");
-    const security = gSecureMsgProbe.key.endsWith("-openpgp")
-      ? "OpenPGP"
-      : "S/MIME";
-    Glean.mail.mailsReadSecure.record({ security, isSigned, isEncrypted });
+    Services.telemetry.keyedScalarAdd(
+      "tb.mails.read_secure",
+      gSecureMsgProbe.key,
+      1
+    );
   }
 }
 

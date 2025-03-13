@@ -60,8 +60,6 @@ add_task(async function test_secure_mails_read() {
   const headers = { from: "alice@t1.example.com", to: "bob@t2.example.net" };
   const folder = await create_folder("secure-mail");
 
-  const tabmail = document.getElementById("tabmail");
-
   for (let i = 0; i < NUM_PLAIN_MAILS; i++) {
     await add_message_to_folder(
       [folder],
@@ -78,7 +76,6 @@ add_task(async function test_secure_mails_read() {
   const openpgpFiles = [
     "../openpgp/data/eml/signed-by-0x3099ff1238852b9f-encrypted-to-0xf231550c4f47e38e.eml",
   ];
-  const NUM_SECURE_MAILS = smimeFiles.length + openpgpFiles.length;
 
   // Copy over all the openpgp/smime mails into the folder.
   for (const msgFile of smimeFiles.concat(openpgpFiles)) {
@@ -97,44 +94,32 @@ add_task(async function test_secure_mails_read() {
     await copyListener.promise;
   }
 
-  // Selecting all added mails multiple times should not change read statistics.
-  for (let run = 1; run < 3; run++) {
+  await be_in_folder(folder);
+  let run = 1;
+  while (run < 3) {
     info(`Checking security; run=#${run}`);
-    for (let i = 0; i < NUM_SECURE_MAILS + NUM_PLAIN_MAILS; i++) {
-      await be_in_folder(folder);
-      const eventName =
-        i < NUM_SECURE_MAILS ? "MsgSecurityTelemetryProcessed" : "MsgLoaded";
-      const win = tabmail.currentTabInfo.chromeBrowser.contentWindow;
-      const eventPromise = new Promise(resolve =>
-        win.addEventListener(eventName, resolve, { once: true })
-      );
-      info(`Selecting message at index ${i}`);
+    for (
+      let i = 0;
+      i < NUM_PLAIN_MAILS + smimeFiles.length + openpgpFiles.length;
+      i++
+    ) {
       await select_click_row(i);
-      info(`Awaiting ${eventName} event for message at index ${i}`);
-      const event = await eventPromise;
-      info(`Seen ${eventName} event for message at index ${i}`);
+    }
 
-  let events = Glean.mail.mailsReadSecure.testGetValue();
-  Assert.equal(
-    events.filter(e => e.extra.security == "S/MIME" && e.extra.is_encrypted)
-      ?.length,
-    NUM_SMIME_MAILS,
-    "Count of S/MIME encrypted mails read should be correct"
-  );
-  Assert.equal(
-    events.filter(e => e.extra.security == "OpenPGP" && e.extra.is_encrypted)
-      ?.length,
-    NUM_OPENPGP_MAILS,
-    "Count of OpenPGP encrypted mails read should be correct"
-  );
+    let scalars = TelemetryTestUtils.getProcessScalars("parent", true);
+    Assert.equal(
+      scalars["tb.mails.read_secure"]["encrypted-smime"],
+      smimeFiles.length,
+      `Count of smime encrypted mails read should be correct in run ${run}.`
+    );
+    Assert.equal(
+      scalars["tb.mails.read_secure"]["encrypted-openpgp"],
+      openpgpFiles.length,
+      `Count of openpgp encrypted mails read should be correct in run ${run}.`
+    );
 
-  // Select all added mails again should not change read statistics.
-  for (
-    let i = 0;
-    i < NUM_PLAIN_MAILS + NUM_SMIME_MAILS + NUM_OPENPGP_MAILS;
-    i++
-  ) {
-    await select_click_row(i);
+    // Select all added mails again should not change read statistics.
+    run++;
   }
 
   events = Glean.mail.mailsReadSecure.testGetValue();
