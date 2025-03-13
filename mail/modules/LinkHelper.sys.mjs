@@ -45,12 +45,7 @@ export function openWebSearch(query, engine) {
       engine = await Services.search.getDefault();
       openLinkExternally(engine.getSubmission(query).uri.spec);
 
-      Services.telemetry.keyedScalarAdd(
-        "tb.websearch.usage",
-        engine.name.toLowerCase(),
-        1
-      );
-    }
+    Glean.tb.websearchUsage[engine.name.toLowerCase()].add(1);
   });
 }
 
