@@ -4,6 +4,3 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 MOZ_BRANDING_DIRECTORY=comm/mail/branding/nightly
-
-# This is a temporary hard-coded measure to accomodate MSIX repackaging
-MOZ_OFFICIAL_BRANDING_DIRECTORY=comm/mail/branding/tb_beta
