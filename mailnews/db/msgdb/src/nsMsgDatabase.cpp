@@ -1516,8 +1516,8 @@ nsresult nsMsgDatabase::InitNewDB() {
     }
 
     // create the unique table for the dbFolderInfo.
-    struct mdbOid allMsgHdrsTableOID{};
-    struct mdbOid allThreadsTableOID{};
+    struct mdbOid allMsgHdrsTableOID {};
+    struct mdbOid allThreadsTableOID {};
 
     allMsgHdrsTableOID.mOid_Scope = m_hdrRowScopeToken;
     allMsgHdrsTableOID.mOid_Id = kAllMsgHdrsTableKey;
@@ -1544,7 +1544,7 @@ nsresult nsMsgDatabase::GetTableCreateIfMissing(const char* scope,
                                                 nsIMdbTable** table,
                                                 mdb_token& scopeToken,
                                                 mdb_token& kindToken) {
-  struct mdbOid tableOID{};
+  struct mdbOid tableOID {};
 
   if (!m_mdbStore) {
     return NS_ERROR_FAILURE;
@@ -1589,7 +1589,7 @@ nsresult nsMsgDatabase::InitExistingDB() {
     NS_ENSURE_SUCCESS(err, err);
     // create new all msg hdrs table, if it doesn't exist.
     if (NS_SUCCEEDED(err) && !m_mdbAllMsgHeadersTable) {
-      struct mdbOid allMsgHdrsTableOID{};
+      struct mdbOid allMsgHdrsTableOID {};
       allMsgHdrsTableOID.mOid_Scope = m_hdrRowScopeToken;
       allMsgHdrsTableOID.mOid_Id = kAllMsgHdrsTableKey;
 
@@ -1601,7 +1601,7 @@ nsresult nsMsgDatabase::InitExistingDB() {
       }
     }
 
-    struct mdbOid allThreadsTableOID{};
+    struct mdbOid allThreadsTableOID {};
     allThreadsTableOID.mOid_Scope = m_threadRowScopeToken;
     allThreadsTableOID.mOid_Id = kAllThreadsTableKey;
     err = GetStore()->GetTable(GetEnv(), &gAllThreadsTableOID,
@@ -2770,7 +2770,7 @@ nsresult nsMsgDatabase::EnumerateMessagesWithFlag(nsIMsgEnumerator** result,
 NS_IMETHODIMP nsMsgDatabase::CreateNewHdr(nsMsgKey key, nsIMsgDBHdr** pnewHdr) {
   nsresult err = NS_OK;
   nsIMdbRow* hdrRow = nullptr;
-  struct mdbOid allMsgHdrsTableOID{};
+  struct mdbOid allMsgHdrsTableOID {};
 
   if (!pnewHdr || !m_mdbAllMsgHeadersTable || !m_mdbStore) {
     return NS_ERROR_NULL_POINTER;
@@ -2788,7 +2788,7 @@ NS_IMETHODIMP nsMsgDatabase::CreateNewHdr(nsMsgKey key, nsIMsgDBHdr** pnewHdr) {
     // Mork will assign an ID to the new row, generally the next available ID.
     err = m_mdbStore->NewRow(GetEnv(), m_hdrRowScopeToken, &hdrRow);
     if (hdrRow) {
-      struct mdbOid oid{};
+      struct mdbOid oid {};
       hdrRow->GetOid(GetEnv(), &oid);
       key = oid.mOid_Id;
     } else {
@@ -2945,7 +2945,7 @@ nsresult nsMsgDatabase::RowCellColumnTonsString(nsIMdbRow* hdrRow,
                                                 nsAString& resultStr) {
   NS_ENSURE_ARG_POINTER(hdrRow);
 
-  struct mdbYarn yarn{};
+  struct mdbYarn yarn {};
   nsresult rv = hdrRow->AliasCellYarn(GetEnv(), columnToken, &yarn);
   NS_ENSURE_SUCCESS(rv, rv);
   YarnTonsString(&yarn, resultStr);
@@ -2960,7 +2960,7 @@ nsresult nsMsgDatabase::RowCellColumnToConstCharPtr(nsIMdbRow* hdrRow,
                                                     const char** ptr) {
   NS_ENSURE_ARG_POINTER(hdrRow);
 
-  struct mdbYarn yarn{};
+  struct mdbYarn yarn {};
   nsresult rv = hdrRow->AliasCellYarn(GetEnv(), columnToken, &yarn);
   NS_ENSURE_SUCCESS(rv, rv);
   *ptr = (const char*)yarn.mYarn_Buf;
@@ -3125,7 +3125,7 @@ nsresult nsMsgDatabase::RowCellColumnToUInt32(nsIMdbRow* hdrRow,
   }
   if (hdrRow) {
     // ### probably should be an error if hdrRow is NULL...
-    struct mdbYarn yarn{};
+    struct mdbYarn yarn {};
     err = hdrRow->AliasCellYarn(GetEnv(), columnToken, &yarn);
     if (NS_SUCCEEDED(err)) {
       YarnToUInt32(&yarn, uint32Result);
@@ -3139,7 +3139,7 @@ nsresult nsMsgDatabase::UInt32ToRowCellColumn(nsIMdbRow* row,
                                               uint32_t value) {
   NS_ENSURE_ARG_POINTER(row);
 
-  struct mdbYarn yarn{};
+  struct mdbYarn yarn {};
   char yarnBuf[100];
 
   yarn.mYarn_Buf = (void*)yarnBuf;
@@ -3155,7 +3155,7 @@ nsresult nsMsgDatabase::UInt64ToRowCellColumn(nsIMdbRow* row,
                                               uint64_t value) {
   NS_ENSURE_ARG_POINTER(row);
 
-  struct mdbYarn yarn{};
+  struct mdbYarn yarn {};
   char yarnBuf[17];  // max string is 16 bytes, + 1 for null.
 
   yarn.mYarn_Buf = (void*)yarnBuf;
@@ -3179,7 +3179,7 @@ nsresult nsMsgDatabase::RowCellColumnToUInt64(nsIMdbRow* hdrRow,
 
   if (hdrRow) {
     // ### probably should be an error if hdrRow is NULL...
-    struct mdbYarn yarn{};
+    struct mdbYarn yarn {};
     err = hdrRow->AliasCellYarn(GetEnv(), columnToken, &yarn);
     if (NS_SUCCEEDED(err)) {
       YarnToUInt64(&yarn, uint64Result);
@@ -3193,7 +3193,7 @@ nsresult nsMsgDatabase::CharPtrToRowCellColumn(nsIMdbRow* row,
                                                const char* charPtr) {
   NS_ENSURE_ARG_POINTER(row);
 
-  struct mdbYarn yarn{};
+  struct mdbYarn yarn {};
   yarn.mYarn_Buf = (void*)charPtr;
   yarn.mYarn_Size = PL_strlen((const char*)yarn.mYarn_Buf) + 1;
   yarn.mYarn_Fill = yarn.mYarn_Size - 1;
@@ -3210,7 +3210,7 @@ nsresult nsMsgDatabase::RowCellColumnToCharPtr(nsIMdbRow* row,
   nsresult err = NS_ERROR_NULL_POINTER;
 
   if (row && result) {
-    struct mdbYarn yarn{};
+    struct mdbYarn yarn {};
     err = row->AliasCellYarn(GetEnv(), columnToken, &yarn);
     if (NS_SUCCEEDED(err)) {
       *result = (char*)moz_xmalloc(yarn.mYarn_Fill + 1);
@@ -3405,7 +3405,7 @@ nsresult nsMsgDatabase::SetUint32Property(nsIMdbRow* row,
   NS_ENSURE_ARG_POINTER(row);
   NS_ENSURE_STATE(m_mdbStore);  // db might have been closed out from under us.
 
-  struct mdbYarn yarn{};
+  struct mdbYarn yarn {};
   char int32StrBuf[20];
   yarn.mYarn_Buf = int32StrBuf;
   yarn.mYarn_Size = sizeof(int32StrBuf);
@@ -3428,7 +3428,7 @@ nsresult nsMsgDatabase::SetUint64Property(nsIMdbRow* row,
   NS_ENSURE_ARG_POINTER(row);
   NS_ENSURE_STATE(m_mdbStore);  // db might have been closed out from under us.
 
-  struct mdbYarn yarn{};
+  struct mdbYarn yarn {};
   char int64StrBuf[100];
   yarn.mYarn_Buf = int64StrBuf;
   yarn.mYarn_Size = sizeof(int64StrBuf);
@@ -3466,7 +3466,7 @@ nsresult nsMsgDatabase::SetNSStringPropertyWithToken(
     nsIMdbRow* row, mdb_token aProperty, const nsAString& propertyStr) {
   NS_ENSURE_ARG_POINTER(row);
 
-  struct mdbYarn yarn{};
+  struct mdbYarn yarn {};
 
   yarn.mYarn_Grow = nullptr;
   nsresult err =
@@ -3679,8 +3679,8 @@ nsresult nsMsgDatabase::CreateNewThread(nsMsgKey key, const char* subject,
                                         nsMsgThread** newThread) {
   nsresult err = NS_OK;
   nsCOMPtr<nsIMdbTable> threadTable;
-  struct mdbOid threadTableOID{};
-  struct mdbOid allThreadsTableOID{};
+  struct mdbOid threadTableOID {};
+  struct mdbOid allThreadsTableOID {};
 
   if (!newThread || !m_mdbStore) {
     return NS_ERROR_NULL_POINTER;
