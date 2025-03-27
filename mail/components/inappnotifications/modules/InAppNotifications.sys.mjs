@@ -9,6 +9,10 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
   NotificationFilter: "resource:///modules/NotificationFilter.sys.mjs",
+  NotificationUpdater: "resource:///modules/NotificationUpdater.sys.mjs",
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
+  clearTimeout: "resource://gre/modules/Timer.sys.mjs",
+  OfflineNotifications: "resource:///modules/OfflineNotifications.sys.mjs",
 });
 
 const PROFILE_LOCATION = ["scheduled-notifications", "notifications.json"];
@@ -16,8 +20,11 @@ const PROFILE_LOCATION = ["scheduled-notifications", "notifications.json"];
 /**
  * Controller for the In-App Notification system for showing messages from the
  * project to users.
+ *
+ * @implements {nsIObserver}
  */
 export const InAppNotifications = {
+  QueryInterface: ChromeUtils.generateQI(["nsIObserver"]),
   /**
    * @type {?JSONFile}
    */
@@ -53,10 +60,20 @@ export const InAppNotifications = {
       NotificationManager.REQUEST_NOTIFICATIONS_EVENT,
       this
     );
-    //TODO set up refresh from network
-    //TODO possibly don't do this here and wait for the network refresh to have
-    // completed/failed instead.
-    this.notificationManager.updatedNotifications(this.getNotifications());
+    Services.obs.addObserver(this, "intl:app-locales-changed");
+    lazy.NotificationUpdater.onUpdate = updatedNotifications => {
+      this.updateNotifications(updatedNotifications);
+    };
+    const { loadFromCache, hasCache } = await lazy.NotificationUpdater.init();
+    if (loadFromCache) {
+      if (!this._jsonFile.data.notifications.length || !hasCache) {
+        await this.updateNotifications(
+          await lazy.OfflineNotifications.getDefaultNotifications()
+        );
+        return;
+      }
+      this._updateNotificationManager();
+    }
   },
 
   /**
@@ -64,16 +81,18 @@ export const InAppNotifications = {
    *
    * @param {object[]} notifications
    */
-  updateNotifications(notifications) {
+  async updateNotifications(notifications) {
     this._jsonFile.data.notifications = notifications;
-    this._jsonFile.data.lastUpdate = Date.now();
 
     const notificationIds = new Set(
       notifications.map(notification => notification.id)
     );
+    const defaultNotificationIds =
+      await lazy.OfflineNotifications.getDefaultNotificationIds();
+    const allNotificationIds = notificationIds.union(defaultNotificationIds);
     const interactedWithSet = new Set(this._jsonFile.data.interactedWith);
     const stillExistingInteractedWith =
-      interactedWithSet.intersection(notificationIds);
+      interactedWithSet.intersection(allNotificationIds);
     if (stillExistingInteractedWith.size < interactedWithSet.size) {
       this._jsonFile.data.interactedWith = Array.from(
         stillExistingInteractedWith
@@ -81,10 +100,10 @@ export const InAppNotifications = {
     }
     this._jsonFile.data.seeds = Object.fromEntries(
       Object.entries(this._jsonFile.data.seeds).filter(([notificationId]) =>
-        notificationIds.has(notificationId)
+        allNotificationIds.has(notificationId)
       )
     );
-    this.notificationManager.updatedNotifications(notifications);
+    this._updateNotificationManager();
 
     this._jsonFile.saveSoon();
   },
@@ -93,13 +112,12 @@ export const InAppNotifications = {
    * @returns {object[]} All available notifications.
    */
   getNotifications() {
-    return this._jsonFile.data.notifications.filter(
-      notification =>
-        !this._jsonFile.data.interactedWith.includes(notification.id) &&
-        lazy.NotificationFilter.isActiveNotification(
-          notification,
-          this._getSeed(notification.id)
-        )
+    return this._jsonFile.data.notifications.filter(notification =>
+      lazy.NotificationFilter.isActiveNotification(
+        notification,
+        this._getSeed(notification.id),
+        this._jsonFile.data.interactedWith
+      )
     );
   },
 
@@ -126,7 +144,16 @@ export const InAppNotifications = {
         this.markAsInteractedWith(event.detail);
         break;
       case NotificationManager.REQUEST_NOTIFICATIONS_EVENT:
-        this.notificationManager.updatedNotifications(this.getNotifications());
+        this._updateNotificationManager();
+        break;
+    }
+  },
+
+  observe(subject, topic) {
+    switch (topic) {
+      case "intl:app-locales-changed":
+        // When locales change, the filtered notifications can change.
+        this._updateNotificationManager();
         break;
     }
   },
@@ -166,5 +193,46 @@ export const InAppNotifications = {
     this._jsonFile.data.seeds[notificationId] = seed;
     this._jsonFile.saveSoon();
     return seed;
+  },
+
+  /**
+   * Update the notifications the notification manager decides the active
+   * notification with.
+   */
+  _updateNotificationManager() {
+    this._scheduleNotification();
+    this.notificationManager.updatedNotifications(this.getNotifications());
+  },
+
+  /**
+   * @type {number}
+   */
+  _showNotificationTimer: null,
+
+  /**
+   * Schedule a timer to make sure we check for new candidate notifications
+   * when the next possible notification becomes available.
+   */
+  _scheduleNotification() {
+    lazy.clearTimeout(this._showNotificationTimer);
+    this._showNotificationTimer = null;
+
+    if (!this._jsonFile.data.notifications.length) {
+      return;
+    }
+
+    const now = Date.now();
+    const [nextNotification] = this._jsonFile.data.notifications
+      .map(n => Date.parse(n.start_at))
+      .filter(n => n > now)
+      .sort((a, b) => a - b);
+    if (!nextNotification) {
+      return;
+    }
+
+    this._showNotificationTimer = lazy.setTimeout(() => {
+      this._showNotificationTimer = null;
+      this._updateNotificationManager();
+    }, nextNotification - Date.now());
   },
 };

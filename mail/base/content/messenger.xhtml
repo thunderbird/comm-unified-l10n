@@ -53,6 +53,7 @@
   <link rel="stylesheet" href="chrome://messenger/skin/panelUI.css" />
   <link rel="stylesheet" href="chrome://messenger/skin/contextMenu.css" />
   <link rel="stylesheet" href="chrome://messenger/skin/input-fields.css" />
+  <link rel="stylesheet" href="chrome://messenger/skin/inAppNotificationManager.css" />
   <link
     rel="stylesheet"
     href="chrome://messenger/skin/openpgp/inlineNotification.css"
@@ -108,6 +109,7 @@
   <link rel="localization" href="messenger/chat.ftl" />
   <link rel="localization" href="messenger/messageheader/headerFields.ftl" />
   <link rel="localization" href="messenger/mailWidgets.ftl" />
+  <link rel="localization" href="messenger/inAppNotifications.ftl" />
   <link rel="localization" href="messenger/unifiedToolbar.ftl" />
   <link rel="localization" href="messenger/unifiedToolbarItems.ftl" />
 #ifdef NIGHTLY_BUILD
@@ -467,6 +469,15 @@
   </menupopup>
 </popupset>
 #endif
+
+<!--
+  Include in app notifications first to make them as easy as possible to get to
+  when navigating via keyboard. This is important if they miss the instructions
+  for the key command to be able to find what was announced.
+-->
+#include ../../components/inappnotifications/content/inAppNotificationTemplates.inc.xhtml
+
+<div class="in-app-notification-root" role="status"></div>
 
 #include ../../../calendar/base/content/calendar-context-menus-and-tooltips.inc.xhtml
 #include ../../components/unifiedtoolbar/content/unifiedToolbarTemplates.inc.xhtml

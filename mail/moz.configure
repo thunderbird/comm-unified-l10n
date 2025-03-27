@@ -68,6 +68,7 @@ set_config(
         "comm/mail/components/addrbook/metrics.yaml",
         "comm/mail/components/cloudfile/metrics.yaml",
         "comm/mail/components/compose/metrics.yaml",
+        "comm/mail/components/inappnotifications/metrics.yaml",
         "comm/calendar/metrics.yaml",
     ],
 )
@@ -80,7 +81,7 @@ set_config(
         "comm/mail/components/addrbook/metrics.yaml",
         "comm/mail/components/cloudfile/metrics.yaml",
         "comm/mail/components/compose/metrics.yaml",
-        # "comm/mail/components/inappnotifications/metrics.yaml", # Not available on 128.
+        "comm/mail/components/inappnotifications/metrics.yaml",
         "comm/calendar/metrics.yaml",
         # "modules/libpref/metrics.yaml", # Not available on 128.
         # "parser/htmlparser/metrics.yaml", # Not available on 128.

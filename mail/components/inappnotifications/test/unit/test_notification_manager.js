@@ -13,34 +13,38 @@ const { BrowserTestUtils } = ChromeUtils.importESModule(
 const { MockRegistrar } = ChromeUtils.importESModule(
   "resource://testing-common/MockRegistrar.sys.mjs"
 );
+const { PlacesUtils } = ChromeUtils.importESModule(
+  "resource://gre/modules/PlacesUtils.sys.mjs"
+);
+const { clearTimeout, setTimeout } = ChromeUtils.importESModule(
+  "resource://gre/modules/Timer.sys.mjs"
+);
 
 const SAFETY_MARGIN_MS = 100000;
 
-function getMockNotifications() {
+function getMockNotifications(count = 2) {
   const now = Date.now();
   const startDate = new Date(now - SAFETY_MARGIN_MS).toISOString();
   const endDate = new Date(now + SAFETY_MARGIN_MS).toISOString();
-  return [
-    {
-      id: "foo",
-      title: "lorem ipsum",
-      start_at: startDate,
-      end_at: endDate,
-      severity: 4,
-      URL: "about:blank",
-      targeting: {},
-    },
-    {
-      id: "bar",
+  const notificationArray = [];
+
+  for (let i = 0; i < count; i++) {
+    notificationArray.push({
+      id: `${i}`,
       title: "dolor sit amet",
       start_at: startDate,
       end_at: endDate,
       severity: 1,
       URL: "about:blank",
       targeting: {},
-    },
-  ];
+    });
+  }
+
+  return notificationArray;
 }
+
+let didOpen = false;
+let expectedURI = "about:blank";
 
 add_setup(async function () {
   // PlacesUtils when executing the CTA needs the profile.
@@ -51,9 +55,10 @@ add_setup(async function () {
     externalProtocolHandlerExists() {},
     isExposedProtocol() {},
     loadURI(uri) {
+      didOpen = true;
       Assert.equal(
         uri.spec,
-        "about:blank",
+        expectedURI,
         "Should only receive about blank load request"
       );
     },
@@ -63,8 +68,9 @@ add_setup(async function () {
     "@mozilla.org/uriloader/external-protocol-service;1",
     mockExternalProtocolService
   );
-  registerCleanupFunction(() => {
+  registerCleanupFunction(async () => {
     MockRegistrar.unregister(mockExternalProtocolServiceCID);
+    await PlacesUtils.history.clear();
   });
 });
 
@@ -101,7 +107,7 @@ add_task(async function test_updatedNotifications() {
   const notificationsClone = structuredClone(notifications);
   notificationManager.updatedNotifications(notifications);
   const { detail: notification } = await newNotificationEvent;
-  Assert.equal(notification.id, "bar", "Should pick the second notification");
+  Assert.equal(notification.id, "0", "Should pick the first notification");
   Assert.deepEqual(
     notifications,
     notificationsClone,
@@ -134,7 +140,7 @@ add_task(async function test_newNotificationReemit() {
   );
   Assert.equal(
     notification.id,
-    "bar",
+    "0",
     "Should get the current notification immediately"
   );
 
@@ -218,7 +224,7 @@ add_task(async function test_updatedNotifications_stillUpToDate() {
     notificationManager,
     NotificationManager.NEW_NOTIFICATION_EVENT
   );
-  Assert.equal(notification.id, "bar", "Should pick the second notification");
+  Assert.equal(notification.id, "0", "Should pick the first notification");
 
   let gotNotification = false;
   notificationManager.addEventListener(
@@ -250,13 +256,14 @@ add_task(async function test_updatedNotifications_stillUpToDate() {
 });
 
 add_task(async function test_executeNotificationCTA() {
+  didOpen = false;
   const notificationManager = new NotificationManager();
   notificationManager.updatedNotifications(getMockNotifications());
   const { detail: notification } = await BrowserTestUtils.waitForEvent(
     notificationManager,
     NotificationManager.NEW_NOTIFICATION_EVENT
   );
-  Assert.equal(notification.id, "bar", "Should pick the second notification");
+  Assert.equal(notification.id, "0", "Should pick the first notification");
 
   const notificationInteractionEvent = BrowserTestUtils.waitForEvent(
     notificationManager,
@@ -273,6 +280,7 @@ add_task(async function test_executeNotificationCTA() {
     notification.id,
     "Should have interacted with the notification"
   );
+  Assert.ok(didOpen, "Should open URL externally");
   await clearNotificationEvent;
   await BrowserTestUtils.waitForEvent(
     notificationManager,
@@ -306,7 +314,7 @@ add_task(async function test_dismissNotification() {
     notificationManager,
     NotificationManager.NEW_NOTIFICATION_EVENT
   );
-  Assert.equal(notification.id, "bar", "Should pick the second notification");
+  Assert.equal(notification.id, "0", "Should pick the first notification");
 
   const notificationInteractionEvent = BrowserTestUtils.waitForEvent(
     notificationManager,
@@ -347,4 +355,223 @@ add_task(function test_dismissNotification_noop() {
   notificationManager.dismissNotification("baz");
 
   notificationManager.updatedNotifications([]);
+});
+
+add_task(async function test_showDonationsBrowserNotification() {
+  didOpen = false;
+  const now = Date.now();
+  const notifications = [
+    {
+      id: "olddonation",
+      type: "donation_browser",
+      start_at: new Date(now - SAFETY_MARGIN_MS).toISOString(),
+      end_at: new Date(now + SAFETY_MARGIN_MS).toISOString(),
+      URL: "about:blank",
+      CTA: "Appeal",
+      severity: 5,
+    },
+  ];
+  const notificationManager = new NotificationManager();
+  notificationManager.addEventListener(
+    NotificationManager.NEW_NOTIFICATION_EVENT,
+    () => {
+      Assert.ok(false, "Should not get any new notification event");
+    }
+  );
+
+  const notificationInteractionEvent = BrowserTestUtils.waitForEvent(
+    notificationManager,
+    NotificationManager.NOTIFICATION_INTERACTION_EVENT
+  );
+  const clearNotificationEvent = BrowserTestUtils.waitForEvent(
+    notificationManager,
+    NotificationManager.CLEAR_NOTIFICATION_EVENT
+  );
+  notificationManager.updatedNotifications(notifications);
+
+  const { detail: notificationId } = await notificationInteractionEvent;
+  Assert.equal(
+    notificationId,
+    "olddonation",
+    "Should have interacted with the notification"
+  );
+  await clearNotificationEvent;
+  Assert.ok(didOpen, "Should open URL externally");
+
+  notificationManager.updatedNotifications([]);
+});
+
+add_task(async function test_showDonationsTabNotification() {
+  didOpen = false;
+  const now = Date.now();
+  const notifications = [
+    {
+      id: "tabdonation",
+      type: "donation_tab",
+      start_at: new Date(now - SAFETY_MARGIN_MS).toISOString(),
+      end_at: new Date(now + SAFETY_MARGIN_MS).toISOString(),
+      URL: "about:blank",
+      CTA: "Appeal",
+      severity: 5,
+    },
+  ];
+  const notificationManager = new NotificationManager();
+  notificationManager.addEventListener(
+    NotificationManager.NEW_NOTIFICATION_EVENT,
+    () => {
+      Assert.ok(false, "Should not get any new notification event");
+    }
+  );
+
+  const notificationInteractionEvent = BrowserTestUtils.waitForEvent(
+    notificationManager,
+    NotificationManager.NOTIFICATION_INTERACTION_EVENT
+  );
+  const clearNotificationEvent = BrowserTestUtils.waitForEvent(
+    notificationManager,
+    NotificationManager.CLEAR_NOTIFICATION_EVENT
+  );
+  notificationManager.updatedNotifications(notifications);
+
+  const { detail: notificationId } = await notificationInteractionEvent;
+  Assert.equal(
+    notificationId,
+    "tabdonation",
+    "Should have interacted with the notification"
+  );
+  await clearNotificationEvent;
+  Assert.ok(didOpen, "Should open URL externally");
+
+  notificationManager.updatedNotifications([]);
+});
+
+add_task(async function test_newNotificationReemit_handleEvent() {
+  const notificationManager = new NotificationManager();
+  notificationManager.updatedNotifications(getMockNotifications());
+
+  const { promise, resolve } = Promise.withResolvers();
+  const eventHandler = {
+    handleEvent(event) {
+      Assert.strictEqual(this, eventHandler, "Should preserve this context");
+      resolve(event);
+    },
+  };
+  notificationManager.addEventListener(
+    NotificationManager.NEW_NOTIFICATION_EVENT,
+    eventHandler
+  );
+
+  const { detail: notification } = await promise;
+  Assert.equal(
+    notification.id,
+    "0",
+    "Should get the current notification immediately"
+  );
+
+  notificationManager.removeEventListener(
+    NotificationManager.NEW_NOTIFICATION_EVENT,
+    eventHandler
+  );
+  notificationManager.updatedNotifications([]);
+});
+
+add_task(async function test_executeNotificationCTA_formatURL() {
+  didOpen = false;
+  const notificationManager = new NotificationManager();
+  const mockNotifications = getMockNotifications();
+  const url = "https://example.com/%LOCALE%/file.json";
+  mockNotifications[0].URL = url;
+  expectedURI = Services.urlFormatter.formatURL(url);
+  notificationManager.updatedNotifications(mockNotifications);
+  const { detail: notification } = await BrowserTestUtils.waitForEvent(
+    notificationManager,
+    NotificationManager.NEW_NOTIFICATION_EVENT
+  );
+  Assert.equal(notification.id, "0", "Should pick the first notification");
+
+  const notificationInteractionEvent = BrowserTestUtils.waitForEvent(
+    notificationManager,
+    NotificationManager.NOTIFICATION_INTERACTION_EVENT
+  );
+  const clearNotificationEvent = BrowserTestUtils.waitForEvent(
+    notificationManager,
+    NotificationManager.CLEAR_NOTIFICATION_EVENT
+  );
+  notificationManager.executeNotificationCTA(notification.id);
+  const { detail: notificationId } = await notificationInteractionEvent;
+  Assert.equal(
+    notificationId,
+    notification.id,
+    "Should have interacted with the notification"
+  );
+  Assert.ok(didOpen, "Should open URL externally");
+  await clearNotificationEvent;
+  await BrowserTestUtils.waitForEvent(
+    notificationManager,
+    NotificationManager.REQUEST_NOTIFICATIONS_EVENT
+  );
+
+  notificationManager.updatedNotifications([]);
+});
+
+add_task(async function test_maxNotificationsPerDay() {
+  const notificationManager = new NotificationManager();
+  const notifications = getMockNotifications(7);
+  const timeUnit = NotificationManager._PER_TIME_UNIT;
+  let notification;
+  let newNotificationEvent = BrowserTestUtils.waitForEvent(
+    notificationManager,
+    NotificationManager.NEW_NOTIFICATION_EVENT
+  );
+
+  notificationManager._MAX_MS_BETWEEN_NOTIFICATIONS = 100;
+  NotificationManager._PER_TIME_UNIT = 1000 * 10;
+  notificationManager.updatedNotifications(notifications);
+  const startTime = Date.now();
+
+  for (let i = 0; i <= 5; i++) {
+    ({ detail: notification } = await newNotificationEvent);
+    Assert.equal(notification.id, `${i}`, "correct notification shown");
+
+    newNotificationEvent = BrowserTestUtils.waitForEvent(
+      notificationManager,
+      NotificationManager.NEW_NOTIFICATION_EVENT,
+      false,
+      ({ detail }) => detail.id === `${i + 1}`
+    );
+
+    notifications.shift();
+    notification = null;
+    notificationManager.updatedNotifications(notifications);
+  }
+
+  newNotificationEvent.then(({ detail }) => {
+    notification = detail;
+  });
+
+  // Wait one second to make sure another notification is not shown.
+  /* eslint-disable-next-line mozilla/no-arbitrary-setTimeout */
+  await new Promise(resolve => setTimeout(resolve, 1000));
+
+  Assert.equal(notification, null, "No new notifications shown");
+
+  await BrowserTestUtils.waitForEvent(
+    notificationManager,
+    NotificationManager.REQUEST_NOTIFICATIONS_EVENT
+  );
+
+  Assert.ok(true, "Scheduled notification shown");
+  Assert.greaterOrEqual(
+    Date.now(),
+    startTime + 1000 * 10,
+    "Message shown after _PER_TIME_UNIT"
+  );
+
+  Assert.lessOrEqual(
+    Date.now(),
+    startTime + 1000 * 11,
+    "Message shown after _PER_TIME_UNIT"
+  );
+
+  NotificationManager._PER_TIME_UNIT = timeUnit;
 });

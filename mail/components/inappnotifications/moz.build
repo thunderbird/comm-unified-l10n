@@ -10,8 +10,15 @@ EXTRA_JS_MODULES += [
     "modules/InAppNotifications.sys.mjs",
     "modules/NotificationFilter.sys.mjs",
     "modules/NotificationManager.sys.mjs",
+    "modules/NotificationUpdater.sys.mjs",
+    "modules/OfflineNotifications.sys.mjs",
 ]
 
-XPCSHELL_TESTS_MANIFESTS += [
-    "test/unit/xpcshell.toml",
+JAR_MANIFESTS += ["jar.mn"]
+
+XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.toml", "test/unit/xpcshell_default.toml"]
+
+BROWSER_CHROME_MANIFESTS += [
+    "test/browser/browser.toml",
+    "test/browser/browser_disabled.toml",
 ]

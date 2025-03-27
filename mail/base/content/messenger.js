@@ -315,6 +315,22 @@ var gMailInit = {
       // Add a timeout to prevent opening the browser immediately at startup.
       setTimeout(this.showEOYDonationAppeal, 2000);
     }
+
+    if (Services.prefs.getBoolPref("mail.inappnotifications.enabled", false)) {
+      import("chrome://messenger/content/in-app-notification-manager.mjs")
+        .then(() => {
+          document
+            .querySelector(".in-app-notification-root")
+            .replaceChildren(
+              document.createElement("in-app-notification-manager")
+            );
+        })
+        .catch(console.error);
+    }
+
+    Glean.inappnotifications.preferences["mail.inappnotifications.enabled"].set(
+      Services.prefs.getBoolPref("mail.inappnotifications.enabled", false)
+    );
   },
 
   /**
