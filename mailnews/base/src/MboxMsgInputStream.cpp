@@ -725,7 +725,8 @@ class MboxParser {
 
 NS_IMPL_ISUPPORTS(MboxMsgInputStream, nsIInputStream);
 
-MboxMsgInputStream::MboxMsgInputStream(nsIInputStream* mboxStream, uint32_t maxAllowedSize)
+MboxMsgInputStream::MboxMsgInputStream(nsIInputStream* mboxStream,
+                                       uint32_t maxAllowedSize)
     : mRawStream(mboxStream),
       mStatus(NS_OK),
       mBuf(8192),
@@ -829,7 +830,10 @@ NS_IMETHODIMP MboxMsgInputStream::Read(char* buf, uint32_t count,
     }
     MOZ_ASSERT(n <= UINT32_MAX);
 
-    const size_t use = !mLimitOutputBytes ? n : std::min(n, (size_t)(mLimitOutputBytes - mOutputBytes));
+    const size_t use =
+        !mLimitOutputBytes
+            ? n
+            : std::min(n, (size_t)(mLimitOutputBytes - mOutputBytes));
 
     if (use < n) {
       // We want the current read to return success (because we're

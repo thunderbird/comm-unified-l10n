@@ -80,10 +80,14 @@ set_config(
         "comm/mail/components/addrbook/metrics.yaml",
         "comm/mail/components/cloudfile/metrics.yaml",
         "comm/mail/components/compose/metrics.yaml",
+        # "comm/mail/components/inappnotifications/metrics.yaml", # Not available on 128.
         "comm/calendar/metrics.yaml",
+        # "modules/libpref/metrics.yaml", # Not available on 128.
+        # "parser/htmlparser/metrics.yaml", # Not available on 128.
         # NOTE: test_pkcs11_module.js will fail without this.
         # The pkcs11 runs before serverknobs can be applied.
         "security/manager/ssl/metrics.yaml",
+        # "toolkit/content/metrics.yaml", # Not available on 128.
         "toolkit/components/crashes/metrics.yaml",
         "toolkit/components/pdfjs/metrics.yaml",
         # Could be useful, but fails "Sorry, Glean found some glinter nits".
@@ -94,6 +98,7 @@ set_config(
         # NOTE: BackgroundTask_shouldprocessupdates.sys.mjs will fail without this
         # It doesn't consider itself to be in automation, and is also
         # collecting metrics too early, in XRE_mainStartup.
+        # "toolkit/mozapps/update/shared_metrics.yaml", # Not available on 128.
         # Could be useful, but fails "Sorry, Glean found some glinter nits".
         # "toolkit/profile/metrics.yaml",
         "toolkit/xre/metrics.yaml",
