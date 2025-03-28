@@ -187,7 +187,7 @@ mail:
       - mail.addressDisplayFormat
       - mail.biff.alert.show_preview
       - mail.biff.alert.show_sender
-      - mail.biff.alert.show_subjec
+      - mail.biff.alert.show_subject
       - mail.biff.play_sound
       - mail.biff.show_alert
       - mail.biff.show_tray_icon
