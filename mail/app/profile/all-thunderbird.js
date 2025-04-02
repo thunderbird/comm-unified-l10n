@@ -1388,11 +1388,6 @@ pref("services.sync.engine.prefs", false);
 pref("services.sync.engine.servers", true);
 #endif
 
-// Donation appeal.
-pref("app.donation.eoy.version", 8);
-pref("app.donation.eoy.version.viewed", 0);
-pref("app.donation.eoy.url", "https://updates.thunderbird.net/thunderbird/128.0/dec24/");
-
 // IMAP-JS disabled, Bug 1707547.
 pref("mailnews.imap.jsmodule", false);
 
