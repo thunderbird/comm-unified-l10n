@@ -122,10 +122,6 @@ class nsMsgProtocol : public nsIStreamListener,
   // uint32_t  m_startPosition;
   int64_t m_readCount;
 
-  nsCOMPtr<nsIFile>
-      m_tempMsgFile;  // we currently have a hack where displaying a msg
-                      // involves writing it to a temp file first
-
   // auth module for access to NTLM functions
   nsCOMPtr<nsIAuthModule> m_authModule;
 
