@@ -1820,30 +1820,28 @@ function displayAttachmentsForExpandedViewExternal() {
 
   // Attachment bar single.
   const firstAttachment = attachmentList.firstElementChild.attachment;
-  const isExternalAttachment = firstAttachment.isExternalAttachment;
-  let displayUrl = isExternalAttachment ? firstAttachment.displayUrl : "";
   const tooltiptext =
-    isExternalAttachment || firstAttachment.isDeleted
+    firstAttachment.isExternalAttachment || firstAttachment.isDeleted
       ? ""
       : attachmentName.getAttribute("tooltiptextopen");
   const externalAttachmentNotFound = bundleMessenger.getString(
     "externalAttachmentNotFound"
   );
 
-  attachmentName.textContent = displayUrl;
+  attachmentName.textContent = firstAttachment.displayUrl || "";
   attachmentName.tooltipText = tooltiptext;
   attachmentName.setAttribute(
     "tooltiptextexternalnotfound",
     externalAttachmentNotFound
   );
   attachmentName.addEventListener("mouseover", () =>
-    top.MsgStatusFeedback.setOverLink(displayUrl)
+    top.MsgStatusFeedback.setOverLink(firstAttachment.displayUrl)
   );
   attachmentName.addEventListener("mouseout", () =>
     top.MsgStatusFeedback.setOverLink("")
   );
   attachmentName.addEventListener("focus", () =>
-    top.MsgStatusFeedback.setOverLink(displayUrl)
+    top.MsgStatusFeedback.setOverLink(firstAttachment.displayUrl)
   );
   attachmentName.addEventListener("blur", () =>
     top.MsgStatusFeedback.setOverLink("")
@@ -1855,7 +1853,7 @@ function displayAttachmentsForExpandedViewExternal() {
     attachmentName.classList.add("notfound");
   }
 
-  if (isExternalAttachment) {
+  if (firstAttachment.isExternalAttachment) {
     attachmentName.classList.add("text-link");
 
     if (!firstAttachment.hasFile) {
@@ -1865,7 +1863,6 @@ function displayAttachmentsForExpandedViewExternal() {
   }
 
   // Expanded attachment list.
-  let index = 0;
   for (const attachmentitem of attachmentList.children) {
     const attachment = attachmentitem.attachment;
     if (attachment.isDeleted) {
@@ -1873,16 +1870,15 @@ function displayAttachmentsForExpandedViewExternal() {
     }
 
     if (attachment.isExternalAttachment) {
-      displayUrl = attachment.displayUrl;
       attachmentitem.setAttribute("tooltiptext", "");
       attachmentitem.addEventListener("mouseover", () =>
-        top.MsgStatusFeedback.setOverLink(displayUrl)
+        top.MsgStatusFeedback.setOverLink(attachment.displayUrl)
       );
       attachmentitem.addEventListener("mouseout", () =>
         top.MsgStatusFeedback.setOverLink("")
       );
       attachmentitem.addEventListener("focus", () =>
-        top.MsgStatusFeedback.setOverLink(displayUrl)
+        top.MsgStatusFeedback.setOverLink(attachment.displayUrl)
       );
       attachmentitem.addEventListener("blur", () =>
         top.MsgStatusFeedback.setOverLink("")
@@ -1895,19 +1891,11 @@ function displayAttachmentsForExpandedViewExternal() {
         .querySelector(".attachmentcell-extension")
         .classList.add("text-link");
 
-      if (attachment.isLinkAttachment) {
-        if (index == 0) {
-          attachment.size = currentAttachments[index].size;
-        }
-      }
-
       if (!attachment.hasFile) {
         attachmentitem.setAttribute("tooltiptext", externalAttachmentNotFound);
         attachmentitem.classList.add("notfound");
       }
     }
-
-    index++;
   }
 }
 
