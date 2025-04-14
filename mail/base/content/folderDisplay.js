@@ -41,10 +41,6 @@ var nsMsgViewIndex_None = 0xffffffff;
  *  manipulations...
  */
 function FolderDisplayWidget() {
-  // If the folder does not get handled by the DBViewWrapper, stash it here.
-  //  ex: when isServer is true.
-  this._nonViewFolder = null;
-
   this.view = new DBViewWrapper(this);
 
   /**
@@ -65,7 +61,6 @@ function FolderDisplayWidget() {
    *  navigation history.  At some point we might touch it for those reasons.
    */
   this.messenger = null;
-  this.threadPaneCommandUpdater = this;
 
   /**
    * Flag to expose whether all messages are loaded or not.  Set by
@@ -73,31 +68,10 @@ function FolderDisplayWidget() {
    */
   this._allMessagesLoaded = false;
 
-  /**
-   * Save the top row displayed when we go inactive, restore when we go active,
-   *  nuke it when we destroy the view.
-   */
-  this._savedFirstVisibleRow = null;
   /** the next view index to select once the delete completes */
   this._nextViewIndexAfterDelete = null;
-  /**
-   * Track when a message is being deleted so we can respond appropriately.
-   */
-  this._deleteInProgress = false;
-
-  this._mostRecentSelectionCounts = [];
-  this._mostRecentCurrentIndices = [];
 }
 FolderDisplayWidget.prototype = {
-  /**
-   * @returns the currently displayed folder.  This is just proxied from the
-   *     view wrapper.
-   * @groupName Displayed
-   */
-  get displayedFolder() {
-    return this._nonViewFolder || this.view.displayedFolder;
-  },
-
   /**
    * @returns true if the selection should be summarized for this folder. This
    *     is based on the mail.operate_on_msgs_in_collapsed_threads pref and
@@ -108,7 +82,7 @@ FolderDisplayWidget.prototype = {
   get summarizeSelectionInFolder() {
     return (
       Services.prefs.getBoolPref("mail.operate_on_msgs_in_collapsed_threads") &&
-      !(this.displayedFolder instanceof Ci.nsIMsgNewsFolder)
+      !(this.view.displayedFolder instanceof Ci.nsIMsgNewsFolder)
     );
   },
 
@@ -126,18 +100,6 @@ FolderDisplayWidget.prototype = {
     }
     return null;
   },
-
-  /**
-   * Number of headers to tell the message database to cache when we enter a
-   *  folder.  This value is being propagated from legacy code which provided
-   *  no explanation for its choice.
-   *
-   * We definitely want the header cache size to be larger than the number of
-   *  rows that can be displayed on screen simultaneously.
-   *
-   * @private
-   */
-  PERF_HEADER_CACHE_SIZE: 100,
 
   /**
    * @name Columns
@@ -263,7 +225,7 @@ FolderDisplayWidget.prototype = {
     //  valid at the time we generate the notification.  In such a case, you
     //  can easily get that information from the gDBView.  (The documentation
     //  on creating a custom column assumes gDBView.)
-    Services.obs.notifyObservers(this.displayedFolder, "MsgCreateDBView");
+    Services.obs.notifyObservers(this.view.displayedFolder, "MsgCreateDBView");
   },
 
   /**
@@ -279,7 +241,6 @@ FolderDisplayWidget.prototype = {
     // but the actual tree view selection (based on view indices) is a goner no
     //  matter what, make everyone forget.
     this.view.dbView.selection = null;
-    this._savedFirstVisibleRow = null;
     this._nextViewIndexAfterDelete = null;
   },
 
@@ -373,8 +334,6 @@ FolderDisplayWidget.prototype = {
    * For the imap mark-as-deleted we won't know beforehand.
    */
   onMessagesRemoved() {
-    this._deleteInProgress = false;
-
     // - we saw this coming
     const rowCount = this.view.dbView.rowCount;
     if (this._nextViewIndexAfterDelete != null) {
@@ -410,26 +369,7 @@ FolderDisplayWidget.prototype = {
       treeSelection.clearRange(0, 0);
     }
 
-    // Check if we now no longer have a selection, but we had exactly one
-    //  message selected previously.  If we did, then try and do some
-    //  'persistence of having a thing selected'.
-    if (
-      treeSelection.count == 0 &&
-      this._mostRecentSelectionCounts.length > 1 &&
-      this._mostRecentSelectionCounts[1] == 1 &&
-      this._mostRecentCurrentIndices[1] != -1
-    ) {
-      let targetIndex = this._mostRecentCurrentIndices[1];
-      if (targetIndex >= rowCount) {
-        targetIndex = rowCount - 1;
-      }
-      this.selectViewIndex(targetIndex);
-      return;
-    }
-
-    // Otherwise, just tell the view that things have changed so it can update
-    //  itself to the new state of things.
-    // tell the view that things have changed so it can update itself suitably.
+    // Tell the view that things have changed so it can update itself suitably.
     if (this.view.dbView) {
       this.view.dbView.selectionChanged();
     }
@@ -451,93 +391,6 @@ FolderDisplayWidget.prototype = {
   // @}
   /* ===== End IDBViewWrapperListener ===== */
 
-  /*   ==================================   */
-  /* ===== nsIMsgDBViewCommandUpdater ===== */
-  /*   ==================================   */
-
-  /**
-   * @name nsIMsgDBViewCommandUpdater Interface
-   * @private
-   */
-  // @{
-
-  /**
-   * This gets called when the selection changes AND !suppressCommandUpdating
-   *  AND (we're not removing a row OR we are now out of rows).
-   * In response, we update the toolbar.
-   */
-  updateCommandStatus() {},
-
-  /**
-   * This gets called by nsMsgDBView::UpdateDisplayMessage following a call
-   *  to nsIMessenger.OpenURL to kick off message display OR (UDM gets called)
-   *  by nsMsgDBView::SelectionChanged in lieu of loading the message because
-   *  mSupressMsgDisplay.
-   * In other words, we get notified immediately after the process of displaying
-   *  a message triggered by the nsMsgDBView happens.  We get some arguments
-   *  that are display optimizations for historical reasons (as usual).
-   *
-   * Things this makes us want to do:
-   * - Set the tab title, perhaps.  (If we are a message display.)
-   * - Update message counts, because things might have changed, why not.
-   * - Update some toolbar buttons, why not.
-   *
-   * @param aFolder The display/view folder, as opposed to the backing folder.
-   * @param aSubject The subject with "Re: " if it's got one, which makes it
-   *     notably different from just directly accessing the message header's
-   *     subject.
-   * @param aKeywords The keywords, which roughly translates to message tags.
-   */
-  displayMessageChanged() {},
-
-  /**
-   * This gets called as a hint that the currently selected message is junk and
-   *  said junked message is going to be moved out of the current folder, or
-   *  right before a header is removed from the db view.  The legacy behaviour
-   *  is to retrieve the msgToSelectAfterDelete attribute off the db view,
-   *  stashing it for benefit of the code that gets called when a message
-   *  move/deletion is completed so that we can trigger its display.
-   */
-  updateNextMessageAfterDelete() {
-    this.hintAboutToDeleteMessages();
-  },
-
-  /**
-   * The most recent currentIndexes on the selection (from the last time
-   *  summarizeSelection got called).  We use this in onMessagesRemoved if
-   *  we get an unexpected notification.
-   * We keep a maximum of 2 entries in this list.
-   */
-  _mostRecentCurrentIndices: undefined, // initialized in constructor
-  /**
-   * The most recent counts on the selection (from the last time
-   *  summarizeSelection got called).  We use this in onMessagesRemoved if
-   *  we get an unexpected notification.
-   * We keep a maximum of 2 entries in this list.
-   */
-  _mostRecentSelectionCounts: undefined, // initialized in constructor
-
-  /**
-   * Always called by the db view when the selection changes in
-   *  SelectionChanged.  This event will come after the notification to
-   *  displayMessageChanged (if one happens), and before the notification to
-   *  updateCommandStatus (if one happens).
-   */
-  summarizeSelection() {
-    // save the current index off in case the selection gets deleted out from
-    //  under us and we want to have persistence of actually-having-something
-    //  selected.
-    const treeSelection = this.treeSelection;
-    if (treeSelection) {
-      this._mostRecentCurrentIndices.unshift(treeSelection.currentIndex);
-      this._mostRecentCurrentIndices.splice(2);
-      this._mostRecentSelectionCounts.unshift(treeSelection.count);
-      this._mostRecentSelectionCounts.splice(2);
-    }
-  },
-  // @}
-  /* ===== End nsIMsgDBViewCommandUpdater ===== */
-
   /* ===== Hints from the command infrastructure ===== */
   /**
    * @name Command Infrastructure Hints
@@ -557,7 +410,6 @@ FolderDisplayWidget.prototype = {
    * Our automated complement (that calls us) is updateNextMessageAfterDelete.
    */
   hintAboutToDeleteMessages() {
-    this._deleteInProgress = true;
     // save the value, even if it is nsMsgViewIndex_None.
     this._nextViewIndexAfterDelete = this.view.dbView.msgToSelectAfterDelete;
   },
@@ -830,7 +682,7 @@ FolderDisplayWidget.prototype = {
       aViewIndex < 0 ||
       aViewIndex >= rowCount
     ) {
-      this.clearSelection();
+      treeSelection.clearSelection();
       return;
     }
 
@@ -867,9 +719,6 @@ FolderDisplayWidget.prototype = {
     }
 
     this.ensureRowIsVisible(aViewIndex);
-
-    // The saved selection is invalidated, since we've got something newer
-    this._savedSelection = null;
   },
 
   // @}

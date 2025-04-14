@@ -15,57 +15,6 @@ ChromeUtils.defineESModuleGetters(this, {
   TreeSelection: "chrome://messenger/content/TreeSelection.mjs",
 });
 
-/**
- * When right-clicks happen, we do not want to corrupt the underlying
- * selection.  The right-click is a transient selection.  So, unless the
- * user is right-clicking on the current selection, we create a new
- * selection object (thanks to TreeSelection) and set that as the
- * current/transient selection.
- *
- * @param aSingleSelect Should the selection we create be a single selection?
- *     This is relevant if the row being clicked on is already part of the
- *     selection.  If it is part of the selection and !aSingleSelect, then we
- *     leave the selection as is.  If it is part of the selection and
- *     aSingleSelect then we create a transient single-row selection.
- */
-function ChangeSelectionWithoutContentLoad(event, tree, aSingleSelect) {
-  var treeSelection = tree.view.selection;
-
-  var row = tree.getRowAt(event.clientX, event.clientY);
-  // Only do something if:
-  // - the row is valid
-  // - it's not already selected (or we want a single selection)
-  if (row >= 0 && (aSingleSelect || !treeSelection.isSelected(row))) {
-    // Check if the row is exactly the existing selection.  In that case
-    //  there is no need to create a bogus selection.
-    if (treeSelection.count == 1) {
-      const minObj = {};
-      treeSelection.getRangeAt(0, minObj, {});
-      if (minObj.value == row) {
-        event.stopPropagation();
-        return;
-      }
-    }
-
-    const transientSelection = new TreeSelection(tree);
-    transientSelection.logAdjustSelectionForReplay();
-
-    var saveCurrentIndex = treeSelection.currentIndex;
-
-    // tell it to log calls to adjustSelection
-    // attach it to the view
-    tree.view.selection = transientSelection;
-    // Don't generate any selection events! (we never set this to false, because
-    //  that would generate an event, and we never need one of those from this
-    //  selection object.
-    transientSelection.selectEventsSuppressed = true;
-    transientSelection.select(row);
-    transientSelection.currentIndex = saveCurrentIndex;
-    tree.ensureRowIsVisible(row);
-  }
-  event.stopPropagation();
-}
-
 function ThreadPaneOnDragStart(aEvent) {
   if (aEvent.target.localName != "treechildren") {
     return;
@@ -256,14 +205,6 @@ function HandleSelectColClick(event, row) {
   if (event.detail == 1) {
     selection.toggleSelect(row);
   }
-
-  // There is no longer any selection, clean up for correct state of things.
-  if (selection.count == 0) {
-    if (gFolderDisplay.displayedFolder) {
-      gFolderDisplay.displayedFolder.lastMessageLoaded = nsMsgKey_None;
-    }
-    gFolderDisplay._mostRecentSelectionCounts[1] = 0;
-  }
 }
 
 /**
@@ -279,14 +220,40 @@ function handleDeleteColClick(event) {
 
   // Simulate a right click on the message row to inherit all the validations
   // and alerts coming from the "cmd_delete" command.
-  ChangeSelectionWithoutContentLoad(
-    event,
-    event.target.parentNode,
-    event.button == 1
-  );
+  const tree = gFolderDisplay.tree;
+  const realSelection = tree.view.selection;
+  let transientSelection = {};
+  const row = tree.getRowAt(event.clientX, event.clientY);
+
+  // Check if the row is exactly the existing selection. In that case there
+  // is no need to create a bogus selection.
+  const haveTransientSelection =
+    row >= 0 && !(realSelection.count == 1 && realSelection.isSelected(row));
+  if (haveTransientSelection) {
+    transientSelection = new TreeSelection(tree);
+    // Tell it to log calls to adjustSelection.
+    transientSelection.logAdjustSelectionForReplay();
+    // Attach it to the view.
+    tree.view.selection = transientSelection;
+    // Don't generate any selection events! (We never set this to false,
+    // because that would generate an event, and we never need one of those
+    // from this selection object.
+    transientSelection.selectEventsSuppressed = true;
+    transientSelection.select(row);
+    transientSelection.currentIndex = realSelection.currentIndex;
+    tree.ensureRowIsVisible(row);
+  }
+  event.stopPropagation();
 
   // Trigger the message deletion.
   goDoCommand("cmd_delete");
+
+  if (haveTransientSelection) {
+    // Restore the selection.
+    tree.view.selection = realSelection;
+    // Replay any calls to adjustSelection, this handles suppression.
+    transientSelection.replayAdjustSelectionLog(realSelection);
+  }
 }
 
 function ThreadPaneDoubleClick() {

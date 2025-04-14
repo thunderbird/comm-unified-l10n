@@ -33,11 +33,6 @@ var gFolderPicker;
 var gStatusFeedback;
 var gSearchBundle;
 
-// Datasource search listener -- made global as it has to be registered
-// and unregistered in different functions.
-var gDataSourceSearchListener;
-var gViewSearchListener;
-
 var gSearchStopButton;
 
 // Should we try to search online?
