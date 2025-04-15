@@ -1988,7 +1988,7 @@ function addAttachmentToPopup(
   menuitem = menupopup.appendChild(menuitem);
 
   // Create the "open containing folder" menu item, for existing detached only.
-  if (attachment.isFileAttachment) {
+  if (attachment.isFileAttachment && attachment.isAllowedURL) {
     const menuseparator = document.createXULElement("menuseparator");
     menupopup.appendChild(menuseparator);
     menuitem = document.createXULElement("menuitem");

@@ -64,7 +64,7 @@ export class AttachmentInfo {
    *   been detached to file or is a link attachment.
    * @param {object} options.message - The message object associated to this
    *   attachment.
-   * @param {Function} [updateAttachmentsDisplayFn] - An optional callback
+   * @param {Function} [options.updateAttachmentsDisplayFn] - An optional callback
    *   function that is called to update the attachment display at appropriate
    *   times.
    */
@@ -470,7 +470,7 @@ export class AttachmentInfo {
    * @returns true if the attachment is a detached file, false otherwise.
    */
   get isFileAttachment() {
-    return this.isExternalAttachment && this.url.startsWith("file:");
+    return this.isExternalAttachment && /^file:\/\/\//.test(this.url);
   }
 
   /**
@@ -491,6 +491,9 @@ export class AttachmentInfo {
    */
   get hasFile() {
     if (this.sizeResolved && this.size == -1) {
+      return false;
+    }
+    if (!this.isAllowedURL) {
       return false;
     }
 
@@ -514,6 +517,28 @@ export class AttachmentInfo {
   }
 
   /**
+   * @returns {boolean} true if this attachment is allowed to be loaded.
+   */
+  get isAllowedURL() {
+    if (!URL.canParse(this.url)) {
+      return false;
+    }
+
+    // const u = new URL(this.url);
+    // if (u.protocol == "file:" && u.hostname) {
+    //   // Bug 1507354 will make this work, and would be a better way of
+    //   // handling the below.
+    //  return false;
+    // }
+
+    if (/^file:\/\/\/[^A-Za-z]/i.test(this.url)) {
+      // Looks like a non-local (remote UNC) file URL. Don't allow that.
+      return false;
+    }
+    return /^(http?s|file|data|mailbox|imap|s?news|ews):/i.test(this.url);
+  }
+
+  /**
    * This method checks whether the attachment url location exists and
    * is accessible. For http and file urls, fetch() will have the size
    * in the content-length header.
@@ -523,6 +548,10 @@ export class AttachmentInfo {
    */
   async isEmpty() {
     if (this.isDeleted) {
+      return true;
+    }
+
+    if (!this.isAllowedURL) {
       return true;
     }
 
