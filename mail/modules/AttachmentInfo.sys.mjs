@@ -133,6 +133,30 @@ export class AttachmentInfo {
   }
 
   /**
+   * Create a temp file in an appropriate non-predictable temp folder.
+   *
+   * @param {string} filename - Preferred filename.
+   * @returns {nsIFile} the created file.
+   */
+  async #setupTempFile(filename) {
+    const tmpPath = PathUtils.join(
+      PathUtils.tempDir,
+      "pid-" + Services.appinfo.processID
+    );
+    await IOUtils.makeDirectory(tmpPath, { permissions: 0o700 });
+    const tempFile = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsIFile);
+    tempFile.initWithPath(tmpPath);
+
+    tempFile.append(filename);
+    tempFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
+
+    Cc["@mozilla.org/uriloader/external-helper-app-service;1"]
+      .getService(Ci.nsPIExternalAppLauncher)
+      .deleteTemporaryFileOnExit(tempFile);
+    return tempFile;
+  }
+
+  /**
    * Open this attachment.
    *
    * @param {integer} [browsingContextId]
@@ -245,25 +269,20 @@ export class AttachmentInfo {
         }
       }
 
-      if (this.contentType == "message/rfc822") {
-        let tempFile = this.#temporaryFiles.get(url);
-        if (!tempFile?.exists()) {
-          tempFile = Services.dirsvc.get("TmpD", Ci.nsIFile);
-          // Try to use the name of the attachment for the temporary file, so
-          // that the name is included in the URI of the message that is
-          // opened, and possibly saved as a file later by the user.
-          let sanitizedName = lazy.DownloadPaths.sanitize(this.name);
-          if (!sanitizedName) {
-            sanitizedName = "message.eml";
-          } else if (!/\.eml$/i.test(sanitizedName)) {
-            sanitizedName += ".eml";
-          }
-          tempFile.append(sanitizedName);
-          tempFile.createUnique(0, 0o600);
-          await saveToFile(tempFile.path, true);
-
-          this.#temporaryFiles.set(url, tempFile);
+    if (this.contentType == "message/rfc822") {
+      let tempFile = this.#temporaryFiles.get(this.url);
+      if (!tempFile?.exists()) {
+        // Try to use the name of the attachment for the temporary file, so
+        // that the name is included in the URI of the message that is
+        // opened, and possibly saved as a file later by the user.
+        let sanitizedName = lazy.DownloadPaths.sanitize(this.name);
+        if (!sanitizedName) {
+          sanitizedName = "message.eml";
+        } else if (!/\.eml$/i.test(sanitizedName)) {
+          sanitizedName += ".eml";
         }
+        tempFile = await this.#setupTempFile(sanitizedName);
+        await this.saveToFile(tempFile.path, true);
 
         lazy.MailUtils.openEMLFile(
           win,
@@ -300,24 +319,8 @@ export class AttachmentInfo {
 
       name = lazy.DownloadPaths.sanitize(name);
 
-      const createTemporaryFileAndOpen = async mimeInfo => {
-        const tmpPath = PathUtils.join(
-          Services.dirsvc.get("TmpD", Ci.nsIFile).path,
-          "pid-" + Services.appinfo.processID
-        );
-        await IOUtils.makeDirectory(tmpPath, { permissions: 0o700 });
-        const tempFile = Cc["@mozilla.org/file/local;1"].createInstance(
-          Ci.nsIFile
-        );
-        tempFile.initWithPath(tmpPath);
-
-        tempFile.append(name);
-        tempFile.createUnique(Ci.nsIFile.NORMAL_FILE_TYPE, 0o600);
-        tempFile.remove(false);
-
-        Cc["@mozilla.org/uriloader/external-helper-app-service;1"]
-          .getService(Ci.nsPIExternalAppLauncher)
-          .deleteTemporaryFileOnExit(tempFile);
+    const createTemporaryFileAndOpen = async fileMimeInfo => {
+      const tempFile = await this.#setupTempFile(name);
 
         await saveToFile(tempFile.path, true);
         // Before opening from the temp dir, make the file read-only so that
