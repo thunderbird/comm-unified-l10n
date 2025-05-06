@@ -1037,6 +1037,11 @@ var dbViewWrapperListener = {
     this._allMessagesLoaded = false;
 
     if (!window.threadTree || !gViewWrapper) {
+      if (location.href == "about:message" && window.msgLoading) {
+        // Apparently the view has been re-created after the underlying folder
+        // has been compacted.
+        window.ReloadMessage();
+      }
       return;
     }
 
