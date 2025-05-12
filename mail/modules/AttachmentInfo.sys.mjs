@@ -269,20 +269,21 @@ export class AttachmentInfo {
         }
       }
 
-    if (this.contentType == "message/rfc822") {
-      let tempFile = this.#temporaryFiles.get(this.url);
-      if (!tempFile?.exists()) {
-        // Try to use the name of the attachment for the temporary file, so
-        // that the name is included in the URI of the message that is
-        // opened, and possibly saved as a file later by the user.
-        let sanitizedName = lazy.DownloadPaths.sanitize(this.name);
-        if (!sanitizedName) {
-          sanitizedName = "message.eml";
-        } else if (!/\.eml$/i.test(sanitizedName)) {
-          sanitizedName += ".eml";
+      if (this.contentType == "message/rfc822") {
+        let tempFile = this.#temporaryFiles.get(this.url);
+        if (!tempFile?.exists()) {
+          // Try to use the name of the attachment for the temporary file, so
+          // that the name is included in the URI of the message that is
+          // opened, and possibly saved as a file later by the user.
+          let sanitizedName = lazy.DownloadPaths.sanitize(this.name);
+          if (!sanitizedName) {
+            sanitizedName = "message.eml";
+          } else if (!/\.eml$/i.test(sanitizedName)) {
+            sanitizedName += ".eml";
+          }
+          tempFile = await this.#setupTempFile(sanitizedName);
+          await this.saveToFile(tempFile.path, true);
         }
-        tempFile = await this.#setupTempFile(sanitizedName);
-        await this.saveToFile(tempFile.path, true);
 
         lazy.MailUtils.openEMLFile(
           win,
