@@ -283,7 +283,7 @@ export class AttachmentInfo {
           }
           tempFile = await this.#setupTempFile(sanitizedName);
           await this.saveToFile(tempFile.path, true);
-          
+
           this.#temporaryFiles.set(url, tempFile);
         }
 
@@ -322,8 +322,8 @@ export class AttachmentInfo {
 
       name = lazy.DownloadPaths.sanitize(name);
 
-    const createTemporaryFileAndOpen = async fileMimeInfo => {
-      const tempFile = await this.#setupTempFile(name);
+      const createTemporaryFileAndOpen = async mimeInfo => {
+        const tempFile = await this.#setupTempFile(name);
 
         await saveToFile(tempFile.path, true);
         // Before opening from the temp dir, make the file read-only so that
