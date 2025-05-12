@@ -2572,8 +2572,6 @@ var detailsPane = {
       event => {
         // Prevent scrolling of the html tag when space is used on a button or
         // checkbox.
-        dump("xxxmagnus keypress event.key=" + event.key + "\n");
-        // dump("xxxmagnus open? " + this._dialog.open+ "\n");
         if (
           event.key == " " &&
           ["button", "checkbox"].includes(document.activeElement.type)
@@ -2587,9 +2585,7 @@ var detailsPane = {
 
         event.preventDefault();
         this.form.reset();
-      },
-      { capture: true }
-    );
+    });
     this.form.addEventListener("reset", async event => {
       event.preventDefault();
       if (this.isDirty) {
