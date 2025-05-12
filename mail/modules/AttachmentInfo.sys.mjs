@@ -283,6 +283,8 @@ export class AttachmentInfo {
           }
           tempFile = await this.#setupTempFile(sanitizedName);
           await this.saveToFile(tempFile.path, true);
+          
+          this.#temporaryFiles.set(url, tempFile);
         }
 
         lazy.MailUtils.openEMLFile(
