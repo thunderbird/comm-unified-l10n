@@ -270,7 +270,7 @@ export class AttachmentInfo {
       }
 
       if (this.contentType == "message/rfc822") {
-        let tempFile = this.#temporaryFiles.get(this.url);
+        let tempFile = this.#temporaryFiles.get(url);
         if (!tempFile?.exists()) {
           // Try to use the name of the attachment for the temporary file, so
           // that the name is included in the URI of the message that is
@@ -282,7 +282,7 @@ export class AttachmentInfo {
             sanitizedName += ".eml";
           }
           tempFile = await this.#setupTempFile(sanitizedName);
-          await this.saveToFile(tempFile.path, true);
+          await saveToFile(tempFile.path, true);
 
           this.#temporaryFiles.set(url, tempFile);
         }
