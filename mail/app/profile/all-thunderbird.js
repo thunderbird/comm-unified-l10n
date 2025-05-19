@@ -617,6 +617,9 @@ pref("toolbar.customization.usesheet", true);
 pref("toolbar.customization.usesheet", false);
 #endif
 
+// Comma separated list of allowed hostnames to have the account data at.
+pref("mail.allowed_unc_hosts", "");
+
 // Start compositions with (empty) attachment pane showing
 pref("mail.compose.show_attachment_pane", false);
 // Check for missing attachments?
