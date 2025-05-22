@@ -5,4 +5,4 @@
 
 MOZ_BRANDING_DIRECTORY=comm/mail/branding/nightly
 
-MOZ_OFFICIAL_BRANDING_DIRECTORY=comm/mail/branding/tb_beta
+MOZ_OFFICIAL_BRANDING_DIRECTORY=comm/mail/branding/thunderbird
