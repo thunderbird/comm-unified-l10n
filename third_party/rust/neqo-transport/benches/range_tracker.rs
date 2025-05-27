@@ -4,8 +4,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::{hint::black_box, time::Duration};
-
 use criterion::{criterion_group, criterion_main, Criterion};
 use neqo_transport::send_stream::RangeTracker;
 
@@ -31,12 +29,12 @@ fn coalesce(c: &mut Criterion, count: u64) {
         |b| {
             b.iter_batched_ref(
                 || build_coalesce(count),
-                black_box(|used: &mut RangeTracker| {
+                |used| {
                     used.mark_acked(CHUNK, chunk);
                     let tail = (count + 1) * CHUNK;
                     used.mark_sent(tail, chunk);
                     used.mark_acked(tail, chunk);
-                }),
+                },
                 criterion::BatchSize::SmallInput,
             );
         },
@@ -50,9 +48,5 @@ fn benchmark_coalesce(c: &mut Criterion) {
     coalesce(c, 1000);
 }
 
-criterion_group! {
-    name = benches;
-    config = Criterion::default().warm_up_time(Duration::from_secs(5)).measurement_time(Duration::from_secs(60));
-    targets = benchmark_coalesce
-}
+criterion_group!(benches, benchmark_coalesce);
 criterion_main!(benches);

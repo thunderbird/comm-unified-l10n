@@ -5,7 +5,6 @@
 // except according to those terms.
 
 use std::{
-    fmt::{self, Display, Formatter},
     mem,
     ops::{Deref, Div as _},
 };
@@ -35,8 +34,8 @@ pub struct HeaderEncoder {
     max_dynamic_index_ref: Option<u64>,
 }
 
-impl Display for HeaderEncoder {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+impl ::std::fmt::Display for HeaderEncoder {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         write!(f, "HeaderEncoder")
     }
 }
@@ -164,8 +163,8 @@ pub struct HeaderDecoder<'a> {
     req_insert_cnt: u64,
 }
 
-impl Display for HeaderDecoder<'_> {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+impl ::std::fmt::Display for HeaderDecoder<'_> {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         write!(f, "HeaderDecoder")
     }
 }

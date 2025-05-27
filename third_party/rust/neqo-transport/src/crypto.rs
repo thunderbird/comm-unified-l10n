@@ -7,7 +7,6 @@
 use std::{
     cell::RefCell,
     cmp::{max, min},
-    fmt::{self, Display, Formatter},
     mem,
     ops::{Index, IndexMut, Range},
     rc::Rc,
@@ -58,9 +57,9 @@ thread_local!(pub static OVERWRITE_INVOCATIONS: RefCell<Option<PacketNumber>> = 
 pub struct Crypto {
     version: Version,
     protocols: Vec<String>,
-    tls: Agent,
-    streams: CryptoStreams,
-    states: CryptoStates,
+    pub(crate) tls: Agent,
+    pub(crate) streams: CryptoStreams,
+    pub(crate) states: CryptoStates,
 }
 
 type TpHandler = Rc<RefCell<TransportParametersHandler>>;
@@ -131,6 +130,11 @@ impl Crypto {
     }
 
     /// Get the set of enabled protocols.
+    #[allow(
+        clippy::allow_attributes,
+        clippy::missing_const_for_fn,
+        reason = "TODO: False positive on nightly."
+    )]
     pub fn protocols(&self) -> &[String] {
         &self.protocols
     }
@@ -392,40 +396,10 @@ impl Crypto {
             unreachable!("It is a server");
         }
     }
-
-    #[must_use]
-    pub fn tls_mut(&mut self) -> &mut Agent {
-        &mut self.tls
-    }
-
-    #[must_use]
-    pub const fn tls(&self) -> &Agent {
-        &self.tls
-    }
-
-    #[must_use]
-    pub const fn streams(&self) -> &CryptoStreams {
-        &self.streams
-    }
-
-    #[must_use]
-    pub fn streams_mut(&mut self) -> &mut CryptoStreams {
-        &mut self.streams
-    }
-
-    #[must_use]
-    pub const fn states(&self) -> &CryptoStates {
-        &self.states
-    }
-
-    #[must_use]
-    pub fn states_mut(&mut self) -> &mut CryptoStates {
-        &mut self.states
-    }
 }
 
-impl Display for Crypto {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+impl ::std::fmt::Display for Crypto {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         write!(f, "Crypto")
     }
 }
@@ -738,8 +712,8 @@ impl CryptoDxState {
     }
 }
 
-impl Display for CryptoDxState {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+impl std::fmt::Display for CryptoDxState {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         write!(f, "epoch {} {:?}", self.epoch, self.direction)
     }
 }
@@ -1347,8 +1321,8 @@ impl CryptoStates {
     }
 }
 
-impl Display for CryptoStates {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+impl std::fmt::Display for CryptoStates {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         write!(f, "CryptoStates")
     }
 }

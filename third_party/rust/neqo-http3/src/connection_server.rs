@@ -4,11 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::{
-    fmt::{self, Display, Formatter},
-    rc::Rc,
-    time::Instant,
-};
+use std::{rc::Rc, time::Instant};
 
 use neqo_common::{event::Provider as _, qdebug, qinfo, qtrace, Header, MessageType, Role};
 use neqo_transport::{
@@ -32,8 +28,8 @@ pub struct Http3ServerHandler {
     needs_processing: bool,
 }
 
-impl Display for Http3ServerHandler {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+impl ::std::fmt::Display for Http3ServerHandler {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         write!(f, "Http3 server connection")
     }
 }
@@ -49,7 +45,7 @@ impl Http3ServerHandler {
 
     #[must_use]
     pub fn state(&self) -> Http3State {
-        self.base_handler.state().clone()
+        self.base_handler.state()
     }
 
     /// Supply a response for a request.
@@ -70,7 +66,7 @@ impl Http3ServerHandler {
     ) -> Res<usize> {
         let n = self
             .base_handler
-            .send_streams_mut()
+            .send_streams
             .get_mut(&stream_id)
             .ok_or(Error::InvalidStreamId)?
             .send_data(conn, data)?;
@@ -89,7 +85,7 @@ impl Http3ServerHandler {
         conn: &mut Connection,
     ) -> Res<()> {
         self.base_handler
-            .send_streams_mut()
+            .send_streams
             .get_mut(&stream_id)
             .ok_or(Error::InvalidStreamId)?
             .http_stream()
@@ -262,7 +258,7 @@ impl Http3ServerHandler {
         conn.close(now, err.code(), format!("{err}"));
         self.base_handler.close(err.code());
         self.events
-            .connection_state_change(self.base_handler.state().clone());
+            .connection_state_change(self.base_handler.state());
     }
 
     // If this return an error the connection must be closed.
@@ -292,16 +288,16 @@ impl Http3ServerHandler {
                     .handle_stream_stop_sending(stream_id, app_error, conn)?,
                 ConnectionEvent::StateChange(state) => {
                     if self.base_handler.handle_state_change(conn, &state)? {
-                        if self.base_handler.state() == &Http3State::Connected {
+                        if self.base_handler.state() == Http3State::Connected {
                             let settings = self.base_handler.save_settings();
                             conn.send_ticket(now, &settings)?;
                         }
                         self.events
-                            .connection_state_change(self.base_handler.state().clone());
+                            .connection_state_change(self.base_handler.state());
                     }
                 }
                 ConnectionEvent::SendStreamWritable { stream_id } => {
-                    if let Some(s) = self.base_handler.send_streams_mut().get_mut(&stream_id) {
+                    if let Some(s) = self.base_handler.send_streams.get_mut(&stream_id) {
                         s.stream_writable();
                     }
                 }
@@ -329,7 +325,7 @@ impl Http3ServerHandler {
                         MessageType::Response,
                         Http3StreamType::Http,
                         stream_id,
-                        Rc::clone(self.base_handler.qpack_encoder()),
+                        Rc::clone(&self.base_handler.qpack_encoder),
                         Box::new(self.events.clone()),
                     )),
                     Box::new(RecvMessage::new(
@@ -339,7 +335,7 @@ impl Http3ServerHandler {
                             stream_id,
                             first_frame_type: Some(first_frame_type),
                         },
-                        Rc::clone(self.base_handler.qpack_decoder()),
+                        Rc::clone(&self.base_handler.qpack_decoder),
                         Box::new(self.events.clone()),
                         None,
                         PriorityHandler::new(false, Priority::default()),

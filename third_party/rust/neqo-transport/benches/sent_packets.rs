@@ -4,10 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::{
-    hint::black_box,
-    time::{Duration, Instant},
-};
+use std::time::Instant;
 
 use criterion::{criterion_group, criterion_main, Criterion};
 use neqo_transport::{
@@ -43,15 +40,11 @@ fn take_ranges(c: &mut Criterion) {
         b.iter_batched_ref(
             sent_packets,
             // Take the first 90 packets, minus some gaps.
-            |pkts| black_box(pkts.take_ranges([70..=89, 40..=59, 10..=29])),
+            |pkts| pkts.take_ranges([70..=89, 40..=59, 10..=29]),
             criterion::BatchSize::SmallInput,
         );
     });
 }
 
-criterion_group! {
-    name = benches;
-    config = Criterion::default().warm_up_time(Duration::from_secs(5)).measurement_time(Duration::from_secs(60));
-    targets = take_ranges
-}
+criterion_group!(benches, take_ranges);
 criterion_main!(benches);

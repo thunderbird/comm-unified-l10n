@@ -15,7 +15,6 @@ use std::{
     cell::RefCell,
     cmp::{max, min, Ordering},
     collections::{btree_map::Entry, BTreeMap, VecDeque},
-    fmt::{self, Display, Formatter},
     mem,
     num::NonZeroUsize,
     ops::Add,
@@ -852,8 +851,7 @@ impl SendStream {
         match self.state {
             SendStreamState::Send {
                 ref mut send_buf, ..
-            } => {
-                let (offset, slice) = send_buf.next_bytes()?;
+            } => send_buf.next_bytes().and_then(|(offset, slice)| {
                 if retransmission_only {
                     qtrace!(
                         "next_bytes apply retransmission limit at {}",
@@ -869,7 +867,7 @@ impl SendStream {
                 } else {
                     Some((offset, slice))
                 }
-            }
+            }),
             SendStreamState::DataSent {
                 ref mut send_buf,
                 fin_sent,
@@ -1388,8 +1386,8 @@ impl SendStream {
     }
 }
 
-impl Display for SendStream {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+impl ::std::fmt::Display for SendStream {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         write!(f, "SendStream {}", self.stream_id)
     }
 }
@@ -1798,7 +1796,7 @@ impl<'a> IntoIterator for &'a mut SendStreams {
 
 #[derive(Debug, Clone)]
 pub struct SendStreamRecoveryToken {
-    id: StreamId,
+    pub(crate) id: StreamId,
     offset: u64,
     length: usize,
     fin: bool,
@@ -1808,7 +1806,7 @@ pub struct SendStreamRecoveryToken {
 mod tests {
     use std::{cell::RefCell, collections::VecDeque, num::NonZeroUsize, rc::Rc};
 
-    use neqo_common::{event::Provider as _, hex_with_len, qtrace, Encoder, MAX_VARINT};
+    use neqo_common::{event::Provider as _, hex_with_len, qtrace, Encoder};
 
     use super::SendStreamRecoveryToken;
     use crate::{
@@ -2933,6 +2931,8 @@ mod tests {
     /// Create a `SendStream` and force it into a state where it believes that
     /// `offset` bytes have already been sent and acknowledged.
     fn stream_with_sent(stream: u64, offset: usize) -> SendStream {
+        const MAX_VARINT: u64 = (1 << 62) - 1;
+
         let conn_fc = connection_fc(MAX_VARINT);
         let mut s = SendStream::new(
             StreamId::from(stream),

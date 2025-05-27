@@ -102,11 +102,7 @@ pub fn connect_fail(client: &mut SecretAgent, server: &mut SecretAgent) {
     assert!(!server.state().is_connected());
 }
 
-#[allow(
-    clippy::allow_attributes,
-    dead_code,
-    reason = "Yes, we currently don't construct WithoutZeroRtt and WithZeroRtt."
-)]
+#[allow(clippy::allow_attributes, dead_code, reason = "False positive.")]
 #[derive(Clone, Copy, Debug)]
 pub enum Resumption {
     WithoutZeroRtt,

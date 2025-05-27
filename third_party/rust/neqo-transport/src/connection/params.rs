@@ -6,8 +6,6 @@
 
 use std::{cmp::max, time::Duration};
 
-use neqo_common::MAX_VARINT;
-
 pub use crate::recovery::FAST_PTO_SCALE;
 use crate::{
     connection::{ConnectionIdManager, Role, LOCAL_ACTIVE_CID_LIMIT},
@@ -29,7 +27,7 @@ use crate::{
     CongestionControlAlgorithm, Res,
 };
 
-const LOCAL_MAX_DATA: u64 = MAX_VARINT;
+const LOCAL_MAX_DATA: u64 = 0x3FFF_FFFF_FFFF_FFFF; // 2^62-1
 const LOCAL_STREAM_LIMIT_BIDI: u64 = 16;
 const LOCAL_STREAM_LIMIT_UNI: u64 = 16;
 /// See `ConnectionParameters.ack_ratio` for a discussion of this value.
@@ -434,47 +432,47 @@ impl ConnectionParameters {
     ) -> Res<TransportParametersHandler> {
         let mut tps = TransportParametersHandler::new(role, self.versions.clone());
         // default parameters
-        tps.local_mut().set_integer(
+        tps.local.set_integer(
             ActiveConnectionIdLimit,
             u64::try_from(LOCAL_ACTIVE_CID_LIMIT)?,
         );
         if self.disable_migration {
-            tps.local_mut().set_empty(DisableMigration);
+            tps.local.set_empty(DisableMigration);
         }
         if self.grease {
-            tps.local_mut().set_empty(GreaseQuicBit);
+            tps.local.set_empty(GreaseQuicBit);
         }
-        tps.local_mut().set_integer(
+        tps.local.set_integer(
             MaxAckDelay,
             u64::try_from(DEFAULT_LOCAL_ACK_DELAY.as_millis())?,
         );
-        tps.local_mut()
+        tps.local
             .set_integer(MinAckDelay, u64::try_from(GRANULARITY.as_micros())?);
 
         // set configurable parameters
-        tps.local_mut().set_integer(InitialMaxData, self.max_data);
-        tps.local_mut().set_integer(
+        tps.local.set_integer(InitialMaxData, self.max_data);
+        tps.local.set_integer(
             InitialMaxStreamDataBidiLocal,
             self.max_stream_data_bidi_local,
         );
-        tps.local_mut().set_integer(
+        tps.local.set_integer(
             InitialMaxStreamDataBidiRemote,
             self.max_stream_data_bidi_remote,
         );
-        tps.local_mut()
+        tps.local
             .set_integer(InitialMaxStreamDataUni, self.max_stream_data_uni);
-        tps.local_mut()
+        tps.local
             .set_integer(InitialMaxStreamsBidi, self.max_streams_bidi);
-        tps.local_mut()
+        tps.local
             .set_integer(InitialMaxStreamsUni, self.max_streams_uni);
-        tps.local_mut().set_integer(
+        tps.local.set_integer(
             TransportParameterId::IdleTimeout,
             u64::try_from(self.idle_timeout.as_millis()).unwrap_or(0),
         );
         if let PreferredAddressConfig::Address(preferred) = &self.preferred_address {
             if role == Role::Server {
                 let (cid, srt) = cid_manager.preferred_address_cid()?;
-                tps.local_mut().set(
+                tps.local.set(
                     TransportParameterId::PreferredAddress,
                     TransportParameter::PreferredAddress {
                         v4: preferred.ipv4(),
@@ -485,7 +483,7 @@ impl ConnectionParameters {
                 );
             }
         }
-        tps.local_mut()
+        tps.local
             .set_integer(MaxDatagramFrameSize, self.datagram_size);
         Ok(tps)
     }

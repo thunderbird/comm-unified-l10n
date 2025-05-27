@@ -36,32 +36,32 @@ pub struct SharedArgs {
     /// ALPN labels to negotiate.
     ///
     /// This client still only does HTTP/3 no matter what the ALPN says.
-    alpn: String,
+    pub alpn: String,
 
     #[arg(name = "qlog-dir", long, value_parser=clap::value_parser!(PathBuf))]
     /// Enable QLOG logging and QLOG traces to this directory
-    qlog_dir: Option<PathBuf>,
+    pub qlog_dir: Option<PathBuf>,
 
     #[arg(name = "encoder-table-size", long, default_value = "16384")]
-    max_table_size_encoder: u64,
+    pub max_table_size_encoder: u64,
 
     #[arg(name = "decoder-table-size", long, default_value = "16384")]
-    max_table_size_decoder: u64,
+    pub max_table_size_decoder: u64,
 
     #[arg(name = "max-blocked-streams", short = 'b', long, default_value = "10")]
-    max_blocked_streams: u16,
+    pub max_blocked_streams: u16,
 
     #[arg(short = 'c', long, number_of_values = 1)]
     /// The set of TLS cipher suites to enable.
     /// From: `TLS_AES_128_GCM_SHA256`, `TLS_AES_256_GCM_SHA384`, `TLS_CHACHA20_POLY1305_SHA256`.
-    ciphers: Vec<String>,
+    pub ciphers: Vec<String>,
 
     #[arg(name = "qns-test", long)]
     /// Enable special behavior for use with QUIC Network Simulator
-    qns_test: Option<String>,
+    pub qns_test: Option<String>,
 
     #[command(flatten)]
-    quic_parameters: QuicParameters,
+    pub quic_parameters: QuicParameters,
 }
 
 #[cfg(any(test, feature = "bench"))]

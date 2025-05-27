@@ -6,7 +6,6 @@
 
 use std::{
     cell::RefCell,
-    fmt::{self, Debug, Formatter},
     ops::{Deref, DerefMut},
     os::raw::c_uint,
     ptr::null_mut,
@@ -47,11 +46,7 @@ macro_rules! scoped_ptr {
             /// # Errors
             ///
             /// When passed a null pointer generates an error.
-            #[allow(
-                clippy::allow_attributes,
-                dead_code,
-                reason = "False positive; is used in code calling the macro."
-            )]
+            #[allow(clippy::allow_attributes, dead_code, reason = "False positive.")]
             pub fn from_ptr(ptr: *mut $target) -> Result<Self, $crate::err::Error> {
                 if ptr.is_null() {
                     Err($crate::err::Error::last_nss_error())
@@ -119,8 +114,8 @@ impl Clone for PublicKey {
     }
 }
 
-impl Debug for PublicKey {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+impl std::fmt::Debug for PublicKey {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         if let Ok(b) = self.key_data() {
             write!(f, "PublicKey {}", hex_with_len(b))
         } else {
@@ -173,8 +168,8 @@ impl Clone for PrivateKey {
     }
 }
 
-impl Debug for PrivateKey {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+impl std::fmt::Debug for PrivateKey {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         if let Ok(b) = self.key_data() {
             write!(f, "PrivateKey {}", hex_with_len(b))
         } else {
@@ -220,8 +215,8 @@ impl Clone for SymKey {
     }
 }
 
-impl Debug for SymKey {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+impl std::fmt::Debug for SymKey {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         if let Ok(b) = self.as_bytes() {
             write!(f, "SymKey {}", hex_with_len(b))
         } else {

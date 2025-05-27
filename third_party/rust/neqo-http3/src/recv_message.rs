@@ -4,13 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::{
-    cell::RefCell,
-    cmp::min,
-    collections::VecDeque,
-    fmt::{self, Debug, Display, Formatter},
-    rc::Rc,
-};
+use std::{cell::RefCell, cmp::min, collections::VecDeque, fmt::Debug, rc::Rc};
 
 use neqo_common::{header::HeadersExt as _, qdebug, qinfo, qtrace, Header};
 use neqo_qpack::decoder::QPackDecoder;
@@ -83,8 +77,8 @@ pub struct RecvMessage {
     blocked_push_promise: VecDeque<PushInfo>,
 }
 
-impl Display for RecvMessage {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+impl ::std::fmt::Display for RecvMessage {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         write!(f, "RecvMessage stream_id:{}", self.stream_id)
     }
 }

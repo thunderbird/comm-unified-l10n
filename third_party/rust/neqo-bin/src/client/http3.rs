@@ -186,8 +186,8 @@ impl super::Handler for Handler<'_> {
                     fin,
                     ..
                 } => {
-                    if self.url_handler.stream_handler(stream_id).is_some() {
-                        qdebug!("READ HEADERS[{stream_id}]: fin={fin} {headers:?}");
+                    if let Some(handler) = self.url_handler.stream_handler(stream_id) {
+                        handler.process_header_ready(stream_id, fin, headers);
                     } else {
                         qwarn!("Data on unexpected stream: {stream_id}");
                     }
@@ -267,6 +267,7 @@ impl super::Handler for Handler<'_> {
 }
 
 trait StreamHandler {
+    fn process_header_ready(&mut self, stream_id: StreamId, fin: bool, headers: Vec<Header>);
     fn process_data_readable(
         &mut self,
         stream_id: StreamId,
@@ -282,6 +283,12 @@ struct DownloadStreamHandler {
 }
 
 impl StreamHandler for DownloadStreamHandler {
+    fn process_header_ready(&mut self, stream_id: StreamId, fin: bool, headers: Vec<Header>) {
+        if self.out_file.is_none() {
+            qdebug!("READ HEADERS[{stream_id}]: fin={fin} {headers:?}");
+        }
+    }
+
     fn process_data_readable(
         &mut self,
         stream_id: StreamId,
@@ -322,6 +329,10 @@ struct UploadStreamHandler {
 }
 
 impl StreamHandler for UploadStreamHandler {
+    fn process_header_ready(&mut self, stream_id: StreamId, fin: bool, headers: Vec<Header>) {
+        qdebug!("READ HEADERS[{stream_id}]: fin={fin} {headers:?}");
+    }
+
     fn process_data_readable(
         &mut self,
         stream_id: StreamId,
@@ -333,10 +344,8 @@ impl StreamHandler for UploadStreamHandler {
             let trimmed_txt = txt.trim_end_matches(char::from(0));
             let parsed: usize = trimmed_txt.parse().map_err(|_| Error::InvalidInput)?;
             if parsed == self.data.len() {
-                qinfo!(
-                    "Stream ID: {stream_id:?}, Upload time: {:?}",
-                    Instant::now().duration_since(self.start)
-                );
+                let upload_time = Instant::now().duration_since(self.start);
+                qinfo!("Stream ID: {stream_id:?}, Upload time: {upload_time:?}");
             }
             Ok(())
         } else {

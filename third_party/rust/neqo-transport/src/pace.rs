@@ -8,7 +8,7 @@
 
 use std::{
     cmp::min,
-    fmt::{self, Debug, Display, Formatter},
+    fmt::{Debug, Display},
     time::{Duration, Instant},
 };
 
@@ -127,13 +127,13 @@ impl Pacer {
 }
 
 impl Display for Pacer {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "Pacer {}/{}", self.c, self.p)
     }
 }
 
 impl Debug for Pacer {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "Pacer@{:?} {}/{}..{}", self.t, self.c, self.p, self.m)
     }
 }

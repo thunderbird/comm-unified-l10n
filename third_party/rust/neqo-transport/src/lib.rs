@@ -4,8 +4,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::fmt::{self, Display, Formatter};
-
 use neqo_common::qwarn;
 use neqo_crypto::Error as CryptoError;
 
@@ -208,8 +206,8 @@ impl ::std::error::Error for Error {
     }
 }
 
-impl Display for Error {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+impl ::std::fmt::Display for Error {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         write!(f, "Transport error: {self:?}")
     }
 }

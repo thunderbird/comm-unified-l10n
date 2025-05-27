@@ -7,7 +7,7 @@
 use std::{
     cell::RefCell,
     collections::VecDeque,
-    fmt::{self, Debug, Display, Formatter},
+    fmt::{Debug, Display},
     mem,
     rc::Rc,
     slice::SliceIndex,
@@ -157,7 +157,7 @@ pub struct PushController {
 }
 
 impl Display for PushController {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         write!(f, "Push controller")
     }
 }

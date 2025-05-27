@@ -6,7 +6,7 @@
 
 use std::{
     cell::RefCell,
-    fmt::{self, Debug, Display, Formatter},
+    fmt::{Debug, Display},
     iter,
     net::SocketAddr,
     rc::Rc,
@@ -286,7 +286,7 @@ pub struct Http3Client {
 }
 
 impl Display for Http3Client {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         write!(f, "Http3 client")
     }
 }
@@ -352,7 +352,7 @@ impl Http3Client {
     /// The function returns the current state of the connection.
     #[must_use]
     pub fn state(&self) -> Http3State {
-        self.base_handler.state().clone()
+        self.base_handler.state()
     }
 
     #[must_use]
@@ -422,8 +422,9 @@ impl Http3Client {
     /// connection the HTTP/3 setting will be decoded and used until the setting are received from
     /// the server.
     pub fn take_resumption_token(&mut self, now: Instant) -> Option<ResumptionToken> {
-        let t = self.conn.take_resumption_token(now)?;
-        self.encode_resumption_token(&t)
+        self.conn
+            .take_resumption_token(now)
+            .and_then(|t| self.encode_resumption_token(&t))
     }
 
     /// This may be call if an application has a resumption token. This must be called before
@@ -440,7 +441,7 @@ impl Http3Client {
     ///
     /// On closing if the base handler can't handle it (debug only).
     pub fn enable_resumption(&mut self, now: Instant, token: impl AsRef<[u8]>) -> Res<()> {
-        if self.base_handler.state() != &Http3State::Initializing {
+        if self.base_handler.state != Http3State::Initializing {
             return Err(Error::InvalidState);
         }
         let mut dec = Decoder::from(token.as_ref());
@@ -469,7 +470,7 @@ impl Http3Client {
             self.base_handler
                 .set_0rtt_settings(&mut self.conn, settings)?;
             self.events
-                .connection_state_change(self.base_handler.state().clone());
+                .connection_state_change(self.base_handler.state());
             self.push_handler
                 .borrow_mut()
                 .maybe_send_max_push_id_frame(&mut self.base_handler);
@@ -484,14 +485,14 @@ impl Http3Client {
     {
         qinfo!("[{self}] Close the connection error={error} msg={msg}");
         if !matches!(
-            self.base_handler.state(),
+            self.base_handler.state,
             Http3State::Closing(_) | Http3State::Closed(_)
         ) {
             self.push_handler.borrow_mut().clear();
             self.conn.close(now, error, msg);
             self.base_handler.close(error);
             self.events
-                .connection_state_change(self.base_handler.state().clone());
+                .connection_state_change(self.base_handler.state());
         }
     }
 
@@ -622,7 +623,7 @@ impl Http3Client {
             buf.len()
         );
         self.base_handler
-            .send_streams_mut()
+            .send_streams
             .get_mut(&stream_id)
             .ok_or(Error::InvalidStreamId)?
             .send_data(&mut self.conn, buf)
@@ -821,7 +822,7 @@ impl Http3Client {
     /// `InvalidStreamId` if the stream does not exist.
     pub fn webtransport_send_stream_stats(&mut self, stream_id: StreamId) -> Res<SendStreamStats> {
         self.base_handler
-            .send_streams_mut()
+            .send_streams
             .get_mut(&stream_id)
             .ok_or(Error::InvalidStreamId)?
             .stats(&mut self.conn)
@@ -834,7 +835,7 @@ impl Http3Client {
     /// `InvalidStreamId` if the stream does not exist.
     pub fn webtransport_recv_stream_stats(&mut self, stream_id: StreamId) -> Res<RecvStreamStats> {
         self.base_handler
-            .recv_streams_mut()
+            .recv_streams
             .get_mut(&stream_id)
             .ok_or(Error::InvalidStreamId)?
             .stats(&mut self.conn)
@@ -999,7 +1000,7 @@ impl Http3Client {
                     self.base_handler.add_new_stream(stream_id);
                 }
                 ConnectionEvent::SendStreamWritable { stream_id } => {
-                    if let Some(s) = self.base_handler.send_streams_mut().get_mut(&stream_id) {
+                    if let Some(s) = self.base_handler.send_streams.get_mut(&stream_id) {
                         s.stream_writable();
                     }
                 }
@@ -1034,7 +1035,7 @@ impl Http3Client {
                         .handle_state_change(&mut self.conn, &state)?
                     {
                         self.events
-                            .connection_state_change(self.base_handler.state().clone());
+                            .connection_state_change(self.base_handler.state());
                     }
                 }
                 ConnectionEvent::ZeroRttRejected => {
@@ -1155,7 +1156,7 @@ impl Http3Client {
                     stream_id,
                     first_frame_type: None,
                 },
-                Rc::clone(self.base_handler.qpack_decoder()),
+                Rc::clone(&self.base_handler.qpack_decoder),
                 Box::new(RecvPushEvents::new(push_id, Rc::clone(&self.push_handler))),
                 None,
                 // TODO: think about the right priority for the push streams.
@@ -1176,10 +1177,9 @@ impl Http3Client {
             return Err(Error::HttpId);
         }
 
-        match self.base_handler.state_mut() {
+        match self.base_handler.state {
             Http3State::Connected => {
-                self.base_handler
-                    .set_state(Http3State::GoingAway(goaway_stream_id));
+                self.base_handler.state = Http3State::GoingAway(goaway_stream_id);
             }
             Http3State::GoingAway(ref mut stream_id) => {
                 if goaway_stream_id > *stream_id {
@@ -1194,7 +1194,7 @@ impl Http3Client {
         // Issue reset events for streams >= goaway stream id
         let send_ids: Vec<StreamId> = self
             .base_handler
-            .send_streams()
+            .send_streams
             .iter()
             .filter_map(id_gte(goaway_stream_id))
             .collect();
@@ -1209,7 +1209,7 @@ impl Http3Client {
 
         let recv_ids: Vec<StreamId> = self
             .base_handler
-            .recv_streams()
+            .recv_streams
             .iter()
             .filter_map(id_gte(goaway_stream_id))
             .collect();
@@ -1240,12 +1240,12 @@ impl Http3Client {
 
     #[must_use]
     pub fn qpack_decoder_stats(&self) -> QpackStats {
-        self.base_handler.qpack_decoder().borrow().stats()
+        self.base_handler.qpack_decoder.borrow().stats()
     }
 
     #[must_use]
     pub fn qpack_encoder_stats(&self) -> QpackStats {
-        self.base_handler.qpack_encoder().borrow().stats()
+        self.base_handler.qpack_encoder.borrow().stats()
     }
 
     #[must_use]

@@ -4,13 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::{
-    cell::RefCell,
-    cmp::min,
-    fmt::{self, Debug, Display, Formatter},
-    num::NonZeroUsize,
-    rc::Rc,
-};
+use std::{cell::RefCell, cmp::min, fmt::Debug, num::NonZeroUsize, rc::Rc};
 
 use neqo_common::{qdebug, qtrace, Encoder, Header, MessageType};
 use neqo_qpack::encoder::QPackEncoder;
@@ -330,8 +324,8 @@ impl HttpSendStream for SendMessage {
     }
 }
 
-impl Display for SendMessage {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+impl ::std::fmt::Display for SendMessage {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         write!(f, "SendMesage {}", self.stream_id())
     }
 }

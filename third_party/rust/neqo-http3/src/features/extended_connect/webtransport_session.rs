@@ -4,13 +4,7 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::{
-    cell::RefCell,
-    collections::BTreeSet,
-    fmt::{self, Display, Formatter},
-    mem,
-    rc::Rc,
-};
+use std::{cell::RefCell, collections::BTreeSet, mem, rc::Rc};
 
 use neqo_common::{qtrace, Encoder, Header, MessageType, Role};
 use neqo_qpack::{QPackDecoder, QPackEncoder};
@@ -54,8 +48,8 @@ pub struct WebTransportSession {
     role: Role,
 }
 
-impl Display for WebTransportSession {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+impl ::std::fmt::Display for WebTransportSession {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         write!(f, "WebTransportSession session={}", self.session_id)
     }
 }

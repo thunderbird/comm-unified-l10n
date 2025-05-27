@@ -39,9 +39,9 @@ const RECV_BUF_SIZE: usize = u16::MAX as usize;
 /// - Linux/Android: use segmentation offloading via GRO
 /// - Windows: use segmentation offloading via URO (caveat see <https://github.com/quinn-rs/quinn/issues/2041>)
 /// - Apple: no segmentation offloading available, use multiple buffers
-#[cfg(not(all(apple, feature = "fast-apple-datapath")))]
+#[cfg(not(apple))]
 const NUM_BUFS: usize = 1;
-#[cfg(all(apple, feature = "fast-apple-datapath"))]
+#[cfg(apple)]
 // Value approximated based on neqo-bin "Download" benchmark only.
 const NUM_BUFS: usize = 16;
 
@@ -294,10 +294,7 @@ mod tests {
 
     /// Expect [`Socket::recv`] to handle multiple [`Datagram`]s on GRO read.
     #[test]
-    #[cfg_attr(
-        not(any(target_os = "linux", target_os = "windows")),
-        ignore = "GRO not available"
-    )]
+    #[cfg_attr(not(any(target_os = "linux", target_os = "windows")), ignore)]
     fn many_datagrams_through_gro() -> Result<(), io::Error> {
         const SEGMENT_SIZE: usize = 128;
 

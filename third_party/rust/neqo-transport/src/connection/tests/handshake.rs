@@ -1375,7 +1375,7 @@ fn grease_quic_bit_transport_parameter() {
     fn get_remote_tp(conn: &Connection) -> bool {
         conn.tps
             .borrow()
-            .remote_handshake()
+            .remote
             .as_ref()
             .unwrap()
             .get_empty(GreaseQuicBit)

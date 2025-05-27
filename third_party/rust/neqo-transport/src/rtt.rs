@@ -129,7 +129,11 @@ impl RttEstimate {
             self.first_sample_time = Some(now);
         } else {
             // Calculate EWMA RTT (based on {{?RFC6298}}).
-            let rttvar_sample = self.smoothed_rtt.abs_diff(rtt_sample);
+            let rttvar_sample = if self.smoothed_rtt > rtt_sample {
+                self.smoothed_rtt - rtt_sample
+            } else {
+                rtt_sample - self.smoothed_rtt
+            };
 
             self.latest_rtt = rtt_sample;
             self.rttvar = (self.rttvar * 3 + rttvar_sample) / 4;

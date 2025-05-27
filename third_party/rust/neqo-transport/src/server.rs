@@ -10,7 +10,6 @@ use std::{
     cell::RefCell,
     cmp::min,
     collections::HashSet,
-    fmt::{self, Display, Formatter},
     ops::{Deref, DerefMut},
     path::PathBuf,
     rc::Rc,
@@ -420,7 +419,12 @@ impl Server {
                 now,
             );
 
-            return Output::Datagram(Datagram::new(destination, source, IpTos::default(), vn));
+            return Output::Datagram(Datagram::new(
+                dgram.destination(),
+                dgram.source(),
+                IpTos::default(),
+                vn,
+            ));
         }
 
         match packet.packet_type() {
@@ -435,10 +439,8 @@ impl Server {
                 self.handle_initial(initial, dgram, now)
             }
             PacketType::ZeroRtt => {
-                qdebug!(
-                    "[{self}] Dropping 0-RTT for unknown connection {}",
-                    ConnectionId::from(packet.dcid())
-                );
+                let dcid = ConnectionId::from(packet.dcid());
+                qdebug!("[{self}] Dropping 0-RTT for unknown connection {dcid}");
                 Output::None
             }
             PacketType::OtherVersion => unreachable!(),
@@ -551,8 +553,8 @@ impl PartialEq for ConnectionRef {
 
 impl Eq for ConnectionRef {}
 
-impl Display for Server {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+impl ::std::fmt::Display for Server {
+    fn fmt(&self, f: &mut ::std::fmt::Formatter) -> ::std::fmt::Result {
         write!(f, "Server")
     }
 }

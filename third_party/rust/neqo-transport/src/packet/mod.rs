@@ -91,16 +91,15 @@ impl PacketType {
     }
 }
 
-impl TryFrom<PacketType> for Epoch {
-    type Error = Error;
-
-    fn try_from(v: PacketType) -> Res<Self> {
+#[expect(clippy::fallible_impl_from, reason = "TODO: Use strum.")]
+impl From<PacketType> for Epoch {
+    fn from(v: PacketType) -> Self {
         match v {
-            PacketType::Initial => Ok(Self::Initial),
-            PacketType::ZeroRtt => Ok(Self::ZeroRtt),
-            PacketType::Handshake => Ok(Self::Handshake),
-            PacketType::Short => Ok(Self::ApplicationData),
-            _ => Err(Error::InvalidPacket),
+            PacketType::Initial => Self::Initial,
+            PacketType::ZeroRtt => Self::ZeroRtt,
+            PacketType::Handshake => Self::Handshake,
+            PacketType::Short => Self::ApplicationData,
+            _ => panic!("shouldn't be here"),
         }
     }
 }
@@ -426,11 +425,13 @@ impl PacketBuilder {
             self.write_len(crypto.expansion());
         }
 
+        let hdr = &self.encoder.as_ref()[self.header.clone()];
+        let body = &self.encoder.as_ref()[self.header.end..];
         qtrace!(
             "Packet build pn={} hdr={} body={}",
             self.pn,
-            hex(&self.encoder.as_ref()[self.header.clone()]),
-            hex(&self.encoder.as_ref()[self.header.end..])
+            hex(hdr),
+            hex(body)
         );
 
         // Add space for crypto expansion.
@@ -770,6 +771,11 @@ impl<'a> PublicPacket<'a> {
             .as_cid_ref()
     }
 
+    #[allow(
+        clippy::allow_attributes,
+        clippy::missing_const_for_fn,
+        reason = "TODO: False positive on nightly."
+    )]
     #[must_use]
     pub fn token(&self) -> &[u8] {
         &self.token
@@ -777,7 +783,7 @@ impl<'a> PublicPacket<'a> {
 
     #[must_use]
     pub fn version(&self) -> Option<Version> {
-        Version::try_from(self.version?).ok()
+        self.version.and_then(|v| Version::try_from(v).ok())
     }
 
     #[must_use]
@@ -875,7 +881,7 @@ impl<'a> PublicPacket<'a> {
         crypto: &mut CryptoStates,
         release_at: Instant,
     ) -> Res<DecryptedPacket> {
-        let epoch: Epoch = self.packet_type.try_into()?;
+        let epoch: Epoch = self.packet_type.into();
         // When we don't have a version, the crypto code doesn't need a version
         // for lookup, so use the default, but fix it up if decryption succeeds.
         let version = self.version().unwrap_or_default();

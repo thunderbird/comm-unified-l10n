@@ -4,8 +4,6 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::{hint::black_box, time::Duration};
-
 use criterion::{criterion_group, criterion_main, Criterion};
 use neqo_transport::recv_stream::RxStreamOrderer;
 
@@ -20,13 +18,9 @@ fn rx_stream_orderer() {
 
 fn criterion_benchmark(c: &mut Criterion) {
     c.bench_function("RxStreamOrderer::inbound_frame()", |b| {
-        b.iter(black_box(rx_stream_orderer));
+        b.iter(rx_stream_orderer);
     });
 }
 
-criterion_group! {
-    name = benches;
-    config = Criterion::default().warm_up_time(Duration::from_secs(5)).measurement_time(Duration::from_secs(60));
-    targets = criterion_benchmark
-}
+criterion_group!(benches, criterion_benchmark);
 criterion_main!(benches);

@@ -4,11 +4,9 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::fmt::{self, Debug, Formatter, Write};
+use std::fmt::Debug;
 
 use crate::hex_with_len;
-
-pub const MAX_VARINT: u64 = (1 << 62) - 1;
 
 /// Decoder is a view into a byte array that has a read offset.  Use it for parsing.
 pub struct Decoder<'a> {
@@ -115,7 +113,7 @@ impl<'a> Decoder<'a> {
     /// Signed types will fail if the high bit is set.
     pub fn decode_uint<T: TryFrom<u64>>(&mut self) -> Option<T> {
         let v = self.decode_n(size_of::<T>());
-        T::try_from(v?).ok()
+        v.and_then(|v| T::try_from(v).ok())
     }
 
     /// Decodes a QUIC varint.
@@ -170,7 +168,7 @@ impl<'a> AsRef<[u8]> for Decoder<'a> {
 }
 
 impl Debug for Decoder<'_> {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         f.write_str(&hex_with_len(self.as_ref()))
     }
 }
@@ -435,7 +433,7 @@ impl Encoder {
 }
 
 impl Debug for Encoder {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         f.write_str(&hex_with_len(self))
     }
 }
@@ -469,13 +467,6 @@ impl From<&[u8]> for Encoder {
 impl From<Encoder> for Vec<u8> {
     fn from(buf: Encoder) -> Self {
         buf.buf
-    }
-}
-
-impl Write for Encoder {
-    fn write_str(&mut self, s: &str) -> fmt::Result {
-        self.buf.extend_from_slice(s.as_bytes());
-        Ok(())
     }
 }
 
