@@ -467,17 +467,6 @@
         ],
         "revision": "05283dda2b07c9b7ca421a0cf74ca76439ad3ebf"
     },
-    "mk": {
-        "pin": false,
-        "platforms": [
-            "linux",
-            "linux64",
-            "macosx64",
-            "win32",
-            "win64"
-        ],
-        "revision": "05283dda2b07c9b7ca421a0cf74ca76439ad3ebf"
-    },
     "ms": {
         "pin": false,
         "platforms": [
