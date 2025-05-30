@@ -5,7 +5,6 @@
 use std::cmp;
 use std::collections::HashMap;
 
-use malloc_size_of_derive::MallocSizeOf;
 use once_cell::sync::OnceCell;
 use serde::{Deserialize, Serialize};
 
@@ -37,7 +36,7 @@ fn linear_range(min: u64, max: u64, count: usize) -> Vec<u64> {
 ///
 /// Buckets are pre-computed at instantiation with a linear  distribution from `min` to `max`
 /// and `bucket_count` buckets.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, MallocSizeOf)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub struct PrecomputedLinear {
     // Don't serialize the (potentially large) array of ranges, instead compute them on first
     // access.

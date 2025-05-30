@@ -115,7 +115,7 @@ pub fn create_metadata_items(
         let ident = Ident::new(&name, Span::call_site());
         quote! {
             #[doc(hidden)]
-            #[unsafe(no_mangle)]
+            #[no_mangle]
             pub extern "C" fn #ident() -> u16 {
                 // Force constant evaluation to ensure:
                 // 1. The checksum is computed at compile time; and
@@ -128,7 +128,7 @@ pub fn create_metadata_items(
 
     quote! {
         const #const_ident: ::uniffi::MetadataBuffer = #metadata_expr;
-        #[unsafe(no_mangle)]
+        #[no_mangle]
         #[doc(hidden)]
         pub static #static_ident: [u8; #const_ident.size] = #const_ident.into_array();
 

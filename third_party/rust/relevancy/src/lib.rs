@@ -27,9 +27,6 @@ use remote_settings::{RemoteSettingsClient, RemoteSettingsService};
 
 pub use db::RelevancyDb;
 pub use error::{ApiResult, Error, RelevancyApiError, Result};
-// reexport logging helpers.
-pub use error_support::{debug, error, info, trace, warn};
-
 pub use interest::{Interest, InterestVector};
 pub use ranker::score;
 
@@ -198,7 +195,7 @@ impl<C: rs::RelevancyRemoteSettingsClient> RelevancyStoreInner<C> {
         let mut interest_vector = InterestVector::default();
         for url in top_urls_by_frecency {
             let interest_count = self.db.read(|dao| dao.get_url_interest_vector(&url))?;
-            crate::trace!("classified: {url} {}", interest_count.summary());
+            log::trace!("classified: {url} {}", interest_count.summary());
             interest_vector = interest_vector + interest_count;
         }
         Ok(interest_vector)

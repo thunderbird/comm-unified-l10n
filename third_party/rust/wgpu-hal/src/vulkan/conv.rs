@@ -182,10 +182,14 @@ pub fn map_vk_surface_formats(sf: vk::SurfaceFormatKHR) -> Option<wgt::TextureFo
 }
 
 impl crate::Attachment<'_, super::TextureView> {
-    pub(super) fn make_attachment_key(&self, ops: crate::AttachmentOps) -> super::AttachmentKey {
+    pub(super) fn make_attachment_key(
+        &self,
+        ops: crate::AttachmentOps,
+        caps: &super::PrivateCapabilities,
+    ) -> super::AttachmentKey {
         super::AttachmentKey {
-            format: self.view.raw_format,
-            layout: derive_image_layout(self.usage, self.view.format),
+            format: caps.map_texture_format(self.view.attachment.view_format),
+            layout: derive_image_layout(self.usage, self.view.attachment.view_format),
             ops,
         }
     }
@@ -194,7 +198,14 @@ impl crate::Attachment<'_, super::TextureView> {
 impl crate::ColorAttachment<'_, super::TextureView> {
     pub(super) unsafe fn make_vk_clear_color(&self) -> vk::ClearColorValue {
         let cv = &self.clear_value;
-        match self.target.view.format.sample_type(None, None).unwrap() {
+        match self
+            .target
+            .view
+            .attachment
+            .view_format
+            .sample_type(None, None)
+            .unwrap()
+        {
             wgt::TextureSampleType::Float { .. } => vk::ClearColorValue {
                 float32: [cv.r as f32, cv.g as f32, cv.b as f32, cv.a as f32],
             },

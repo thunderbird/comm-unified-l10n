@@ -4,6 +4,7 @@ use cocoa::{appkit::NSView, base::id as cocoa_id};
 use core_graphics_types::geometry::CGSize;
 use metal::*;
 use objc::{rc::autoreleasepool, runtime::YES};
+use std::mem;
 use winit::{
     event::{Event, WindowEvent},
     event_loop::ControlFlow,
@@ -41,7 +42,7 @@ fn main() {
 
     let device = find_raytracing_supporting_device();
 
-    let mut layer = MetalLayer::new();
+    let layer = MetalLayer::new();
     layer.set_device(&device);
     layer.set_pixel_format(MTLPixelFormat::RGBA16Float);
     layer.set_presents_with_transaction(false);
@@ -50,7 +51,7 @@ fn main() {
         if let Ok(RawWindowHandle::AppKit(rw)) = window.window_handle().map(|wh| wh.as_raw()) {
             let view = rw.ns_view.as_ptr() as cocoa_id;
             view.setWantsLayer(YES);
-            view.setLayer(<*mut _>::cast(layer.as_mut()));
+            view.setLayer(mem::transmute(layer.as_ref()));
         }
     }
 

@@ -4,11 +4,9 @@
 
 use std::borrow::Cow;
 
-use malloc_size_of_derive::MallocSizeOf;
-
 use super::{metrics::*, CommonMetricData, LabeledMetricData, Lifetime};
 
-#[derive(Debug, MallocSizeOf)]
+#[derive(Debug)]
 pub struct CoreMetrics {
     pub client_id: UuidMetric,
     pub first_run_date: DatetimeMetric,
@@ -21,7 +19,7 @@ pub struct CoreMetrics {
     pub distribution_name: StringMetric,
 }
 
-#[derive(Debug, MallocSizeOf)]
+#[derive(Debug)]
 pub struct AdditionalMetrics {
     /// The number of times we encountered an IO error
     /// when writing a pending ping to disk.
@@ -201,7 +199,7 @@ impl AdditionalMetrics {
     }
 }
 
-#[derive(Debug, MallocSizeOf)]
+#[derive(Debug)]
 pub struct UploadMetrics {
     pub ping_upload_failure: LabeledMetric<CounterMetric>,
     pub discarded_exceeding_pings_size: MemoryDistributionMetric,
@@ -325,7 +323,7 @@ impl UploadMetrics {
     }
 }
 
-#[derive(Debug, MallocSizeOf)]
+#[derive(Debug)]
 pub struct DatabaseMetrics {
     pub size: MemoryDistributionMetric,
 

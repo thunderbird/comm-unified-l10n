@@ -9,7 +9,6 @@ use crate::error::Error;
 #[cfg(feature = "sync-client")]
 use crate::error::ErrorResponse;
 
-use crate::error::warn;
 use std::collections::HashMap;
 use std::time;
 
@@ -459,9 +458,10 @@ impl Engine {
         if self.failure.is_none() {
             self.failure = Some(failure);
         } else {
-            warn!(
+            log::warn!(
                 "engine already has recorded a failure of {:?} - ignoring {:?}",
-                &self.failure, &failure
+                &self.failure,
+                &failure
             );
         }
     }
@@ -766,7 +766,7 @@ impl SyncTelemetryPing {
     pub fn uid(&mut self, uid: String) {
         if let Some(ref existing) = self.uid {
             if *existing != uid {
-                warn!("existing uid ${} being replaced by {}", existing, uid);
+                log::warn!("existing uid ${} being replaced by {}", existing, uid);
             }
         }
         self.uid = Some(uid);

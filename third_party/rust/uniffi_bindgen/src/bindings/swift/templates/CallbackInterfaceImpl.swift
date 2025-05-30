@@ -1,3 +1,4 @@
+{%- if self.include_once_check("CallbackInterfaceRuntime.swift") %}{%- include "CallbackInterfaceRuntime.swift" %}{%- endif %}
 {%- let trait_impl=format!("UniffiCallbackInterface{}", name) %}
 
 // Put the implementation in a struct so we don't pollute the top-level namespace

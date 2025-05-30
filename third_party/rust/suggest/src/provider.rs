@@ -140,18 +140,11 @@ impl SuggestionProvider {
             )])),
             Self::Yelp => Some(HashMap::from([(
                 Collection::Other,
-                HashSet::from([
-                    SuggestRecordType::Icon,
-                    SuggestRecordType::Geonames,
-                    SuggestRecordType::GeonamesAlternates,
-                ]),
+                HashSet::from([SuggestRecordType::Icon, SuggestRecordType::Geonames]),
             )])),
             Self::Weather => Some(HashMap::from([(
                 Collection::Other,
-                HashSet::from([
-                    SuggestRecordType::Geonames,
-                    SuggestRecordType::GeonamesAlternates,
-                ]),
+                HashSet::from([SuggestRecordType::Geonames]),
             )])),
             Self::Fakespot => Some(HashMap::from([(
                 Collection::Fakespot,

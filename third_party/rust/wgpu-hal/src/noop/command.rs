@@ -146,11 +146,7 @@ impl crate::CommandEncoder for CommandBuffer {
 
     // render
 
-    unsafe fn begin_render_pass(
-        &mut self,
-        desc: &crate::RenderPassDescriptor<Resource, Resource>,
-    ) -> DeviceResult<()> {
-        Ok(())
+    unsafe fn begin_render_pass(&mut self, desc: &crate::RenderPassDescriptor<Resource, Resource>) {
     }
     unsafe fn end_render_pass(&mut self) {}
 

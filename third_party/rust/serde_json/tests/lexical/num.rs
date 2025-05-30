@@ -63,6 +63,7 @@ fn check_float<T: Float>(x: T) {
     assert!(T::from_bits(x.to_bits()) == x);
 
     // Check properties
+    let _ = x.to_bits() & T::SIGN_MASK;
     let _ = x.to_bits() & T::EXPONENT_MASK;
     let _ = x.to_bits() & T::HIDDEN_BIT_MASK;
     let _ = x.to_bits() & T::MANTISSA_MASK;

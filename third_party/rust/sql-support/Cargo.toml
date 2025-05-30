@@ -33,12 +33,10 @@ path = "src/lib.rs"
 
 [dependencies]
 lazy_static = "1.4"
+log = "0.4"
 parking_lot = ">=0.11,<=0.12"
 tempfile = "3.1.0"
 thiserror = "1.0"
-
-[dependencies.error-support]
-path = "../error"
 
 [dependencies.interrupt-support]
 path = "../interrupt"
@@ -52,6 +50,6 @@ features = [
     "unlock_notify",
 ]
 
-[dev-dependencies.error-support]
-path = "../error"
-features = ["testing"]
+[dev-dependencies.env_logger]
+version = "0.10"
+default-features = false

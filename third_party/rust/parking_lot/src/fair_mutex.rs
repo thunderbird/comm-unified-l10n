@@ -6,6 +6,7 @@
 // copied, modified, or distributed except according to those terms.
 
 use crate::raw_fair_mutex::RawFairMutex;
+use lock_api;
 
 /// A mutual exclusive primitive that is always fair, useful for protecting shared data
 ///

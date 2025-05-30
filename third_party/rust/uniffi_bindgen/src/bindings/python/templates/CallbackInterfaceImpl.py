@@ -1,3 +1,4 @@
+{% if self.include_once_check("CallbackInterfaceRuntime.py") %}{% include "CallbackInterfaceRuntime.py" %}{% endif %}
 {%- let trait_impl=format!("_UniffiTraitImpl{}", name) %}
 
 # Put all the bits inside a class to keep the top-level namespace clean
@@ -63,7 +64,7 @@ class {{ trait_impl }}:
                 {{ meth.foreign_future_ffi_result_struct().name()|ffi_struct_name }}(
                     {%- match meth.return_type() %}
                     {%- when Some(return_type) %}
-                    {{ meth.return_type().map(FfiType::from)|ffi_default_value(ci) }},
+                    {{ meth.return_type().map(FfiType::from)|ffi_default_value }},
                     {%- when None %}
                     {%- endmatch %}
                     _UniffiRustCallStatus(status_code, rust_buffer),

@@ -40,14 +40,20 @@ impl OnceState {
     /// indicate to future forced initialization routines that it is poisoned.
     #[inline]
     pub fn poisoned(self) -> bool {
-        matches!(self, OnceState::Poisoned)
+        match self {
+            OnceState::Poisoned => true,
+            _ => false,
+        }
     }
 
     /// Returns whether the associated `Once` has successfully executed a
     /// closure.
     #[inline]
     pub fn done(self) -> bool {
-        matches!(self, OnceState::Done)
+        match self {
+            OnceState::Done => true,
+            _ => false,
+        }
     }
 }
 

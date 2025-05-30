@@ -17,7 +17,6 @@ use crate::schema;
 use crate::sync::record::TabsRecord;
 use crate::DeviceType;
 use crate::{PendingCommand, RemoteCommand, Timestamp};
-use error_support::{error, info, trace, warn};
 use rusqlite::{
     types::{FromSql, FromSqlError, FromSqlResult, ToSql, ToSqlOutput, ValueRef},
     Connection, OpenFlags,
@@ -97,7 +96,7 @@ impl TabsStorage {
         {
             if let Err(err) = conn.close() {
                 // Log the error, but continue with shutdown
-                error!("Failed to close the connection: {:?}", err);
+                log::error!("Failed to close the connection: {:?}", err);
             }
         }
     }
@@ -125,7 +124,7 @@ impl TabsStorage {
             &crate::schema::TabsMigrationLogic,
         ) {
             Ok(conn) => {
-                info!("tabs storage is opening an existing database");
+                log::info!("tabs storage is opening an existing database");
                 self.db_connection = DbConnection::Open(conn);
                 match self.db_connection {
                     DbConnection::Open(ref conn) => Ok(Some(conn)),
@@ -135,7 +134,7 @@ impl TabsStorage {
             Err(open_database::Error::SqlError(rusqlite::Error::SqliteFailure(code, _)))
                 if code.code == rusqlite::ErrorCode::CannotOpen =>
             {
-                info!("tabs storage could not open an existing database and hasn't been asked to create one");
+                log::info!("tabs storage could not open an existing database and hasn't been asked to create one");
                 Ok(None)
             }
             Err(e) => Err(e.into()),
@@ -158,7 +157,7 @@ impl TabsStorage {
             flags,
             &crate::schema::TabsMigrationLogic,
         )?;
-        info!("tabs storage is creating a database connection");
+        log::info!("tabs storage is creating a database connection");
         self.db_connection = DbConnection::Open(conn);
         match self.db_connection {
             DbConnection::Open(ref conn) => Ok(conn),
@@ -169,7 +168,7 @@ impl TabsStorage {
     pub fn update_local_state(&mut self, local_state: Vec<RemoteTab>) {
         let num_tabs = local_state.len();
         self.local_tabs.borrow_mut().replace(local_state);
-        info!("update_local_state has {num_tabs} tab entries");
+        log::info!("update_local_state has {num_tabs} tab entries");
     }
 
     // We try our best to fit as many tabs in a payload as possible, this includes
@@ -203,7 +202,7 @@ impl TabsStorage {
             // Sort the tabs so when we trim tabs it's the oldest tabs
             sanitized_tabs.sort_by(|a, b| b.last_used.cmp(&a.last_used));
             trim_tabs_length(&mut sanitized_tabs, MAX_PAYLOAD_SIZE);
-            info!(
+            log::info!(
                 "prepare_local_tabs_for_upload found {} tabs",
                 sanitized_tabs.len()
             );
@@ -211,7 +210,7 @@ impl TabsStorage {
         }
         // It's a less than ideal outcome if at startup (or any time) we are asked to
         // sync tabs before the app has told us what the tabs are, so make noise.
-        warn!("prepare_local_tabs_for_upload - have no local tabs");
+        log::warn!("prepare_local_tabs_for_upload - have no local tabs");
         None
     }
 
@@ -280,7 +279,7 @@ impl TabsStorage {
                 // so we really should consider just dropping it? (Sadly though, it does seem
                 // possible it's actually a very recently connected client, so we keep it)
                 // We should get rid of this eventually - https://github.com/mozilla/application-services/issues/5199
-                info!(
+                log::info!(
                     "Storing tabs from a client that doesn't appear in the devices list: {}",
                     id,
                 );
@@ -376,7 +375,7 @@ impl TabsStorage {
                             ":ttl": client_ttl_ms,
                         },
                     )?;
-                    info!(
+                    log::info!(
                         "removed {} stale clients (threshold was {})",
                         num_removed,
                         last_sync - client_ttl_ms
@@ -402,7 +401,7 @@ impl TabsStorage {
         for remote_tab in new_remote_tabs {
             let record = &remote_tab.0;
             let last_modified = remote_tab.1;
-            info!(
+            log::info!(
                 "inserting tab for device {}, last modified at {}",
                 record.id,
                 last_modified.as_millis()
@@ -485,8 +484,8 @@ impl TabsStorage {
     ) -> Result<bool> {
         let connection = self.open_or_create()?;
         let RemoteCommand::CloseTab { url } = command;
-        info!("Adding remote command for {device_id} at {time_requested}");
-        trace!("command is {command:?}");
+        log::info!("Adding remote command for {device_id} at {time_requested}");
+        log::trace!("command is {command:?}");
         // tx maybe not needed for single write?
         let tx = connection.unchecked_transaction()?;
         let changes = tx.execute_cached(
@@ -511,7 +510,7 @@ impl TabsStorage {
     ) -> Result<bool> {
         let connection = self.open_or_create()?;
         let RemoteCommand::CloseTab { url } = command;
-        info!("removing remote tab close details: client={device_id}");
+        log::info!("removing remote tab close details: client={device_id}");
         let tx = connection.unchecked_transaction()?;
         let changes = tx.execute_cached(
             "DELETE FROM remote_tab_commands
@@ -548,7 +547,9 @@ impl TabsStorage {
                 let command = match row.get::<_, CommandKind>(1) {
                     Ok(c) => c,
                     Err(e) => {
-                        error!("do_get_pending_commands: ignoring error fetching command: {e:?}");
+                        log::error!(
+                            "do_get_pending_commands: ignoring error fetching command: {e:?}"
+                        );
                         return Ok(None);
                     }
                 };
@@ -576,8 +577,8 @@ impl TabsStorage {
     pub fn set_pending_command_sent(&mut self, command: &PendingCommand) -> Result<bool> {
         let connection = self.open_or_create()?;
         let RemoteCommand::CloseTab { url } = &command.command;
-        info!("setting remote tab sent: client={}", command.device_id);
-        trace!("command: {command:?}");
+        log::info!("setting remote tab sent: client={}", command.device_id);
+        log::trace!("command: {command:?}");
         let tx = connection.unchecked_transaction()?;
         let ts = Timestamp::now();
         let changes = tx.execute_cached(
@@ -656,7 +657,7 @@ impl TabsStorage {
             },
         )?;
 
-        info!(
+        log::info!(
             "deleted {} pending tab closures because they were not in the new tabs",
             conn.changes()
         );
@@ -670,7 +671,7 @@ impl TabsStorage {
             ) AND (SELECT last_modified FROM tabs WHERE guid = device_id) - time_requested >= {REMOTE_COMMAND_TTL_MS}
         ");
         tx.execute_cached(&sql, [])?;
-        info!("deleted {} records because they timed out", conn.changes());
+        log::info!("deleted {} records because they timed out", conn.changes());
 
         // Commit changes and clean up temp
         tx.commit()?;
@@ -779,7 +780,7 @@ mod tests {
 
     #[test]
     fn test_open_if_exists_no_file() {
-        error_support::init_for_tests();
+        env_logger::try_init().ok();
         let dir = tempfile::tempdir().unwrap();
         let db_name = dir.path().join("test_open_for_read_no_file.db");
         let mut storage = TabsStorage::new(db_name.clone());
@@ -793,7 +794,7 @@ mod tests {
 
     #[test]
     fn test_tabs_meta() {
-        error_support::init_for_tests();
+        env_logger::try_init().ok();
         let dir = tempfile::tempdir().unwrap();
         let db_name = dir.path().join("test_tabs_meta.db");
         let mut db = TabsStorage::new(db_name);
@@ -828,7 +829,7 @@ mod tests {
 
     #[test]
     fn test_prepare_local_tabs_for_upload() {
-        error_support::init_for_tests();
+        env_logger::try_init().ok();
         let mut storage = TabsStorage::new_with_mem_path("test_prepare_local_tabs_for_upload");
         assert_eq!(storage.prepare_local_tabs_for_upload(), None);
         storage.update_local_state(vec![
@@ -887,7 +888,7 @@ mod tests {
     }
     #[test]
     fn test_trimming_tab_title() {
-        error_support::init_for_tests();
+        env_logger::try_init().ok();
         let mut storage = TabsStorage::new_with_mem_path("test_prepare_local_tabs_for_upload");
         assert_eq!(storage.prepare_local_tabs_for_upload(), None);
         storage.update_local_state(vec![RemoteTab {
@@ -912,7 +913,7 @@ mod tests {
     }
     #[test]
     fn test_utf8_safe_title_trim() {
-        error_support::init_for_tests();
+        env_logger::try_init().ok();
         let mut storage = TabsStorage::new_with_mem_path("test_prepare_local_tabs_for_upload");
         assert_eq!(storage.prepare_local_tabs_for_upload(), None);
         storage.update_local_state(vec![
@@ -956,7 +957,7 @@ mod tests {
     }
     #[test]
     fn test_trim_tabs_length() {
-        error_support::init_for_tests();
+        env_logger::try_init().ok();
         let mut storage = TabsStorage::new_with_mem_path("test_prepare_local_tabs_for_upload");
         assert_eq!(storage.prepare_local_tabs_for_upload(), None);
         let mut too_many_tabs: Vec<RemoteTab> = Vec::new();
@@ -985,7 +986,7 @@ mod tests {
     }
     #[test]
     fn test_remove_stale_clients() {
-        error_support::init_for_tests();
+        env_logger::try_init().ok();
         let dir = tempfile::tempdir().unwrap();
         let db_name = dir.path().join("test_remove_stale_clients.db");
         let mut storage = TabsStorage::new(db_name);
@@ -1062,7 +1063,7 @@ mod tests {
 
     #[test]
     fn test_add_pending_dupe_simple() {
-        error_support::init_for_tests();
+        env_logger::try_init().ok();
         let mut storage = TabsStorage::new_with_mem_path("test_add_pending_dupe_simple");
         let command = RemoteCommand::close_tab("https://example1.com");
         // returns a bool to say if it's new or not.
@@ -1082,7 +1083,7 @@ mod tests {
 
     #[test]
     fn test_add_pending_remote_close() {
-        error_support::init_for_tests();
+        env_logger::try_init().ok();
         let mut storage = TabsStorage::new_with_mem_path("test_add_pending_remote_close");
         storage.open_or_create().unwrap();
         assert!(storage.open_if_exists().unwrap().is_some());
@@ -1138,7 +1139,7 @@ mod tests {
 
     #[test]
     fn test_remote_tabs_filters_pending_closures() {
-        error_support::init_for_tests();
+        env_logger::try_init().ok();
         let mut storage =
             TabsStorage::new_with_mem_path("test_remote_tabs_filters_pending_closures");
         let records = vec![
@@ -1250,7 +1251,7 @@ mod tests {
 
     #[test]
     fn test_remove_old_pending_closures_timed_removal() {
-        error_support::init_for_tests();
+        env_logger::try_init().ok();
         let mut storage =
             TabsStorage::new_with_mem_path("test_remove_old_pending_closures_timed_removal");
 
@@ -1336,7 +1337,7 @@ mod tests {
     }
     #[test]
     fn test_remove_old_pending_closures_no_tab_removal() {
-        error_support::init_for_tests();
+        env_logger::try_init().ok();
         let mut storage =
             TabsStorage::new_with_mem_path("test_remove_old_pending_closures_no_tab_removal");
         let db = storage.open_if_exists().unwrap().unwrap();
@@ -1422,7 +1423,7 @@ mod tests {
 
     #[test]
     fn test_remove_pending_command() {
-        error_support::init_for_tests();
+        env_logger::try_init().ok();
         let mut storage = TabsStorage::new_with_mem_path("test_remove_pending_command");
         storage.open_or_create().unwrap();
         assert!(storage.open_if_exists().unwrap().is_some());
@@ -1462,7 +1463,7 @@ mod tests {
 
     #[test]
     fn test_sent_command() {
-        error_support::init_for_tests();
+        env_logger::try_init().ok();
         let mut storage = TabsStorage::new_with_mem_path("test_sent_command");
         let command = RemoteCommand::close_tab("https://example1.com");
         storage
@@ -1495,7 +1496,7 @@ mod tests {
 
     #[test]
     fn test_remove_pending_closures_only_affects_target_device() {
-        error_support::init_for_tests();
+        env_logger::try_init().ok();
         let mut storage =
             TabsStorage::new_with_mem_path("test_remove_pending_closures_target_device");
         let now = Timestamp::now();

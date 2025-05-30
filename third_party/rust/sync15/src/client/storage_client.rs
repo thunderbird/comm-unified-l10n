@@ -8,7 +8,7 @@ use super::request::{
 use super::token;
 use crate::bso::{IncomingBso, IncomingEncryptedBso, OutgoingBso, OutgoingEncryptedBso};
 use crate::engine::{CollectionPost, CollectionRequest};
-use crate::error::{self, debug, info, trace, warn, Error, ErrorResponse};
+use crate::error::{self, Error, ErrorResponse};
 use crate::record_types::MetaGlobalRecord;
 use crate::{CollectionName, Guid, ServerTimestamp};
 use serde_json::Value;
@@ -37,7 +37,7 @@ fn parse_seconds(seconds_str: &str) -> Option<u32> {
     let secs = seconds_str.parse::<f64>().ok()?.ceil();
     // Note: u32 doesn't impl TryFrom<f64> :(
     if !secs.is_finite() || secs < 0.0 || secs > f64::from(u32::MAX) {
-        warn!("invalid backoff value: {}", secs);
+        log::warn!("invalid backoff value: {}", secs);
         None
     } else {
         Some(secs as u32)
@@ -77,9 +77,10 @@ impl<T> Sync15ClientResponse<T> {
                 .get(header_names::X_LAST_MODIFIED)
                 .and_then(|s| ServerTimestamp::from_str(s).ok())
                 .ok_or(Error::MissingServerTimestamp)?;
-            info!(
+            log::info!(
                 "Successful request to \"{}\", incoming x-last-modified={:?}",
-                route, last_modified
+                route,
+                last_modified
             );
 
             Sync15ClientResponse::Success {
@@ -90,7 +91,7 @@ impl<T> Sync15ClientResponse<T> {
             }
         } else {
             let status = resp.status;
-            info!("Request \"{}\" was an error (status={})", route, status);
+            log::info!("Request \"{}\" was an error (status={})", route, status);
             match status {
                 404 => Sync15ClientResponse::Error(ErrorResponse::NotFound { route }),
                 401 => Sync15ClientResponse::Error(ErrorResponse::Unauthorized { route }),
@@ -109,7 +110,7 @@ impl<T> Sync15ClientResponse<T> {
                 // This should never happen as callers are expected to have
                 // already special-cased this response, so warn if it does.
                 // (or maybe we could panic?)
-                warn!("Converting success response into an error");
+                log::warn!("Converting success response into an error");
                 ErrorResponse::RequestFailed { status, route }
             }
             Sync15ClientResponse::Error(e) => e,
@@ -224,9 +225,10 @@ impl SetupStorageClient for Sync15StorageClient {
                 route,
                 status,
             } => {
-                debug!(
+                log::debug!(
                     "Got meta global with modified = {}; last-modified = {}",
-                    record.envelope.modified, last_modified
+                    record.envelope.modified,
+                    last_modified
                 );
                 Sync15ClientResponse::Success {
                     record: serde_json::from_str(&record.payload)?,
@@ -330,7 +332,7 @@ impl Sync15StorageClient {
     where
         for<'a> T: serde::de::Deserialize<'a>,
     {
-        trace!(
+        log::trace!(
             "request: {} {} ({:?})",
             req.method,
             req.url.path(),
@@ -408,7 +410,7 @@ impl Sync15StorageClient {
     pub(crate) fn wipe_remote_engine(&self, engine: &str) -> error::Result<()> {
         let s = self.tsc.api_endpoint()? + "/";
         let url = Url::parse(&s)?.join(&format!("storage/{}", engine))?;
-        debug!("Wiping: {:?}", url);
+        log::debug!("Wiping: {:?}", url);
         let req = self.build_request(Method::Delete, url)?;
         match self.exec_request::<Value>(req, false) {
             Ok(Sync15ClientResponse::Error(ErrorResponse::NotFound { .. }))

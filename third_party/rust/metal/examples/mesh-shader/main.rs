@@ -5,6 +5,7 @@ use core_graphics_types::geometry::CGSize;
 
 use metal::*;
 use objc::{rc::autoreleasepool, runtime::YES};
+use std::mem;
 
 use winit::{
     event::{Event, WindowEvent},
@@ -33,7 +34,7 @@ fn main() {
 
     let device = Device::system_default().expect("no device found");
 
-    let mut layer = MetalLayer::new();
+    let layer = MetalLayer::new();
     layer.set_device(&device);
     layer.set_pixel_format(MTLPixelFormat::BGRA8Unorm);
     layer.set_presents_with_transaction(false);
@@ -42,7 +43,7 @@ fn main() {
         if let Ok(RawWindowHandle::AppKit(rw)) = window.window_handle().map(|wh| wh.as_raw()) {
             let view = rw.ns_view.as_ptr() as cocoa_id;
             view.setWantsLayer(YES);
-            view.setLayer(<*mut _>::cast(layer.as_mut()));
+            view.setLayer(mem::transmute(layer.as_ref()));
         }
     }
 
@@ -97,13 +98,13 @@ fn main() {
                             let render_pass_descriptor = RenderPassDescriptor::new();
 
                             prepare_render_pass_descriptor(
-                                render_pass_descriptor,
+                                &render_pass_descriptor,
                                 drawable.texture(),
                             );
 
                             let command_buffer = command_queue.new_command_buffer();
                             let encoder =
-                                command_buffer.new_render_command_encoder(render_pass_descriptor);
+                                command_buffer.new_render_command_encoder(&render_pass_descriptor);
 
                             encoder.set_render_pipeline_state(&pipeline_state);
                             encoder.draw_mesh_threads(
@@ -114,7 +115,7 @@ fn main() {
 
                             encoder.end_encoding();
 
-                            command_buffer.present_drawable(drawable);
+                            command_buffer.present_drawable(&drawable);
                             command_buffer.commit();
                         }
                         _ => (),

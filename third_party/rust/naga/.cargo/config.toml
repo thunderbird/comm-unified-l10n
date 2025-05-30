@@ -1,2 +1,2 @@
 [alias]
-xtask = "run -p naga-xtask --"
+xtask = "run --manifest-path xtask/Cargo.toml --"

@@ -5,7 +5,7 @@
 
 use chrono::Local;
 
-use crate::{db::DEFAULT_SUGGESTION_SCORE, geoname::Geoname};
+use crate::db::DEFAULT_SUGGESTION_SCORE;
 
 /// The template parameter for a timestamp in a "raw" sponsored suggestion URL.
 const TIMESTAMP_TEMPLATE: &str = "%YYYYMMDDHH%";
@@ -15,16 +15,6 @@ const TIMESTAMP_TEMPLATE: &str = "%YYYYMMDDHH%";
 /// Cooked timestamps don't include the leading or trailing `%`, so this is
 /// 2 bytes shorter than [`TIMESTAMP_TEMPLATE`].
 const TIMESTAMP_LENGTH: usize = 10;
-
-/// Subject type for Yelp suggestion.
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Hash, uniffi::Enum)]
-#[repr(u8)]
-pub enum YelpSubjectType {
-    // Service such as sushi, ramen, yoga etc.
-    Service = 0,
-    // Specific business such as the shop name.
-    Business = 1,
-}
 
 /// A suggestion from the database to show in the address bar.
 #[derive(Clone, Debug, PartialEq, uniffi::Enum)]
@@ -76,7 +66,6 @@ pub enum Suggestion {
         score: f64,
         has_location_sign: bool,
         subject_exact_match: bool,
-        subject_type: YelpSubjectType,
         location_param: String,
     },
     Mdn {
@@ -86,7 +75,11 @@ pub enum Suggestion {
         score: f64,
     },
     Weather {
-        city: Option<Geoname>,
+        city: Option<String>,
+        region: Option<String>,
+        country: Option<String>,
+        latitude: Option<f64>,
+        longitude: Option<f64>,
         score: f64,
     },
     Fakespot {

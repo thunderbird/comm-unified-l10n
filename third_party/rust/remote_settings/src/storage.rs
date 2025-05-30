@@ -10,7 +10,6 @@ use camino::Utf8PathBuf;
 use rusqlite::{params, Connection, OpenFlags, OptionalExtension, Transaction};
 use serde_json;
 use sha2::{Digest, Sha256};
-use std::io;
 
 use sql_support::{open_database::open_database_with_flags, ConnExt};
 
@@ -66,13 +65,8 @@ impl Storage {
         let Some(dir) = self.path.parent() else {
             return Ok(());
         };
-        if !std::fs::exists(dir).map_err(Error::CreateDirError)? {
-            match std::fs::create_dir(dir) {
-                Ok(()) => (),
-                // Another thread created the directory, just ignore the error.
-                Err(e) if e.kind() == io::ErrorKind::AlreadyExists => (),
-                Err(e) => return Err(Error::CreateDirError(e)),
-            }
+        if !std::fs::exists(dir)? {
+            std::fs::create_dir(dir)?;
         }
         Ok(())
     }

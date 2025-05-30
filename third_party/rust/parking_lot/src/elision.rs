@@ -5,6 +5,8 @@
 // http://opensource.org/licenses/MIT>, at your option. This file may not be
 // copied, modified, or distributed except according to those terms.
 
+#[cfg(all(feature = "hardware-lock-elision", any(target_arch = "x86", target_arch = "x86_64")))]
+use std::arch::asm;
 use std::sync::atomic::AtomicUsize;
 
 // Extension trait to add lock elision primitives to atomic types
@@ -33,10 +35,7 @@ pub fn have_elision() -> bool {
 
 // This implementation is never actually called because it is guarded by
 // have_elision().
-#[cfg(not(all(
-    feature = "hardware-lock-elision",
-    any(target_arch = "x86", target_arch = "x86_64")
-)))]
+#[cfg(not(all(feature = "hardware-lock-elision", any(target_arch = "x86", target_arch = "x86_64"))))]
 impl AtomicElisionExt for AtomicUsize {
     type IntType = usize;
 
@@ -51,10 +50,7 @@ impl AtomicElisionExt for AtomicUsize {
     }
 }
 
-#[cfg(all(
-    feature = "hardware-lock-elision",
-    any(target_arch = "x86", target_arch = "x86_64")
-))]
+#[cfg(all(feature = "hardware-lock-elision", any(target_arch = "x86", target_arch = "x86_64")))]
 impl AtomicElisionExt for AtomicUsize {
     type IntType = usize;
 

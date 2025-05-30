@@ -1030,7 +1030,6 @@ impl RenderCommandEncoderRef {
         }
     }
 
-    #[allow(clippy::too_many_arguments)]
     pub fn draw_indexed_primitives_instanced_base_instance(
         &self,
         primitive_type: MTLPrimitiveType,
@@ -1340,7 +1339,6 @@ impl BlitCommandEncoderRef {
         }
     }
 
-    #[allow(clippy::too_many_arguments)]
     pub fn copy_from_texture(
         &self,
         source_texture: &TextureRef,
@@ -1368,7 +1366,6 @@ impl BlitCommandEncoderRef {
         }
     }
 
-    #[allow(clippy::too_many_arguments)]
     pub fn copy_from_buffer_to_texture(
         &self,
         source_buffer: &BufferRef,
@@ -1399,7 +1396,6 @@ impl BlitCommandEncoderRef {
     }
 
     /// See <https://developer.apple.com/documentation/metal/mtlblitcommandencoder/1400756-copy>
-    #[allow(clippy::too_many_arguments)]
     pub fn copy_from_texture_to_buffer(
         &self,
         source_texture: &TextureRef,

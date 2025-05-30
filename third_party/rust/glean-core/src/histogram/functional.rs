@@ -4,7 +4,6 @@
 
 use std::collections::HashMap;
 
-use malloc_size_of_derive::MallocSizeOf;
 use serde::{Deserialize, Serialize};
 
 use super::{Bucketing, Histogram};
@@ -19,7 +18,7 @@ use crate::util::floating_point_context::FloatingPointContext;
 /// i = ⌊n log<sub>base</sub>(𝑥)⌋
 ///
 /// In other words, there are n buckets for each power of `base` magnitude.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, MallocSizeOf)]
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 pub struct Functional {
     exponent: f64,
 }

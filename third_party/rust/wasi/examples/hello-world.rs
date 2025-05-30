@@ -1,7 +1,4 @@
-use std::io::Write as _;
-
 fn main() {
-    let mut stdout = wasi::cli::stdout::get_stdout();
-    stdout.write_all(b"Hello, world!\n").unwrap();
-    stdout.flush().unwrap();
+    let stdout = wasi::cli::stdout::get_stdout();
+    stdout.blocking_write_and_flush(b"Hello, world!\n").unwrap();
 }

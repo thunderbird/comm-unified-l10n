@@ -648,15 +648,19 @@ impl super::Validator {
                     return Err(ExpressionError::InvalidImageArrayIndex);
                 }
                 if let Some(expr) = array_index {
-                    if !matches!(resolver[expr], Ti::Scalar(Sc::I32 | Sc::U32)) {
-                        return Err(ExpressionError::InvalidImageArrayIndexType(expr));
+                    match resolver[expr] {
+                        Ti::Scalar(Sc {
+                            kind: Sk::Sint | Sk::Uint,
+                            width: _,
+                        }) => {}
+                        _ => return Err(ExpressionError::InvalidImageArrayIndexType(expr)),
                     }
                 }
 
                 match (sample, class.is_multisampled()) {
                     (None, false) => {}
                     (Some(sample), true) => {
-                        if !matches!(resolver[sample], Ti::Scalar(Sc::I32 | Sc::U32)) {
+                        if resolver[sample].scalar_kind() != Some(Sk::Sint) {
                             return Err(ExpressionError::InvalidImageOtherIndexType(sample));
                         }
                     }

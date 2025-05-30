@@ -4,7 +4,6 @@
 
 use std::collections::HashMap;
 
-use malloc_size_of_derive::MallocSizeOf;
 use serde::{Deserialize, Serialize};
 
 /// Represents a list of metrics and an associated boolean property
@@ -18,7 +17,7 @@ use serde::{Deserialize, Serialize};
 ///     "category.metric_name": true
 /// }
 /// ```
-#[derive(Serialize, Deserialize, Debug, Clone, Default, MallocSizeOf)]
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
 pub struct RemoteSettingsConfig {
     /// This is a `HashMap` consisting of base_identifiers as keys
     /// and bool values representing an override for the `disabled`

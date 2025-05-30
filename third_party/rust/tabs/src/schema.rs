@@ -78,7 +78,7 @@ impl MigrationLogic for TabsMigrationLogic {
     }
 
     fn init(&self, db: &Transaction<'_>) -> MigrationResult<()> {
-        error_support::debug!("Creating schemas");
+        log::debug!("Creating schemas");
         init_schema(db)?;
         Ok(())
     }

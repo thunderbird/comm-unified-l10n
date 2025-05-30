@@ -902,7 +902,6 @@ enum Command {
     BindAttachment {
         attachment: u32,
         view: TextureView,
-        depth_slice: Option<u32>,
     },
     ResolveAttachment {
         attachment: u32,

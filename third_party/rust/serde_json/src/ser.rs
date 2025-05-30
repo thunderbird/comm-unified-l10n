@@ -2,9 +2,7 @@
 
 use crate::error::{Error, ErrorCode, Result};
 use crate::io;
-use alloc::string::String;
-#[cfg(feature = "raw_value")]
-use alloc::string::ToString;
+use alloc::string::{String, ToString};
 use alloc::vec::Vec;
 use core::fmt::{self, Display};
 use core::num::FpCategory;
@@ -1059,7 +1057,7 @@ where
     }
 
     fn serialize_char(self, value: char) -> Result<()> {
-        self.ser.serialize_str(value.encode_utf8(&mut [0u8; 4]))
+        self.ser.serialize_str(&value.to_string())
     }
 
     fn serialize_bytes(self, _value: &[u8]) -> Result<()> {
@@ -1688,20 +1686,6 @@ pub trait Formatter {
     }
 
     /// Writes a floating point value like `-31.26e+12` to the specified writer.
-    ///
-    /// # Special cases
-    ///
-    /// This function **does not** check for NaN or infinity. If the input
-    /// number is not a finite float, the printed representation will be some
-    /// correctly formatted but unspecified numerical value.
-    ///
-    /// Please check [`is_finite`] yourself before calling this function, or
-    /// check [`is_nan`] and [`is_infinite`] and handle those cases yourself
-    /// with a different `Formatter` method.
-    ///
-    /// [`is_finite`]: f32::is_finite
-    /// [`is_nan`]: f32::is_nan
-    /// [`is_infinite`]: f32::is_infinite
     #[inline]
     fn write_f32<W>(&mut self, writer: &mut W, value: f32) -> io::Result<()>
     where
@@ -1713,20 +1697,6 @@ pub trait Formatter {
     }
 
     /// Writes a floating point value like `-31.26e+12` to the specified writer.
-    ///
-    /// # Special cases
-    ///
-    /// This function **does not** check for NaN or infinity. If the input
-    /// number is not a finite float, the printed representation will be some
-    /// correctly formatted but unspecified numerical value.
-    ///
-    /// Please check [`is_finite`] yourself before calling this function, or
-    /// check [`is_nan`] and [`is_infinite`] and handle those cases yourself
-    /// with a different `Formatter` method.
-    ///
-    /// [`is_finite`]: f64::is_finite
-    /// [`is_nan`]: f64::is_nan
-    /// [`is_infinite`]: f64::is_infinite
     #[inline]
     fn write_f64<W>(&mut self, writer: &mut W, value: f64) -> io::Result<()>
     where

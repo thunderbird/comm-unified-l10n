@@ -10,7 +10,7 @@ use super::status::{ServiceStatus, SyncResult};
 use super::storage_client::{BackoffListener, Sync15StorageClient, Sync15StorageClientInit};
 use crate::clients_engine::{self, CommandProcessor, CLIENTS_TTL_REFRESH};
 use crate::engine::{EngineSyncAssociation, SyncEngine};
-use crate::error::{debug, info, trace, warn, Error};
+use crate::error::Error;
 use crate::telemetry;
 use crate::KeyBundle;
 use interrupt_support::Interruptee;
@@ -125,7 +125,7 @@ pub fn sync_multiple_with_command_processor(
     interruptee: &dyn Interruptee,
     req_info: Option<SyncRequestInfo<'_>>,
 ) -> SyncResult {
-    info!("Syncing {} engines", engines.len());
+    log::info!("Syncing {} engines", engines.len());
     let mut sync_result = SyncResult {
         service_status: ServiceStatus::OtherError,
         result: Ok(()),
@@ -152,15 +152,16 @@ pub fn sync_multiple_with_command_processor(
     };
     match driver.sync() {
         Ok(()) => {
-            debug!(
+            log::debug!(
                 "sync was successful, final status={:?}",
                 sync_result.service_status
             );
         }
         Err(e) => {
-            warn!(
+            log::warn!(
                 "sync failed: {}, final status={:?}",
-                e, sync_result.service_status,
+                e,
+                sync_result.service_status,
             );
             sync_result.result = Err(e);
         }
@@ -169,7 +170,7 @@ pub fn sync_multiple_with_command_processor(
     // ignoring it during the sync
     sync_result.set_sync_after(backoff.get_required_wait(false).unwrap_or_default());
     mem_cached_state.next_sync_after = sync_result.next_sync_after;
-    trace!("Sync result: {:?}", sync_result);
+    log::trace!("Sync result: {:?}", sync_result);
     sync_result
 }
 
@@ -201,17 +202,17 @@ struct SyncMultipleDriver<'info, 'res, 'pgs, 'mcs> {
 impl SyncMultipleDriver<'_, '_, '_, '_> {
     /// The actual worker for sync_multiple.
     fn sync(mut self) -> result::Result<(), Error> {
-        info!("Loading/initializing persisted state");
+        log::info!("Loading/initializing persisted state");
         let mut pgs = self.prepare_persisted_state();
 
-        info!("Preparing client info");
+        log::info!("Preparing client info");
         let client_info = self.prepare_client_info()?;
 
         if self.was_interrupted() {
             return Ok(());
         }
 
-        info!("Entering sync state machine");
+        log::info!("Entering sync state machine");
         // Advance the state machine to the point where it can perform a full
         // sync. This may involve uploading meta/global, crypto/keys etc.
         let mut global_state = self.run_state_machine(&client_info, &mut pgs)?;
@@ -225,7 +226,7 @@ impl SyncMultipleDriver<'_, '_, '_, '_> {
         self.result.service_status = ServiceStatus::Ok;
 
         let clients_engine = if let Some(command_processor) = self.command_processor {
-            info!("Synchronizing clients engine");
+            log::info!("Synchronizing clients engine");
             let should_refresh = self.mem_cached_state.should_refresh_client();
             let mut engine = clients_engine::Engine::new(command_processor, self.interruptee);
             if let Err(e) = engine.sync(
@@ -257,16 +258,16 @@ impl SyncMultipleDriver<'_, '_, '_, '_> {
             None
         };
 
-        info!("Synchronizing engines");
+        log::info!("Synchronizing engines");
 
         let telem_sync =
             self.sync_engines(&client_info, &mut global_state, clients_engine.as_ref());
         self.result.telemetry.sync(telem_sync);
 
-        info!("Finished syncing engines.");
+        log::info!("Finished syncing engines.");
 
         if !self.saw_auth_error {
-            trace!("Updating persisted global state");
+            log::trace!("Updating persisted global state");
             self.mem_cached_state.last_client_info = Some(client_info);
             self.mem_cached_state.last_global_state = Some(global_state);
         }
@@ -276,7 +277,7 @@ impl SyncMultipleDriver<'_, '_, '_, '_> {
 
     fn was_interrupted(&mut self) -> bool {
         if self.interruptee.was_interrupted() {
-            info!("Interrupted, bailing out");
+            log::info!("Interrupted, bailing out");
             self.result.service_status = ServiceStatus::Interrupted;
             true
         } else {
@@ -298,14 +299,14 @@ impl SyncMultipleDriver<'_, '_, '_, '_> {
                 .get_required_wait(self.ignore_soft_backoff)
                 .is_some()
             {
-                warn!("Got backoff, bailing out of sync early");
+                log::warn!("Got backoff, bailing out of sync early");
                 break;
             }
             if global_state.global.declined.iter().any(|e| e == &*name) {
-                info!("The {} engine is declined. Skipping", name);
+                log::info!("The {} engine is declined. Skipping", name);
                 continue;
             }
-            info!("Syncing {} engine!", name);
+            log::info!("Syncing {} engine!", name);
 
             let mut telem_engine = telemetry::Engine::new(&*name);
             let result = super::sync::synchronize_with_clients_engine(
@@ -320,9 +321,9 @@ impl SyncMultipleDriver<'_, '_, '_, '_> {
             );
 
             match result {
-                Ok(()) => info!("Sync of {} was successful!", name),
+                Ok(()) => log::info!("Sync of {} was successful!", name),
                 Err(ref e) => {
-                    warn!("Sync of {} failed! {:?}", name, e);
+                    log::warn!("Sync of {} failed! {:?}", name, e);
                     let this_status = ServiceStatus::from_err(e);
                     // The only error which forces us to discard our state is an
                     // auth error.
@@ -363,7 +364,7 @@ impl SyncMultipleDriver<'_, '_, '_, '_> {
             self.interruptee,
         );
 
-        info!("Advancing state machine to ready (full)");
+        log::info!("Advancing state machine to ready (full)");
         let res = state_machine.run_to_ready(last_state);
         // Grab this now even though we don't need it until later to avoid a
         // lifetime issue
@@ -375,7 +376,7 @@ impl SyncMultipleDriver<'_, '_, '_, '_> {
         // Now that we've gone through the state machine, engine the declined list in
         // the sync_result
         self.result.declined = Some(pgs.get_declined().to_vec());
-        debug!(
+        log::debug!(
             "Declined engines list after state machine set to: {:?}",
             self.result.declined,
         );
@@ -405,14 +406,14 @@ impl SyncMultipleDriver<'_, '_, '_, '_> {
             return Ok(());
         }
         for e in &changes.remote_wipes {
-            info!("Engine {:?} just got disabled locally, wiping server", e);
+            log::info!("Engine {:?} just got disabled locally, wiping server", e);
             client.wipe_remote_engine(e)?;
         }
 
         for s in self.engines {
             let name = s.collection_name();
             if changes.local_resets.contains(&*name) {
-                info!("Resetting engine {}, as it was declined remotely", name);
+                log::info!("Resetting engine {}, as it was declined remotely", name);
                 s.reset(&EngineSyncAssociation::Disconnected)?;
             }
         }
@@ -428,17 +429,17 @@ impl SyncMultipleDriver<'_, '_, '_, '_> {
                 // reuse the client or the memory cached state. We do keep the disk
                 // state as currently that's only the declined list.
                 if client_info.client_init != *self.storage_init {
-                    info!("Discarding all state as the account might have changed");
+                    log::info!("Discarding all state as the account might have changed");
                     *self.mem_cached_state = MemoryCachedState::default();
                     ClientInfo::new(self.storage_init)?
                 } else {
-                    debug!("Reusing memory-cached client_info");
+                    log::debug!("Reusing memory-cached client_info");
                     // we can reuse it (which should be the common path)
                     client_info
                 }
             }
             None => {
-                debug!("mem_cached_state was stale or missing, need setup");
+                log::debug!("mem_cached_state was stale or missing, need setup");
                 // We almost certainly have no other state here, but to be safe, we
                 // throw away any memory state we do have.
                 self.mem_cached_state.clear_sensitive_info();
@@ -459,7 +460,7 @@ impl SyncMultipleDriver<'_, '_, '_, '_> {
             Some(persisted_string) if !persisted_string.is_empty() => {
                 match serde_json::from_str::<PersistedGlobalState>(persisted_string) {
                     Ok(state) => {
-                        trace!("Read persisted state: {:?}", state);
+                        log::trace!("Read persisted state: {:?}", state);
                         // Note that we don't set `result.declined` from the
                         // data in state - it remains None, which explicitly
                         // indicates "we don't have updated info".
@@ -478,7 +479,7 @@ impl SyncMultipleDriver<'_, '_, '_, '_> {
                 }
             }
             _ => {
-                info!(
+                log::info!(
                     "The application didn't give us persisted state - \
                      this is only expected on the very first run for a given user."
                 );

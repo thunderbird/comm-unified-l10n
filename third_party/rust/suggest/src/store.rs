@@ -9,7 +9,7 @@ use std::{
     sync::Arc,
 };
 
-use error_support::{breadcrumb, handle_error, trace};
+use error_support::{breadcrumb, handle_error};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use remote_settings::{self, RemoteSettingsError, RemoteSettingsServer, RemoteSettingsService};
@@ -20,7 +20,7 @@ use crate::{
     config::{SuggestGlobalConfig, SuggestProviderConfig},
     db::{ConnectionType, IngestedRecord, Sqlite3Extension, SuggestDao, SuggestDb},
     error::Error,
-    geoname::{Geoname, GeonameAlternates, GeonameMatch},
+    geoname::{Geoname, GeonameMatch, GeonameType},
     metrics::{MetricsContext, SuggestIngestionMetrics, SuggestQueryMetrics},
     provider::{SuggestionProvider, SuggestionProviderConstraints, DEFAULT_INGEST_PROVIDERS},
     rs::{
@@ -306,26 +306,36 @@ impl SuggestStore {
     /// Fetches geonames stored in the database. A geoname represents a
     /// geographic place.
     ///
-    /// See `fetch_geonames` in `geoname.rs` for documentation.
+    /// `query` is a string that will be matched directly against geoname names.
+    /// It is not a query string in the usual Suggest sense. `match_name_prefix`
+    /// determines whether prefix matching is performed on names excluding
+    /// abbreviations and airport codes. When `true`, names that start with
+    /// `query` will match. When false, names that equal `query` will match.
+    ///
+    /// `geoname_type` restricts returned geonames to a [`GeonameType`].
+    ///
+    /// `filter` restricts returned geonames to certain cities or regions.
+    /// Cities can be restricted to regions by including the regions in
+    /// `filter`, and regions can be restricted to those containing certain
+    /// cities by including the cities in `filter`. This is especially useful
+    /// since city and region names are not unique. `filter` is disjunctive: If
+    /// any item in `filter` matches a geoname, the geoname will be filtered in.
+    ///
+    /// The query can match a single geoname in more than one way. For example,
+    /// it can match both a full name and an abbreviation. The returned vec of
+    /// [`GeonameMatch`] values will include all matches for a geoname, one
+    /// match per `match_type` per geoname. In other words, a matched geoname
+    /// can map to more than one `GeonameMatch`.
     #[handle_error(Error)]
     pub fn fetch_geonames(
         &self,
         query: &str,
         match_name_prefix: bool,
+        geoname_type: Option<GeonameType>,
         filter: Option<Vec<Geoname>>,
     ) -> SuggestApiResult<Vec<GeonameMatch>> {
-        self.inner.fetch_geonames(query, match_name_prefix, filter)
-    }
-
-    /// Fetches a geoname's names stored in the database.
-    ///
-    /// See `fetch_geoname_alternates` in `geoname.rs` for documentation.
-    #[handle_error(Error)]
-    pub fn fetch_geoname_alternates(
-        &self,
-        geoname: &Geoname,
-    ) -> SuggestApiResult<GeonameAlternates> {
-        self.inner.fetch_geoname_alternates(geoname)
+        self.inner
+            .fetch_geonames(query, match_name_prefix, geoname_type, filter)
     }
 }
 
@@ -559,21 +569,17 @@ impl<S> SuggestStoreInner<S> {
         &self,
         query: &str,
         match_name_prefix: bool,
+        geoname_type: Option<GeonameType>,
         filter: Option<Vec<Geoname>>,
     ) -> Result<Vec<GeonameMatch>> {
         self.dbs()?.reader.read(|dao| {
             dao.fetch_geonames(
                 query,
                 match_name_prefix,
+                geoname_type,
                 filter.as_ref().map(|f| f.iter().collect()),
             )
         })
-    }
-
-    pub fn fetch_geoname_alternates(&self, geoname: &Geoname) -> Result<GeonameAlternates> {
-        self.dbs()?
-            .reader
-            .read(|dao| dao.fetch_geoname_alternates(geoname))
     }
 }
 
@@ -658,7 +664,7 @@ where
         context: &mut MetricsContext,
     ) -> Result<()> {
         for record in &changes.new {
-            trace!("Ingesting record ID: {}", record.id.as_str());
+            log::trace!("Ingesting record ID: {}", record.id.as_str());
             self.process_record(dao, record, constraints, context)?;
         }
         for record in &changes.updated {
@@ -666,20 +672,20 @@ where
             // Suggestions in particular don't have a stable identifier, and
             // determining which suggestions in the record actually changed is
             // more complicated than dropping and re-ingesting all of them.
-            trace!("Reingesting updated record ID: {}", record.id.as_str());
+            log::trace!("Reingesting updated record ID: {}", record.id.as_str());
             dao.delete_record_data(&record.id)?;
             self.process_record(dao, record, constraints, context)?;
         }
         for record in &changes.unchanged {
             if self.should_reprocess_record(dao, record, constraints)? {
-                trace!("Reingesting unchanged record ID: {}", record.id.as_str());
+                log::trace!("Reingesting unchanged record ID: {}", record.id.as_str());
                 self.process_record(dao, record, constraints, context)?;
             } else {
-                trace!("Skipping unchanged record ID: {}", record.id.as_str());
+                log::trace!("Skipping unchanged record ID: {}", record.id.as_str());
             }
         }
         for record in &changes.deleted {
-            trace!("Deleting record ID: {:?}", record.id);
+            log::trace!("Deleting record ID: {:?}", record.id);
             dao.delete_record_data(&record.id)?;
         }
         dao.update_ingested_records(
@@ -770,10 +776,7 @@ where
                     )?;
                 }
             }
-            SuggestRecord::Geonames => self.process_geonames_record(dao, record, context)?,
-            SuggestRecord::GeonamesAlternates => {
-                self.process_geonames_alternates_record(dao, record, context)?
-            }
+            SuggestRecord::Geonames => self.process_geoname_record(dao, record, context)?,
         }
         Ok(())
     }
@@ -972,7 +975,6 @@ impl SuggestStoreDbs {
 #[cfg(test)]
 pub(crate) mod tests {
     use super::*;
-    use crate::suggestion::YelpSubjectType;
 
     use std::sync::atomic::{AtomicUsize, Ordering};
 
@@ -1059,10 +1061,11 @@ pub(crate) mod tests {
             &self,
             query: &str,
             match_name_prefix: bool,
+            geoname_type: Option<GeonameType>,
             filter: Option<Vec<Geoname>>,
         ) -> Vec<GeonameMatch> {
             self.inner
-                .fetch_geonames(query, match_name_prefix, filter)
+                .fetch_geonames(query, match_name_prefix, geoname_type, filter)
                 .expect("Error fetching geonames")
         }
     }
@@ -2243,25 +2246,6 @@ pub(crate) mod tests {
                 "https://www.yelp.com/search?find_desc=ramen&find_loc=I+Tokyo"
             )
             .has_location_sign(false)],
-        );
-        // Business subject.
-        assert_eq!(
-            store.fetch_suggestions(SuggestionQuery::yelp("the shop tokyo")),
-            vec![ramen_suggestion(
-                "the shop tokyo",
-                "https://www.yelp.com/search?find_desc=the+shop&find_loc=tokyo"
-            )
-            .has_location_sign(false)
-            .subject_type(YelpSubjectType::Business)]
-        );
-        assert_eq!(
-            store.fetch_suggestions(SuggestionQuery::yelp("the sho")),
-            vec![
-                ramen_suggestion("the shop", "https://www.yelp.com/search?find_desc=the+shop")
-                    .has_location_sign(false)
-                    .subject_exact_match(false)
-                    .subject_type(YelpSubjectType::Business)
-            ]
         );
 
         Ok(())

@@ -9,7 +9,7 @@
 
 mod kotlin;
 pub use kotlin::KotlinBindingGenerator;
-pub mod python;
+mod python;
 pub use python::PythonBindingGenerator;
 mod ruby;
 pub use ruby::RubyBindingGenerator;

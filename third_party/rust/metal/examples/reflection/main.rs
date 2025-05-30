@@ -8,7 +8,7 @@
 use metal::*;
 use objc::rc::autoreleasepool;
 
-const PROGRAM: &str = r"
+const PROGRAM: &'static str = r"
     #include <metal_stdlib>
 
     using namespace metal;

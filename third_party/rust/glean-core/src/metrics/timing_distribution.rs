@@ -8,8 +8,6 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
-use malloc_size_of_derive::MallocSizeOf;
-
 use crate::common_metric_data::CommonMetricDataInternal;
 use crate::error_recording::{record_error, test_get_num_recorded_errors, ErrorType};
 use crate::histogram::{Functional, Histogram};
@@ -38,7 +36,7 @@ const MAX_SAMPLE_TIME: u64 = 1000 * 1000 * 1000 * 60 * 10;
 ///
 /// Its internals are considered private,
 /// but due to UniFFI's behavior we expose its field for now.
-#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, MallocSizeOf)]
+#[derive(Copy, Clone, Debug, Eq, PartialEq, Hash)]
 pub struct TimerId {
     /// This timer's id.
     pub id: u64,
@@ -65,17 +63,6 @@ pub struct TimingDistributionMetric {
     time_unit: TimeUnit,
     next_id: Arc<AtomicUsize>,
     start_times: Arc<Mutex<HashMap<TimerId, u64>>>,
-}
-
-impl ::malloc_size_of::MallocSizeOf for TimingDistributionMetric {
-    fn size_of(&self, ops: &mut malloc_size_of::MallocSizeOfOps) -> usize {
-        // Note: This is behind an `Arc`.
-        // `size_of` should only be called on the main thread to avoid double-counting.
-        self.meta.size_of(ops)
-            + self.time_unit.size_of(ops)
-            + self.next_id.size_of(ops)
-            + self.start_times.lock().unwrap().size_of(ops)
-    }
 }
 
 /// Create a snapshot of the histogram with a time unit.

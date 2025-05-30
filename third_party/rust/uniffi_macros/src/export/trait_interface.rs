@@ -45,7 +45,7 @@ pub(super) fn gen_trait_scaffolding(
 
     let helper_fn_tokens = quote! {
         #[doc(hidden)]
-        #[unsafe(no_mangle)]
+        #[no_mangle]
         /// Clone a pointer to this object type
         ///
         /// Safety: Only pass pointers returned by a UniFFI call.  Do not pass pointers that were
@@ -67,7 +67,7 @@ pub(super) fn gen_trait_scaffolding(
         }
 
         #[doc(hidden)]
-        #[unsafe(no_mangle)]
+        #[no_mangle]
         /// Free a pointer to this object type
         ///
         /// Safety: Only pass pointers returned by a UniFFI call.  Do not pass pointers that were

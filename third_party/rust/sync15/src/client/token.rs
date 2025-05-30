@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::error::{self, debug, trace, warn, Error as ErrorKind, Result};
+use crate::error::{self, Error as ErrorKind, Result};
 use crate::ServerTimestamp;
 use rc_crypto::hawk;
 use serde_derive::*;
@@ -99,7 +99,7 @@ impl TokenServerFetcher {
 
 impl TokenFetcher for TokenServerFetcher {
     fn fetch_token(&self) -> Result<TokenFetchResult> {
-        debug!("Fetching token from {}", self.server_url);
+        log::debug!("Fetching token from {}", self.server_url);
         let resp = Request::get(self.server_url.clone())
             .header(
                 header_names::AUTHORIZATION,
@@ -109,9 +109,9 @@ impl TokenFetcher for TokenServerFetcher {
             .send()?;
 
         if !resp.is_success() {
-            warn!("Non-success status when fetching token: {}", resp.status);
+            log::warn!("Non-success status when fetching token: {}", resp.status);
             // TODO: the body should be JSON and contain a status parameter we might need?
-            trace!("  Response body {}", resp.text());
+            log::trace!("  Response body {}", resp.text());
             // XXX - shouldn't we "chain" these errors - ie, a BackoffError could
             // have a TokenserverHttpError as its cause?
             if let Some(res) = resp.headers.get_as::<f64, _>(header_names::RETRY_AFTER) {
@@ -288,9 +288,10 @@ impl<TF: TokenFetcher> TokenProviderImpl<TF> {
                         if prev == tc.token.api_endpoint {
                             TokenState::Token(tc)
                         } else {
-                            warn!(
+                            log::warn!(
                                 "api_endpoint changed from {} to {}",
-                                prev, tc.token.api_endpoint
+                                prev,
+                                tc.token.api_endpoint
                             );
                             TokenState::NodeReassigned
                         }
@@ -330,7 +331,7 @@ impl<TF: TokenFetcher> TokenProviderImpl<TF> {
             }
             TokenState::Backoff(ref until, ref existing_endpoint) => {
                 if let Ok(remaining) = until.duration_since(self.fetcher.now()) {
-                    debug!("enforcing existing backoff - {:?} remains", remaining);
+                    log::debug!("enforcing existing backoff - {:?} remains", remaining);
                     None
                 } else {
                     // backoff period is over

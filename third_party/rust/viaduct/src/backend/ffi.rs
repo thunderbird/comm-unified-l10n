@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 use crate::{backend::Backend, settings::GLOBAL_SETTINGS};
-use crate::{error, msg_types, warn, Error};
+use crate::{msg_types, Error};
 use ffi_support::{ByteBuffer, FfiStr};
 
 ffi_support::implement_into_ffi_by_protobuf!(msg_types::Request);
@@ -29,7 +29,7 @@ impl From<crate::Request> for msg_types::Request {
 macro_rules! backend_error {
     ($($args:tt)*) => {{
         let msg = format!($($args)*);
-        error!("{}", msg);
+        log::error!("{}", msg);
         Error::BackendError(msg)
     }};
 }
@@ -77,7 +77,7 @@ impl Backend for FfiBackend {
                 Ok(name) => name,
                 Err(e) => {
                     // Ignore headers with invalid names, since nobody can look for them anyway.
-                    warn!("Server sent back invalid header name: '{}'", e);
+                    log::warn!("Server sent back invalid header name: '{}'", e);
                     continue;
                 }
             };
@@ -119,7 +119,6 @@ type FetchCallback = unsafe extern "C" fn(ByteBuffer) -> ByteBuffer;
 /// Module that manages get/set of the global fetch callback pointer.
 mod callback_holder {
     use super::FetchCallback;
-    use crate::error;
     use std::sync::atomic::{AtomicUsize, Ordering};
 
     /// Note: We only assign to this once.
@@ -159,7 +158,7 @@ mod callback_holder {
                 // it sets this only once. Note that this is actually going to be
                 // before logging is initialized in practice, so there's not a lot
                 // we can actually do here.
-                error!("Bug: Initialized CALLBACK_PTR multiple times");
+                log::error!("Bug: Initialized CALLBACK_PTR multiple times");
                 false
             }
         }
@@ -180,7 +179,9 @@ pub extern "C" fn viaduct_alloc_bytebuffer(sz: i32) -> ByteBuffer {
 #[no_mangle]
 pub extern "C" fn viaduct_log_error(s: FfiStr<'_>) {
     let mut error = ffi_support::ExternError::default();
-    ffi_support::call_with_output(&mut error, || error!("Viaduct Ffi Error: {}", s.as_str()));
+    ffi_support::call_with_output(&mut error, || {
+        log::error!("Viaduct Ffi Error: {}", s.as_str())
+    });
     error.consume_and_log_if_error();
 }
 

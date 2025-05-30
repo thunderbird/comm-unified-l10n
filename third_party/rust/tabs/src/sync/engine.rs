@@ -7,8 +7,6 @@ use crate::storage::{ClientRemoteTabs, RemoteTab, TABS_CLIENT_TTL};
 use crate::store::TabsStore;
 use crate::sync::record::{TabsRecord, TabsRecordTab};
 use anyhow::Result;
-use error_support::{debug, info, trace, warn};
-
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex, RwLock, Weak};
 use sync15::bso::{IncomingBso, OutgoingBso, OutgoingEnvelope};
@@ -126,7 +124,7 @@ impl TabsEngine {
 
     pub fn set_last_sync(&self, last_sync: ServerTimestamp) -> Result<()> {
         let mut storage = self.store.storage.lock().unwrap();
-        debug!("Updating last sync to {}", last_sync);
+        log::debug!("Updating last sync to {}", last_sync);
         let last_sync_millis = last_sync.as_millis();
         Ok(storage.put_meta(schema::LAST_SYNC_META_KEY, &last_sync_millis)?)
     }
@@ -177,7 +175,7 @@ impl SyncEngine for TabsEngine {
                 Some(record) => record,
                 None => {
                     // Invalid record or a "tombstone" which tabs don't have.
-                    warn!("Ignoring incoming invalid tab");
+                    log::warn!("Ignoring incoming invalid tab");
                     incoming_telemetry.failed(1);
                     continue;
                 }
@@ -233,7 +231,7 @@ impl SyncEngine for TabsEngine {
                 last_modified: 0, // ignored for outgoing records.
                 remote_tabs: local_tabs.to_vec(),
             };
-            trace!("outgoing {:?}", local_record);
+            log::trace!("outgoing {:?}", local_record);
             let envelope = OutgoingEnvelope {
                 id: local_id.as_str().into(),
                 ttl: Some(TABS_CLIENT_TTL),
@@ -250,7 +248,7 @@ impl SyncEngine for TabsEngine {
     }
 
     fn set_uploaded(&self, new_timestamp: ServerTimestamp, ids: Vec<Guid>) -> Result<()> {
-        info!("sync uploaded {} records", ids.len());
+        log::info!("sync uploaded {} records", ids.len());
         self.set_last_sync(new_timestamp)?;
         Ok(())
     }
@@ -332,7 +330,7 @@ pub mod test {
 
     #[test]
     fn test_incoming_tabs() {
-        error_support::init_for_tests();
+        env_logger::try_init().ok();
 
         let engine = TabsEngine::new(Arc::new(TabsStore::new_with_mem_path("test-incoming")));
 
@@ -415,7 +413,7 @@ pub mod test {
 
     #[test]
     fn test_no_incoming_doesnt_write() {
-        error_support::init_for_tests();
+        env_logger::try_init().ok();
 
         let engine = TabsEngine::new(Arc::new(TabsStore::new_with_mem_path(
             "test_no_incoming_doesnt_write",
@@ -489,7 +487,7 @@ pub mod test {
 
     #[test]
     fn test_apply_timestamp() {
-        error_support::init_for_tests();
+        env_logger::try_init().ok();
 
         let engine = TabsEngine::new(Arc::new(TabsStore::new_with_mem_path(
             "test-apply-timestamp",

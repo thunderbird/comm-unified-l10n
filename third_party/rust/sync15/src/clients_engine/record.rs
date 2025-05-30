@@ -2,7 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-use crate::error::error;
 use serde_derive::*;
 
 use super::Command;
@@ -99,12 +98,12 @@ impl CommandRecord {
             match &self.args[0] {
                 Some(name) => Some(name.into()),
                 None => {
-                    error!("Incoming '{cmd_name}' command has null argument");
+                    log::error!("Incoming '{cmd_name}' command has null argument");
                     None
                 }
             }
         } else {
-            error!(
+            log::error!(
                 "Incoming '{cmd_name}' command has wrong number of arguments ({})",
                 self.args.len()
             );
@@ -122,7 +121,7 @@ impl CommandRecord {
                 if self.args.is_empty() {
                     Some(Command::ResetAll)
                 } else {
-                    error!("Invalid arguments for 'resetAll' command");
+                    log::error!("Invalid arguments for 'resetAll' command");
                     None
                 }
             }
