@@ -2567,24 +2567,22 @@ var detailsPane = {
       // If there are no dirty fields, clear the flag, otherwise set it.
       this.isDirty = this.dirtyFields.size > 0;
     });
-    this.form.addEventListener(
-      "keypress",
-      event => {
-        // Prevent scrolling of the html tag when space is used on a button or
-        // checkbox.
-        if (
-          event.key == " " &&
-          ["button", "checkbox"].includes(document.activeElement.type)
-        ) {
-          event.preventDefault();
-        }
-
-        if (event.key != "Escape") {
-          return;
-        }
-
+    this.form.addEventListener("keypress", event => {
+      // Prevent scrolling of the html tag when space is used on a button or
+      // checkbox.
+      if (
+        event.key == " " &&
+        ["button", "checkbox"].includes(document.activeElement.type)
+      ) {
         event.preventDefault();
-        this.form.reset();
+      }
+
+      if (event.key != "Escape") {
+        return;
+      }
+
+      event.preventDefault();
+      this.form.reset();
     });
     this.form.addEventListener("reset", async event => {
       event.preventDefault();
