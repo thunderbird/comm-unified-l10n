@@ -5,7 +5,7 @@
 loader: taskgraph.loader.transform:loader
 
 transforms:
-    - taskgraph.transforms.from_deps
+    - taskgraph_patched.transforms.from_deps
     - gecko_taskgraph.transforms.repackage_set_upstream_mac_kind
     - gecko_taskgraph.transforms.repackage_l10n
     - gecko_taskgraph.transforms.name_sanity
