@@ -5,7 +5,7 @@
 loader: taskgraph.loader.transform:loader
 
 transforms:
-    - taskgraph_patched.transforms.from_deps
+    - taskgraph.transforms.from_deps
     - comm_taskgraph.transforms.push_langpacks
     - gecko_taskgraph.transforms.task
 
