@@ -70,12 +70,12 @@ tasks:
                         base: 'FIREFOX_RELEASE_{major_version}_BASE'
                     comm-release-to-esr:
                         source: to-repo
-                        upstream: mozilla-esr128
+                        upstream: mozilla-esr140
                         tag: 'FIREFOX_{major_version}_0esr_BUILD\d'
                         base: 'FIREFOX_ESR_{major_version}_BASE'
-                    comm-bump-esr128:
+                    comm-bump-esr140:
                         source: to-repo
-                        upstream: mozilla-esr128
+                        upstream: mozilla-esr140
                         tag: 'FIREFOX_{major_version}_{minor_version_plus1}(_\d+)?esr_BUILD\d'
                         base: '(FIREFOX_ESR_{major_version}_BASE|FIREFOX_{major_version}_{minor_version}(_\d+)?)esr_BUILD\d'
                     default: null
