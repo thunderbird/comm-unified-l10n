@@ -162,8 +162,8 @@ merge-automation:
             replacements: []
             merge-old-head: false
             end-tag: "ESR_{major_version}_BASE"
-            to-repo: 'https://hg.mozilla.org/releases/comm-esr128'
-            to-branch: 'comm-esr128'
+            to-repo: 'https://hg.mozilla.org/releases/comm-esr140'
+            to-branch: 'comm-esr140'
         comm-bump-central:
             fetch-version-from: "mail/config/version.txt"
             version-files:
