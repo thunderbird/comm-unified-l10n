@@ -1370,7 +1370,7 @@ var nsSpellingCommand = {
       window.openDialog(
         "chrome://messenger/content/messengercompose/EdSpellCheck.xhtml",
         "_blank",
-        "dialog,close,titlebar,modal,resizable",
+        "dialog,close,titlebar,dependent,resizable",
         false,
         skipBlockQuotes,
         true

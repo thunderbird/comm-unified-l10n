@@ -1223,7 +1223,7 @@ var defaultController = {
         window.openDialog(
           "chrome://messenger/content/messengercompose/EdSpellCheck.xhtml",
           "_blank",
-          "dialog,close,titlebar,modal,resizable",
+          "dialog,close,titlebar,dependent,resizable",
           false,
           skipBlockQuotes,
           true
@@ -6158,7 +6158,7 @@ async function GenericSendMessage(msgType) {
         window.openDialog(
           "chrome://messenger/content/messengercompose/EdSpellCheck.xhtml",
           "_blank",
-          "dialog,close,titlebar,modal,resizable",
+          "dialog,close,titlebar,dependent,resizable",
           true,
           true,
           false
