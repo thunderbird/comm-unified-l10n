@@ -162,8 +162,8 @@ merge-automation:
             replacements: []
             merge-old-head: false
             end-tag: "ESR_{major_version}_BASE"
-            to-repo: 'https://hg.mozilla.org/releases/comm-esr128'
-            to-branch: 'comm-esr128'
+            to-repo: 'https://hg.mozilla.org/releases/comm-esr140'
+            to-branch: 'comm-esr140'
         comm-bump-central:
             fetch-version-from: "mail/config/version.txt"
             version-files:
@@ -184,7 +184,7 @@ merge-automation:
             end-tag: 'NIGHTLY_{major_version}_END'
             to-repo: 'https://hg.mozilla.org/comm-central'
             to-branch: 'comm'
-        comm-bump-esr128:
+        comm-bump-esr140:
             fetch-version-from: "mail/config/version.txt"
             version-files:
                 - filename: "mail/config/version.txt"
@@ -193,8 +193,8 @@ merge-automation:
                   version-bump: "minor"
             replacements: []
             merge-old-head: false
-            to-repo: 'https://hg.mozilla.org/releases/comm-esr128'
-            to-branch: 'comm-esr128'
+            to-repo: 'https://hg.mozilla.org/releases/comm-esr140'
+            to-branch: 'comm-esr140'
 
 scriptworker:
     scope-prefix: 'project:comm:thunderbird:releng'
