@@ -6155,7 +6155,7 @@ async function GenericSendMessage(msgType) {
         // focus on the mail body when we have to do a spellcheck.
         focusMsgBody();
         window.cancelSendMessage = false;
-        window.openDialog(
+        const spellCheckDialog = window.openDialog(
           "chrome://messenger/content/messengercompose/EdSpellCheck.xhtml",
           "_blank",
           "dialog,close,titlebar,dependent,resizable",
@@ -6163,6 +6163,18 @@ async function GenericSendMessage(msgType) {
           true,
           false
         );
+        // Opening a dialog as dependent doesn't wait until it's closed again,
+        // so we have to do that explicitily.
+        if (spellCheckDialog.document.readyState != "complete") {
+          await new Promise(resolve =>
+            spellCheckDialog.addEventListener("load", resolve, { once: true })
+          );
+        }
+        await new Promise(resolve => {
+          spellCheckDialog.addEventListener("unload", resolve, {
+            once: true,
+          });
+        });
 
         if (window.cancelSendMessage) {
           throw new Error(`Send aborted by the user: spelling errors found`);
