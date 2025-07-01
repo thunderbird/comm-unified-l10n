@@ -54,12 +54,12 @@ tasks:
                     thunderbird-esr-latest: installer
                     thunderbird-esr-msi-latest-ssl: msi
                     thunderbird-esr-msix-latest-ssl: msix
-                esr140:
+                esr140: {} # Temporarily disable release bouncer check until ESR 140 is available in bouncer
                     # ... these point to the newer branch
-                    thunderbird-esr-next-latest-ssl: installer-ssl
-                    thunderbird-esr-next-latest: installer
-                    thunderbird-esr-next-msi-latest-ssl: msi
-                    thunderbird-esr-next-msix-latest-ssl: msix
+                    #thunderbird-esr-next-latest-ssl: installer-ssl
+                    #thunderbird-esr-next-latest: installer
+                    #thunderbird-esr-next-msi-latest-ssl: msi
+                    #thunderbird-esr-next-msix-latest-ssl: msix
                 default: {}
         shipping-product: thunderbird
         treeherder:
