@@ -120,6 +120,7 @@ const gMockExternalProtocolService = {
 };
 
 add_setup(async () => {
+  NotificationScheduler._startupDelay = 0;
   NotificationScheduler._idleService.disabled = true;
   NotificationScheduler.observe(null, "active");
   NotificationManager._PER_TIME_UNIT = 1;
