@@ -1311,6 +1311,8 @@ function reportPreferences() {
   const booleanPrefs = [
     // General
     "browser.cache.disk.smart_size.enabled",
+    "extensions.hasExperimentsInstalled",
+    "extensions.hasExtensionsInstalled",
     "general.autoScroll",
     "general.smoothScroll",
     "intl.regional_prefs.use_os_locales",
@@ -1321,6 +1323,7 @@ function reportPreferences() {
     "mail.dark-reader.show-toggle",
     "mail.delete_matches_sort_order",
     "mail.display_glyph",
+    "mail.inappnotifications.pkceUpgradeForYahooAol",
     "mail.prompt_purge_threshold",
     "mail.purge.ask",
     "mail.showCondensedAddresses",
