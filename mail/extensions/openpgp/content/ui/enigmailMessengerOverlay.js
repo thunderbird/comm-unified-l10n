@@ -50,6 +50,7 @@ ChromeUtils.defineESModuleGetters(this, {
   getMimeTreeFromUrl: "chrome://openpgp/content/modules/MimeTree.sys.mjs",
   KeyLookupHelper: "chrome://openpgp/content/modules/keyLookupHelper.sys.mjs",
   MailStringUtils: "resource:///modules/MailStringUtils.sys.mjs",
+  MailUtils: "resource:///modules/MailUtils.sys.mjs",
   MimeParser: "resource:///modules/mimeParser.sys.mjs",
   PgpSqliteDb2: "chrome://openpgp/content/modules/sqliteDb.sys.mjs",
   RNP: "chrome://openpgp/content/modules/RNP.sys.mjs",
@@ -79,7 +80,6 @@ Enigmail.msg = {
   changedAttributes: [],
   allAttachmentsDone: false,
   messageDecryptDone: false,
-  showPartialDecryptionReminder: false,
 
   get notificationBox() {
     return gMessageNotificationBar.msgNotificationBar;
@@ -184,7 +184,6 @@ Enigmail.msg = {
     ]) {
       this.removeNotification(value);
     }
-    Enigmail.msg.showPartialDecryptionReminder = false;
 
     let element = document.getElementById("openpgpKeyBox");
     if (element) {
@@ -271,27 +270,10 @@ Enigmail.msg = {
   async notifyMessageDecryptDone() {
     Enigmail.msg.messageDecryptDone = true;
     await Enigmail.msg.processAfterAttachmentsAndDecrypt();
-
-    // Show the partial inline encryption reminder only if the decryption action
-    // came from a partially inline encrypted message.
-    if (Enigmail.msg.showPartialDecryptionReminder) {
-      Enigmail.msg.showPartialDecryptionReminder = false;
-
-      await this.notificationBox.appendNotification(
-        "decryptInlinePGReminder",
-        {
-          label: await document.l10n.formatValue(
-            "openpgp-reminder-partial-display"
-          ),
-          priority: this.notificationBox.PRIORITY_INFO_HIGH,
-        },
-        null
-      );
-    }
   },
 
   // analyse message header and decrypt/verify message
-  async messageDecrypt(event, isAuto) {
+  async messageDecrypt(event, isAuto, processingSubset) {
     const interactive = !!event;
 
     this.mimeParts = null;
@@ -328,7 +310,12 @@ Enigmail.msg = {
     }
     await new Promise(resolve => {
       getMimeTreeFromUrl(url.spec, false, async function (mimeMsg) {
-        await Enigmail.msg.messageDecryptCb(interactive, isAuto, mimeMsg);
+        await Enigmail.msg.messageDecryptCb(
+          interactive,
+          isAuto,
+          mimeMsg,
+          processingSubset
+        );
         await Enigmail.msg.notifyMessageDecryptDone();
         resolve();
       });
@@ -364,7 +351,7 @@ Enigmail.msg = {
     }
   },
 
-  async messageDecryptCb(event, isAuto, mimeMsg) {
+  async messageDecryptCb(event, isAuto, mimeMsg, processingSubset = false) {
     let contentType = "";
     try {
       if (!mimeMsg) {
@@ -575,7 +562,9 @@ Enigmail.msg = {
         false,
         contentEncoding,
         msgUriSpec,
-        isAuto
+        isAuto,
+        "0",
+        processingSubset
       );
     } catch (ex) {
       console.error("Parsing inline-PGP failed.", ex);
@@ -684,7 +673,8 @@ Enigmail.msg = {
     contentEncoding,
     msgUriSpec,
     isAuto,
-    pbMessageIndex = "0"
+    pbMessageIndex = "0",
+    processingSubset
   ) {
     var bodyElement = this.getBodyElement();
     if (!bodyElement) {
@@ -800,23 +790,18 @@ Enigmail.msg = {
     if (isAuto) {
       const ht =
         hasHeadOrTailNode || this.hasHeadOrTailBesidesInlinePGP(msgText);
-      if (ht) {
-        let infoId;
-        let buttonId;
-        if (
-          ht & EnigmailConstants.UNCERTAIN_SIGNATURE ||
-          Enigmail.msg.getFirstPGPMessageType(msgText) == "signed"
-        ) {
-          infoId = "openpgp-partially-signed";
-          buttonId = "openpgp-partial-verify-button";
-        } else {
-          infoId = "openpgp-partially-encrypted";
-          buttonId = "openpgp-partial-decrypt-button";
-        }
+      const firstMsgType = Enigmail.msg.getFirstPGPMessageType(msgText);
 
+      if (ht && firstMsgType == "signed") {
+        // We don't offer to verify inline signed messages.
+        // We show inline signed PGP message blocks as is.
+        return;
+      }
+
+      if (ht && firstMsgType == "encrypted") {
         const [description, buttonLabel] = await document.l10n.formatValues([
-          { id: infoId },
-          { id: buttonId },
+          { id: "openpgp-partially-encrypted" },
+          { id: "openpgp-partial-decrypt-button" },
         ]);
 
         const buttons = [
@@ -861,6 +846,38 @@ Enigmail.msg = {
     var urlSpec = mailNewsUrl ? mailNewsUrl.spec : "";
     const retry = 1;
 
+    if (processingSubset) {
+      // Code based on msgOpenMessageFromString().
+
+      // Ensure the filename isn't predictable.
+      const path = await IOUtils.createUniqueFile(
+        PathUtils.join(PathUtils.tempDir, "pid-" + Services.appinfo.processID),
+        "subPart.eml",
+        0o600
+      );
+
+      const syntheticMessage = "Content-Type: text/plain\r\n\r\n" + msgText;
+      await IOUtils.write(
+        path,
+        MailStringUtils.byteStringToUint8Array(syntheticMessage)
+      );
+
+      const tempFile = await IOUtils.getFile(path);
+
+      // Delete file on exit, because Windows locks the file
+      Cc["@mozilla.org/uriloader/external-helper-app-service;1"]
+        .getService(Ci.nsPIExternalAppLauncher)
+        .deleteTemporaryFileOnExit(tempFile);
+
+      const url = Services.io
+        .getProtocolHandler("file")
+        .QueryInterface(Ci.nsIFileProtocolHandler)
+        .newFileURI(tempFile);
+
+      MailUtils.openEMLFile(window, tempFile, url);
+      return;
+    }
+
     await Enigmail.msg.messageParseCallback(
       msgText,
       EnigmailDecryption.getMsgDate(window),
@@ -888,21 +905,12 @@ Enigmail.msg = {
   },
 
   hasHeadOrTailBesidesInlinePGP(msgText) {
-    const startIndex = msgText.search(/-----BEGIN PGP (SIGNED )?MESSAGE-----/m);
+    const startIndex = msgText.search(/-----BEGIN PGP MESSAGE-----/m);
     const endIndex = msgText.indexOf("-----END PGP");
     let hasHead = false;
     let hasTail = false;
-    let crypto = 0;
 
     if (startIndex > 0) {
-      const pgpMsg = msgText.match(
-        /(-----BEGIN PGP (SIGNED )?MESSAGE-----)/m
-      )[0];
-      if (pgpMsg.search(/SIGNED/) > 0) {
-        crypto = EnigmailConstants.UNCERTAIN_SIGNATURE;
-      } else {
-        crypto = EnigmailConstants.DECRYPTION_FAILED;
-      }
       const startSection = msgText.substr(0, startIndex - 1);
       hasHead = startSection.search(/\S/) >= 0;
     }
@@ -914,16 +922,11 @@ Enigmail.msg = {
       }
     }
 
-    if (hasHead || hasTail) {
-      return EnigmailConstants.PARTIALLY_PGP | crypto;
-    }
-
-    return 0;
+    return hasHead || hasTail;
   },
 
   async processOpenPGPSubset() {
-    Enigmail.msg.showPartialDecryptionReminder = true;
-    await this.messageDecrypt(null, false);
+    await this.messageDecrypt(null, false, true);
   },
 
   /**
