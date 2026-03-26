@@ -11,11 +11,8 @@ UNIFIED_SOURCES += [
     "TestHashIfNecessary.cpp",
     "TestHeaderReader.cpp",
     "TestLineReader.cpp",
+    "TestMsgI18N.cpp",
     "TestMsgMboxRead.cpp",
     "TestMsgMboxWrite.cpp",
     "TestMsgUtils.cpp",
 ]
-
-# LOCAL_INCLUDES += [
-#    "../../src",
-# ]
