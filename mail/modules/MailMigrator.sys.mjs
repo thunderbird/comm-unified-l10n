@@ -30,7 +30,7 @@ export var MailMigrator = {
   _migrateUI() {
     // The code for this was ported from
     // mozilla/browser/components/nsBrowserGlue.js
-    const UI_VERSION = 58;
+    const UI_VERSION = 60;
     const UI_VERSION_PREF = "mail.ui-rdf.version";
     let currentUIVersion = Services.prefs.getIntPref(UI_VERSION_PREF, 0);
 
@@ -420,6 +420,36 @@ export var MailMigrator = {
         // pref that indicates whether such a user was detected.
         Services.prefs.clearUserPref(
           "mail.inappnotifications.pkceUpgradeForYahooAol"
+        );
+      }
+
+      if (currentUIVersion < 60) {
+        function updateCheckedValue(url, id) {
+          if (Services.xulStore.hasValue(url, id, "checked")) {
+            const oldValue = Services.xulStore.getValue(url, id, "checked");
+            Services.xulStore.setValue(
+              url,
+              id,
+              "checked",
+              oldValue == "false" ? "-moz-missing\n" : ""
+            );
+          }
+        }
+        updateCheckedValue(
+          "chrome://messenger/content/messenger.xhtml",
+          "calendar_toggle_orientation_command"
+        );
+        updateCheckedValue(
+          "chrome://messenger/content/messenger.xhtml",
+          "calendar_toggle_workdays_only_command"
+        );
+        updateCheckedValue(
+          "chrome://messenger/content/messenger.xhtml",
+          "calendar_toggle_tasks_in_view_command"
+        );
+        updateCheckedValue(
+          "chrome://messenger/content/messenger.xhtml",
+          "calendar_toggle_show_completed_in_view_command"
         );
       }
 
