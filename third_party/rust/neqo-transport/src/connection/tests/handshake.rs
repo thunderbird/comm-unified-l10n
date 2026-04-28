@@ -806,7 +806,8 @@ fn corrupted_initial() {
         .iter()
         .enumerate()
         .rev()
-        .find(|&(_, &v)| v != 0)
+        .skip(1) // Skip the last byte, which might be a SCONE indicator.
+        .find(|&(_, &v)| v != Connection::SCONE_INDICATION[0]) // The SCONE padding value.
         .unwrap();
     corrupted[idx] ^= 0x76;
 

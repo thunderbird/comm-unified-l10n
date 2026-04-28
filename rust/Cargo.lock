@@ -1688,7 +1688,8 @@ dependencies = [
 [[package]]
 name = "encoding_rs"
 version = "0.8.35"
-source = "git+https://github.com/hsivonen/encoding_rs?rev=1236d1bc423e6ba35a06485f74a6304db2d703b5#1236d1bc423e6ba35a06485f74a6304db2d703b5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "75030f3c4f45dafd7586dd6780965a8c7e8e285a5ecb86713e63a79c5b2766f3"
 dependencies = [
  "cfg-if",
 ]
@@ -4440,7 +4441,7 @@ dependencies = [
 [[package]]
 name = "mp4parse"
 version = "0.17.0"
-source = "git+https://github.com/mozilla/mp4parse-rust?rev=952f5173fd2c33fcbc5e6d3c9de48f4afc0347fc#952f5173fd2c33fcbc5e6d3c9de48f4afc0347fc"
+source = "git+https://github.com/mozilla/mp4parse-rust?rev=f2d96807b8becf7485f035b393575fcfc76cec4c#f2d96807b8becf7485f035b393575fcfc76cec4c"
 dependencies = [
  "bitreader",
  "byteorder",
@@ -4457,7 +4458,7 @@ version = "0.1.0"
 [[package]]
 name = "mp4parse_capi"
 version = "0.17.0"
-source = "git+https://github.com/mozilla/mp4parse-rust?rev=952f5173fd2c33fcbc5e6d3c9de48f4afc0347fc#952f5173fd2c33fcbc5e6d3c9de48f4afc0347fc"
+source = "git+https://github.com/mozilla/mp4parse-rust?rev=f2d96807b8becf7485f035b393575fcfc76cec4c#f2d96807b8becf7485f035b393575fcfc76cec4c"
 dependencies = [
  "byteorder",
  "fallible_collections",
@@ -4482,7 +4483,7 @@ dependencies = [
 [[package]]
 name = "mtu"
 version = "0.3.0"
-source = "git+https://github.com/mozilla/neqo?tag=v0.26.1#0eb6238fd899d2bf9e73c4847e14adc9565a4c81"
+source = "git+https://github.com/mozilla/neqo?tag=v0.26.0#7c0b85f4c7d60bfb74b7be5a64551a4a5c5c0c6b"
 dependencies = [
  "bindgen 0.72.0",
  "cfg_aliases",
@@ -4525,8 +4526,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-common"
-version = "0.26.1"
-source = "git+https://github.com/mozilla/neqo?tag=v0.26.1#0eb6238fd899d2bf9e73c4847e14adc9565a4c81"
+version = "0.26.0"
+source = "git+https://github.com/mozilla/neqo?tag=v0.26.0#7c0b85f4c7d60bfb74b7be5a64551a4a5c5c0c6b"
 dependencies = [
  "enum-map",
  "env_logger",
@@ -4539,8 +4540,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-crypto"
-version = "0.26.1"
-source = "git+https://github.com/mozilla/neqo?tag=v0.26.1#0eb6238fd899d2bf9e73c4847e14adc9565a4c81"
+version = "0.26.0"
+source = "git+https://github.com/mozilla/neqo?tag=v0.26.0#7c0b85f4c7d60bfb74b7be5a64551a4a5c5c0c6b"
 dependencies = [
  "bindgen 0.72.0",
  "enum-map",
@@ -4558,8 +4559,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-http3"
-version = "0.26.1"
-source = "git+https://github.com/mozilla/neqo?tag=v0.26.1#0eb6238fd899d2bf9e73c4847e14adc9565a4c81"
+version = "0.26.0"
+source = "git+https://github.com/mozilla/neqo?tag=v0.26.0#7c0b85f4c7d60bfb74b7be5a64551a4a5c5c0c6b"
 dependencies = [
  "enumset",
  "http",
@@ -4577,8 +4578,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-qpack"
-version = "0.26.1"
-source = "git+https://github.com/mozilla/neqo?tag=v0.26.1#0eb6238fd899d2bf9e73c4847e14adc9565a4c81"
+version = "0.26.0"
+source = "git+https://github.com/mozilla/neqo?tag=v0.26.0#7c0b85f4c7d60bfb74b7be5a64551a4a5c5c0c6b"
 dependencies = [
  "log",
  "neqo-common",
@@ -4591,8 +4592,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-transport"
-version = "0.26.1"
-source = "git+https://github.com/mozilla/neqo?tag=v0.26.1#0eb6238fd899d2bf9e73c4847e14adc9565a4c81"
+version = "0.26.0"
+source = "git+https://github.com/mozilla/neqo?tag=v0.26.0#7c0b85f4c7d60bfb74b7be5a64551a4a5c5c0c6b"
 dependencies = [
  "enum-map",
  "enumset",
@@ -4611,8 +4612,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-udp"
-version = "0.26.1"
-source = "git+https://github.com/mozilla/neqo?tag=v0.26.1#0eb6238fd899d2bf9e73c4847e14adc9565a4c81"
+version = "0.26.0"
+source = "git+https://github.com/mozilla/neqo?tag=v0.26.0#7c0b85f4c7d60bfb74b7be5a64551a4a5c5c0c6b"
 dependencies = [
  "cfg_aliases",
  "libc",
@@ -4991,12 +4992,11 @@ checksum = "269bca4c2591a28585d6bf10d9ed0332b7d76900a1b02bec41bdc3a2cdcda107"
 
 [[package]]
 name = "operation-queue"
-version = "1.1.0"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8656df5fea6ff89e0bcfbe2e34e784f49dc48ddc4bd34ae7e6bb17049b9d9f8d"
+checksum = "5658dc84cdcd31f4f47558ef721373418eef8c89dc7f4c0379ab68a4fd358163"
 dependencies = [
  "async-channel",
- "async-lock",
  "futures",
  "log",
  "oneshot",
