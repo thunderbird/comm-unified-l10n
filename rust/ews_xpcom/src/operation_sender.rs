@@ -190,7 +190,7 @@ impl<ServerT: ServerType + 'static> OperationSender<ServerT> {
             let response = match self.send_http_request(operation_id, name, content).await {
                 Ok(response) => response,
                 Err(err) => {
-                    token = match self.error_handling_line.try_acquire_token().or_token(token) {
+                    token = match self.error_handling_line.try_acquire_token().await.or_token(token) {
                         AcquireOutcome::Success(new_token) => {
                             self.handle_early_failure(err, options).await?;
                             Some(new_token)
@@ -237,7 +237,7 @@ impl<ServerT: ServerType + 'static> OperationSender<ServerT> {
 
             match self.check_envelope_for_error(name, &response).await? {
                 ControlFlow::Continue(delay_ms) => {
-                    token = match self.error_handling_line.try_acquire_token().or_token(token) {
+                    token = match self.error_handling_line.try_acquire_token().await.or_token(token) {
                         AcquireOutcome::Success(new_token) => {
                             xpcom_async::sleep(delay_ms).await?;
                             Some(new_token)
