@@ -930,6 +930,12 @@ MailGlue.prototype = {
             onUninstalled() {
               lazy.checkInstalledExtensions();
             },
+            onDisabled() {
+              lazy.checkInstalledExtensions();
+            },
+            onEnabled() {
+              lazy.checkInstalledExtensions();
+            },
           });
           await lazy.checkInstalledExtensions();
         },
