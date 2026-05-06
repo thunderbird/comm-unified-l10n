@@ -45,37 +45,60 @@ export async function checkInstalledExtensions() {
   // for installed add-ons.
   const TEST_ADDONS = ["special-powers@mozilla.org", "mochikit@mozilla.org"];
 
-  const extensions = await Promise.allSettled(
-    await lazy.AddonManager.getAllAddons().then(a =>
-      a.map(async e => {
-        const data = new lazy.ExtensionData(e.getResourceURI());
-        await data.loadManifest();
-        return data;
-      })
-    )
+  const addons = await lazy.AddonManager.getAllAddons();
+  // Use allSettled to single out add-on whose resources are unavailable, because
+  // they are already torn down.
+  const results = await Promise.allSettled(
+    addons
+      .filter(a => a.type === "extension" && !TEST_ADDONS.includes(a.id))
+      .map(parseManifest)
   );
-  const extensionInfo = extensions
-    .filter(
-      e => e.value?.type == "extension" && !TEST_ADDONS.includes(e.value.id)
-    )
-    .map(e => ({
-      id: e.value.id,
-      isExperiment: !!e.value.manifest.experiment_apis,
-      data: e.value,
-    }));
+  const extensionInfo = results
+    .filter(r => r.status === "fulfilled")
+    .map(r => r.value);
 
-  // If false, we can propose to move to Release. Disabled/enabled status is not
-  // checked, because the user might later want to enable an installed Experiment,
-  // which he may no longer use after moving to Release.
   Services.prefs.setBoolPref(
     "extensions.hasExtensionsInstalled",
-    extensionInfo.length > 0
+    extensionInfo.filter(e => e.isActive && !e.isSpecial).length > 0
   );
   // If false, we can propose to move to Release.
   Services.prefs.setBoolPref(
     "extensions.hasExperimentsInstalled",
-    extensionInfo.some(e => e.isExperiment)
+    extensionInfo.filter(e => e.isActive && !e.isSpecial && e.isExperiment)
+      .length > 0
   );
+}
+
+/**
+ * Parses the manifest of an add-on and determines its type flags.
+ *
+ * @param {AddonWrapper} addon - The add-on to parse.
+ * @returns {object} result
+ * @returns {AddonWrapper} result.addon - The original add-on.
+ * @returns {boolean} result.isActive - Whether the add-on is active.
+ * @returns {boolean} result.isLegacy - Whether the add-on uses the legacy
+ *   manifest key.
+ * @returns {boolean} result.isSpecial - Whether the add-on is a system, builtin
+ *   or privileged add-on.
+ * @returns {boolean} result.isExperiment - Whether the add-on declares
+ *   experiment APIs.
+ */
+export async function parseManifest(addon) {
+  const data = new lazy.ExtensionData(addon.getResourceURI());
+  await data.loadManifest();
+
+  const isLegacy = !!data.manifest.legacy;
+  const isExperiment = !!data.manifest.experiment_apis;
+  const isActive = addon.isActive;
+  const isSpecial = addon.isSystem || addon.isBuiltin || addon.isPrivileged;
+
+  return {
+    addon,
+    isActive,
+    isLegacy,
+    isSpecial,
+    isExperiment,
+  };
 }
 
 /**
