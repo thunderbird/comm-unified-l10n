@@ -1,7 +1,8 @@
 ---
 GECKO_BASE_REPOSITORY: https://hg.mozilla.org/mozilla-unified
-GECKO_HEAD_REPOSITORY: https://hg.mozilla.org/mozilla-central
-GECKO_HEAD_REV: 0540bd6d161451f0897d427d6cde0526ee8ee8c5
+GECKO_HEAD_REPOSITORY: https://hg.mozilla.org/releases/mozilla-beta
+GECKO_HEAD_REV: c2332ba4f9ecc71a50b47a541bedbbc8b430c7b8
+
 ######
 
 ### For comm-central
