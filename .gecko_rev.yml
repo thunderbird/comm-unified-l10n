@@ -1,7 +1,7 @@
 ---
 GECKO_BASE_REPOSITORY: https://hg.mozilla.org/mozilla-unified
 GECKO_HEAD_REPOSITORY: https://hg.mozilla.org/releases/mozilla-esr140
-GECKO_HEAD_REF: FIREFOX_140_11_0esr_BUILD2
+GECKO_HEAD_REF: FIREFOX_140_11_0esr_RELEASE
 GECKO_HEAD_REV: 2e36c464a92f1942683abbed6ceb442308db5eb0
 ######
 
