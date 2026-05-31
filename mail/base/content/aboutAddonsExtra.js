@@ -8,8 +8,9 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 );
 
-const { formatUTMParams } = ChromeUtils.importESModule(
-  "chrome://mozapps/content/extensions/aboutaddons-utils.mjs"
+const { formatUTMParams, getAddonMessageInfo } = ChromeUtils.importESModule(
+  "chrome://mozapps/content/extensions/aboutaddons-utils.mjs",
+  { global: "current" }
 );
 
 ChromeUtils.defineESModuleGetters(this, {
