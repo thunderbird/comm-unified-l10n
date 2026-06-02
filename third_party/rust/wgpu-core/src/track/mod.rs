@@ -106,7 +106,7 @@ use crate::{
     binding_model, command,
     lock::{rank, Mutex},
     pipeline,
-    resource::{self, Labeled, RawResourceAccess, ResourceErrorIdent, Trackable},
+    resource::{self, Labeled, RawResourceAccess, ResourceErrorIdent},
     snatch::SnatchGuard,
     track::blas::BlasTracker,
 };
@@ -697,10 +697,7 @@ impl Tracker {
     ) {
         self.buffers.set_and_remove_from_usage_scope_sparse(
             &mut scope.buffers,
-            bind_group
-                .buffers
-                .used_resources()
-                .map(|b| b.tracker_index()),
+            bind_group.buffers.used_tracker_indices(),
         );
         self.textures
             .set_and_remove_from_usage_scope_sparse(&mut scope.textures, &bind_group.views);
