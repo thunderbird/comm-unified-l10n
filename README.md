@@ -1,17 +1,16 @@
 # Thunderbird
-Thunderbird is a powerful and customizable open source email client with lots of users. It is based on the same platform that Firefox uses.
+Thunderbird is a powerful and customizable open source email client with many users. It is based on the same platform that Firefox uses.
 
 ## Getting Started
 This README will try and give you the basics that you need to get started, more comprehensive documentation is available on the [Thunderbird Developer Website](https://developer.thunderbird.net).
 
 ### Mozilla Code Base
-Thunderbird is built on the Mozilla platform, the same base that Firefox is built from. As such the two projects share a lot of code and much of the documentation for one will apply, in many ways, to the other.
+Thunderbird is built on the Mozilla platform, the same base that Firefox is built from. As such, the two projects share a lot of code and much of the documentation for one will apply to the other.
 
-In order to be able to build Thunderbird - you will need the mozilla-central repository as well as the comm-central repository (where this README lives). Check out our [Getting Started documentation](https://developer.thunderbird.net/thunderbird-development/getting-started) for instructions on how and where to get the source code.
+In order to be able to build Thunderbird - you will need the [Firefox repository](https://github.com/mozilla-firefox/firefox) as well as the [Thunderbird repository](https://github.com/thunderbird/thunderbird-desktop) (where this README lives). Check out our [Getting Started documentation](https://developer.thunderbird.net/thunderbird-development/getting-started) for instructions on how and where to get the source code.
 
-### mozilla-central vs. comm-central
-
-The mozilla-central repostitory contains the Firefox codebase and all of the platform code. The comm-central repository is added as a subdirectory "comm/" under mozilla-central. This contains the code for Thunderbird.
+### Firefox vs Thunderbird Source Code
+The Firefox repository contains the Firefox codebase and all of the platform code. The Thunderbird repository is added as a subdirectory "comm/" under Firefox. This contains the code for Thunderbird.
 
 ## Building Thunderbird
 
@@ -140,47 +139,19 @@ We have a complete listing of the ways in which you can get involved with Thunde
 
 If you want to participate in discussions about Thunderbird development, there are two main mailing lists you want to join.
 
-1. [**TB-Planning**](https://wiki.mozilla.org/Thunderbird/tb-planning)**:** This mailing list is higher level topics like: the future of Thunderbird, potential features, and changes that you would like to see happen. It is also used to discuss a variety of broader issues around community and governance of the project.
-2. [**Maildev**](http://lists.thunderbird.net/mailman/listinfo/maildev_lists.thunderbird.net)**:** A moderated mailing list for discussing engineering plans for Thunderbird. It is a place where you can raise questions and ideas for core Thunderbird development.
+1. [**Thunderbird Planning**](https://thunderbird.topicbox.com/groups/planning)**:** This moderated mailing list is for higher level topics like: the future of Thunderbird, potential features, and changes that you would like to see happen. It is also used to discuss a variety of broader issues around community and governance of the project.
+2. [**Thunderbird Developers**](https://thunderbird.topicbox.com/groups/developers)**:** A moderated mailing list for discussing engineering plans for Thunderbird. It is a place where you can raise questions and ideas for core Thunderbird development.
 
-#### IRC
+#### Matrix Chat
+If you want to ask questions about how to hack on Thunderbird, the Matrix room you want to join is [\#maildev:mozilla.org](https://matrix.to/#/#maildev:mozilla.org?web-instance%5Belement.io%5D=chat.mozilla.org).
 
 If you want to ask questions about how to hack on Thunderbird, the IRC channel you want to join is [\#maildev on irc.mozilla.org](irc://irc.mozilla.org/maildev).
 
 ### Report a Bug and Request Features
 
-### [Bugzilla](https://bugzilla.mozilla.org/enter_bug.cgi?product=Thunderbird)
+Feature requests should be submitted to [Mozilla Connect](https://connect.mozilla.org/).
 
 Thunderbird uses bugzilla for reporting and tracking bugs as well as enhancement requests. If you want to become a contributor to Thunderbird, you will need an account on Bugzilla.
 
 ### Fixing a Bug and Submitting Patches
-
-All the issues, bugs, work in progress patches, or updates related to Thunderbird, are listed on Bugzilla and are properly organized per **Product**, **Component**, and **Status**. For instance you can see how they are listed by looking at [recent bugs for Thunderbird](https://bugzilla.mozilla.org/buglist.cgi?query_format=advanced&product=Thunderbird&bug_status=UNCONFIRMED&bug_severity=blocker&bug_severity=critical&bug_severity=major&bug_severity=normal&bug_severity=minor&bug_severity=trivial&chfieldfrom=-30d&chfield=%5BBug%20creation%5D&list_id=14706087).
-
-#### Create a Bugzilla account
-
-Creating an account is necessary in order to submit patches, leave comments, and interact with any other aspect of Bugzilla. If you're currently using an `IRC` username in the `#maildev` channel, we recommend saving your profile name with the current format `Firstname Lastname (:username)` in order to be easily searchable and allow the Thunderbird team to offer better support.
-
-#### Find a Bug
-
-Use the [Advanced Search](https://bugzilla.mozilla.org/query.cgi?format=advanced) section to find bugs you want to take care of, and be sure that the bug doesn't currently have any user listed as _Assignee_ and the _Status_ is set to `NEW`. You can see a list of "easy" bugs for beginners [via this query](https://bugzilla.mozilla.org/buglist.cgi?bug_status=NEW&classification=Client%20Software&classification=Developer%20Infrastructure&classification=Components&classification=Server%20Software&classification=Other&f1=status_whiteboard&o1=allwordssubstr&product=Calendar&product=Chat%20Core&product=MailNews%20Core&product=Thunderbird&resolution=---&v1=good%20first%20bug&list_id=14884036). However, we assume you came here to fix your "pet hate" bug, so you already likely have a bug to work with.
-
-#### Search for Code References
-
-Making sense of the **Thunderbird** source code, and knowing where to look, will take some time. The code base is pretty big and if you never worked with `XBL` or `Custom Elements` it can be overwhelming at first. We recommend using our code search engine, [Searchfox](https://searchfox.org/comm-central/source/), to inspect the source code and find snippets and references to help you out while investigating a bug.
-
-#### Mercurial Workflow
-
-Mercurial is pretty flexible in terms of allowing you to write your own code and keep it separate from the main code base. You can use Mercurial Bookmarks or Mercurial Queues for managing your work. We have guides created for [bookmarks](https://developer.thunderbird.net/contributing/fixing-a-bug/using-mercurial-bookmarks) and [queues](https://developer.thunderbird.net/contributing/fixing-a-bug/using-mercurial-queues) on our developer website. While some find Mercurial Queues easier to work with, support for them is being deprecated in various Mozilla tools.
-
-Once you finished taking care of your favorite bug and using Mercurial to commit and export your patch, you can upload it to Bugzilla for review.
-
-#### Upload a Patch
-
-Open your patch file in your code editor and be sure it includes all your code changes, and your name and commit message at the top. You can see an example of a patch for this [README here](https://bug1547325.bmoattachments.org/attachment.cgi?id=9093146).
-
-If everything looks good, you can access the selected bug in Bugzilla and click on the **Attach File** link located above the first comment.
-
-#### Ask for a Review
-
-When uploading a patch to Bugzilla, you can request a review from the user who opened the bug or another developer. Simply select the `?` in the dropdown selector in the _review_ option of the **Flags** section. An input field will appear which will allow you to type the name or username of the user you want to review your patch. You can see an example of [a patch on Bugzilla here](https://bugzilla.mozilla.org/show_bug.cgi?id=1547325#c1).
+See [Fixing a Bug in the developer documentation](https://developer.thunderbird.net/thunderbird-development/fixing-a-bug).
