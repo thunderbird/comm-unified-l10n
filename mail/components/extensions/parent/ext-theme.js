@@ -51,17 +51,12 @@ class Theme {
     this.darkDetails = darkDetails;
     this.windowId = windowId;
 
-    if (
-      startupData?.lwtData?.dataVersion == LightweightThemeManager.DATA_VERSION
-    ) {
+    if (startupData?.lwtData) {
       // Parsed theme from a previous load() already available in startupData
       // of parsed theme. We assume that reparsing the theme will yield the same
-      // result as long as DATA_VERSION matches, and therefore reuse the value
-      // of startupData.
-      //
-      // This is a minor optimization; the more important use of startupData is
-      // before startup, by Extension.sys.mjs for
-      // LightweightThemeManager.fallbackThemeData.
+      // result, and therefore reuse the value of startupData. This is a minor
+      // optimization; the more important use of startupData is before startup,
+      // by Extension.sys.mjs for LightweightThemeManager.fallbackThemeData.
       //
       // Note: the assumption "yield the same result" is not obviously true: the
       // startupData persists across application updates, so it is possible for
