@@ -20,7 +20,7 @@ RELEASE_PROJECTS = {
     "comm-central",
     "comm-beta",
     "comm-release",
-    "comm-esr128",
+    "comm-esr153",
 }
 
 RELEASE_PROMOTION_PROJECTS = {
@@ -64,7 +64,7 @@ SIGNING_SCOPE_ALIAS_TO_PROJECT = [
         {
             "comm-beta",
             "comm-release",
-            "comm-esr128",
+            "comm-esr153",
         },
     ],
 ]
@@ -83,7 +83,7 @@ BEETMOVER_SCOPE_ALIAS_TO_PROJECT = [
         {
             "comm-beta",
             "comm-release",
-            "comm-esr128",
+            "comm-esr153",
         },
     ],
 ]
@@ -112,9 +112,9 @@ BALROG_SCOPE_ALIAS_TO_PROJECT = [
         },
     ],
     [
-        "esr128",
+        "esr153",
         {
-            "comm-esr128",
+            "comm-esr153",
         },
     ],
 ]
