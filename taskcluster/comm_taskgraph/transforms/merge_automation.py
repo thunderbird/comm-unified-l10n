@@ -20,8 +20,8 @@ from comm_taskgraph import COMM
 transforms = TransformSequence()
 
 MOZ_HG_URL = "https://hg.mozilla.org/releases/{repo}"
-MOZ_HG_TB_VERSION_URL = "{repo_base_url}/raw-file/tip/mail/config/version.txt"
-MOZ_HG_TB_GECKO_REV_URL = "{repo_base_url}/raw-file/tip/.gecko_rev.yml"
+MOZ_GIT_TB_VERSION_URL = "{repo_base_url}/mail/config/version.txt"
+MOZ_GIT_TB_GECKO_REV_URL = "{repo_base_url}/.gecko_rev.yml"
 MOZ_HG_TAG_URL = "https://hg.mozilla.org/releases/{repo}/json-tags"
 
 
@@ -60,8 +60,10 @@ def update_suite_versions(config, tasks):
         if "merge_config" not in config.params:
             break
         behavior = config.params["merge_config"]["behavior"]
-        if behavior == "comm-bump-central":
-            merge_config = task["worker"]["merge-info"]
+        if behavior == "bump-main":
+            worker = task["worker"]
+            action_name = list(worker["actions"][0].keys())[0]
+            merge_config = task["worker"]["actions"][0][action_name]
             replacements = merge_config["replacements"]
             merge_config["replacements"] = do_suite_verbump(replacements)
 
@@ -78,14 +80,14 @@ def get_json_tags(repo):
 
 
 def get_thunderbird_version(repo_base_url):
-    version_url = MOZ_HG_TB_VERSION_URL.format(repo_base_url=repo_base_url)
+    version_url = MOZ_GIT_TB_VERSION_URL.format(repo_base_url=repo_base_url)
     res = urllib.request.urlopen(version_url)
     res_body = res.read().decode("utf-8").strip()
     return GeckoVersion.parse(res_body)
 
 
 def get_gecko_rev_yml(repo_base_url):
-    url = MOZ_HG_TB_GECKO_REV_URL.format(repo_base_url=repo_base_url)
+    url = MOZ_GIT_TB_GECKO_REV_URL.format(repo_base_url=repo_base_url)
     res = urllib.request.urlopen(url)
     data = res.read().decode("utf-8")
     return yaml.safe_load(data)
@@ -124,7 +126,7 @@ def get_upstream_tag(tag_regex, base_regex, repo):
 
 def mk_gecko_rev_replacement(key, old, new):
     """
-    Build a replacement structure for Treescript.
+    Build a replacement structure for scriptworker-lando.
     The return value is applied to the overall replacements list via .extend().
     In the case where the value does not change, an empty list is returned
     so .extend() has no effect.
@@ -154,9 +156,16 @@ def pin_gecko_rev_yml(config, tasks):
             },
         )
 
-        merge_config = task["worker"]["merge-info"]
+        worker = task["worker"]
+        action_name = list(worker["actions"][0].keys())[0]
+        merge_config = task["worker"]["actions"][0][action_name]
+
         if gecko_rev := task["worker"].pop("gecko-rev", None):
-            source_repo = merge_config[gecko_rev["source"]]
+            source_branch = merge_config[gecko_rev["source"]]
+
+            # The source repo here is always the production repo, even
+            # when testing *-staging, since it is not being written to
+            source_repo = "https://raw.githubusercontent.com/thunderbird/thunderbird-desktop/refs/heads/" + source_branch
             gecko_head_repo = MOZ_HG_URL.format(repo=gecko_rev["upstream"])
 
             gecko_rev_yml = get_gecko_rev_yml(source_repo)

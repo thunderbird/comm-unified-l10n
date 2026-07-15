@@ -9,6 +9,8 @@ transforms:
     - comm_taskgraph.transforms.merge_automation:transforms
     - gecko_taskgraph.transforms.task:transforms
 
+task-defaults:
+    run-on-repo-type: [hg]
 
 tasks:
     merge-automation:
@@ -20,16 +22,27 @@ tasks:
             kind: build
             platform: thunderbird-release/opt
         description: Merge repositories for release management.
-        worker-type: tree
-        scopes: []
+        worker-type: lando
         worker:
-            implementation: treescript
-            tags: []
-            bump: false
+            implementation: scriptworker-lando
+            lando-repo:
+                by-project:
+                    try:
+                        by-behavior:
+                            main-to-beta: staging-thunderbird-beta
+                            beta-to-release: staging-thunderbird-release
+                            release-to-esr: staging-thunderbird-esr153
+                            bump-main: staging-thunderbird-main
+                            bump-esr153: staging-thunderbird-esr153
+                    default:
+                        by-behavior:
+                            main-to-beta: thunderbird-desktop-beta
+                            beta-to-release: thunderbird-desktop-release
+                            release-to-esr: thunderbird-desktop-esr153
+                            bump-main: thunderbird-desktop-main
+                            bump-esr153: thunderbird-desktop-esr153
             dontbuild: false
-            ignore-closed-tree: true
-            push: false
-            l10n-bump-info:
+            actions:
                 by-behavior:
                     comm-central-to-beta:
                         - name: Thunderbird l10n changesets
@@ -58,26 +71,26 @@ tasks:
                     default: null
             gecko-rev:
                 by-behavior:
-                    comm-central-to-beta:
-                        source: from-repo
+                    bump-esr153:
+                        source: to-branch
+                        upstream: mozilla-esr153
+                        tag: 'FIREFOX_{major_version}_{minor_version_plus1}(_\d+)?esr_BUILD\d'
+                        base: '(FIREFOX_ESR_{major_version}_BASE|FIREFOX_{major_version}_{minor_version}(_\d+)?)esr_BUILD\d'
+                    main-to-beta:
+                        source: from-branch
                         upstream: mozilla-beta
                         tag: 'FIREFOX_{major_version}_0b1_BUILD\d'
                         base: 'FIREFOX_BETA_{major_version}_BASE'
-                    comm-beta-to-release:
-                        source: from-repo
+                    beta-to-release:
+                        source: from-branch
                         upstream: mozilla-release
                         tag: 'FIREFOX_{major_version}_0_BUILD\d'
                         base: 'FIREFOX_RELEASE_{major_version}_BASE'
-                    comm-release-to-esr:
-                        source: to-repo
-                        upstream: mozilla-esr140
+                    release-to-esr:
+                        source: to-branch
+                        upstream: mozilla-esr153
                         tag: 'FIREFOX_{major_version}_0esr_BUILD\d'
                         base: 'FIREFOX_ESR_{major_version}_BASE'
-                    comm-bump-esr140:
-                        source: to-repo
-                        upstream: mozilla-esr140
-                        tag: 'FIREFOX_{major_version}_{minor_version_plus1}(_\d+)?esr_BUILD\d'
-                        base: '(FIREFOX_ESR_{major_version}_BASE|FIREFOX_{major_version}_{minor_version}(_\d+)?)esr_BUILD\d'
                     default: null
         run-on-projects: []
         expiration-policy: long
