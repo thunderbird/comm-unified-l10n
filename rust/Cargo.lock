@@ -277,7 +277,7 @@ dependencies = [
 [[package]]
 name = "audioipc2"
 version = "0.6.0"
-source = "git+https://github.com/mozilla/audioipc?rev=e6f44a2bd1e57d11dfc737632a9e849077632330#e6f44a2bd1e57d11dfc737632a9e849077632330"
+source = "git+https://github.com/mozilla/audioipc?rev=3f0d4aef7a2c06b0146384592b312a7f47ab7cea#3f0d4aef7a2c06b0146384592b312a7f47ab7cea"
 dependencies = [
  "arrayvec",
  "ashmem",
@@ -305,7 +305,7 @@ dependencies = [
 [[package]]
 name = "audioipc2-client"
 version = "0.6.0"
-source = "git+https://github.com/mozilla/audioipc?rev=e6f44a2bd1e57d11dfc737632a9e849077632330#e6f44a2bd1e57d11dfc737632a9e849077632330"
+source = "git+https://github.com/mozilla/audioipc?rev=3f0d4aef7a2c06b0146384592b312a7f47ab7cea#3f0d4aef7a2c06b0146384592b312a7f47ab7cea"
 dependencies = [
  "audio_thread_priority",
  "audioipc2",
@@ -316,7 +316,7 @@ dependencies = [
 [[package]]
 name = "audioipc2-server"
 version = "0.6.0"
-source = "git+https://github.com/mozilla/audioipc?rev=e6f44a2bd1e57d11dfc737632a9e849077632330#e6f44a2bd1e57d11dfc737632a9e849077632330"
+source = "git+https://github.com/mozilla/audioipc?rev=3f0d4aef7a2c06b0146384592b312a7f47ab7cea#3f0d4aef7a2c06b0146384592b312a7f47ab7cea"
 dependencies = [
  "audio_thread_priority",
  "audioipc2",
@@ -1220,7 +1220,7 @@ dependencies = [
 [[package]]
 name = "cubeb-pulse"
 version = "0.5.0"
-source = "git+https://github.com/mozilla/cubeb-pulse-rs?rev=8678dcab1c287de79c4c184ccc2e065bc62b70e2#8678dcab1c287de79c4c184ccc2e065bc62b70e2"
+source = "git+https://github.com/mozilla/cubeb-pulse-rs?rev=b46defa5370f16c57ce8b163d8fbb0b68a8e81e1#b46defa5370f16c57ce8b163d8fbb0b68a8e81e1"
 dependencies = [
  "cubeb-backend",
  "pulse",
@@ -4734,7 +4734,7 @@ dependencies = [
 [[package]]
 name = "pulse"
 version = "0.3.0"
-source = "git+https://github.com/mozilla/cubeb-pulse-rs?rev=8678dcab1c287de79c4c184ccc2e065bc62b70e2#8678dcab1c287de79c4c184ccc2e065bc62b70e2"
+source = "git+https://github.com/mozilla/cubeb-pulse-rs?rev=b46defa5370f16c57ce8b163d8fbb0b68a8e81e1#b46defa5370f16c57ce8b163d8fbb0b68a8e81e1"
 dependencies = [
  "bitflags 2.9.0",
  "pulse-ffi",
@@ -4743,7 +4743,7 @@ dependencies = [
 [[package]]
 name = "pulse-ffi"
 version = "0.1.0"
-source = "git+https://github.com/mozilla/cubeb-pulse-rs?rev=8678dcab1c287de79c4c184ccc2e065bc62b70e2#8678dcab1c287de79c4c184ccc2e065bc62b70e2"
+source = "git+https://github.com/mozilla/cubeb-pulse-rs?rev=b46defa5370f16c57ce8b163d8fbb0b68a8e81e1#b46defa5370f16c57ce8b163d8fbb0b68a8e81e1"
 dependencies = [
  "libc",
 ]
