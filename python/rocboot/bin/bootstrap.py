@@ -108,7 +108,9 @@ def git_clone(
     # If the user provides an alternate remote, we add it as "head" and
     # optionally checkout a revision from it.
     if head_repo:
-        subprocess.check_call([str(git), "remote", "add", "head", head_repo], cwd=str(dest), env=env)
+        subprocess.check_call(
+            [str(git), "remote", "add", "head", head_repo], cwd=str(dest), env=env
+        )
         if head_rev:
             subprocess.check_call([str(git), "fetch", "head", head_rev], cwd=str(dest), env=env)
             subprocess.check_call([str(git), "checkout", "FETCH_HEAD"], cwd=str(dest), env=env)
@@ -232,6 +234,7 @@ def clone(options):
         else:
             return thunderbird_dest
     return firefox_dest
+
 
 def bootstrap(srcdir: Path, artifact_mode, no_interactive, no_system_changes):
     args = [sys.executable, "mach"]
