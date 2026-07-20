@@ -5,6 +5,7 @@
 loader: taskgraph.loader.transform:loader
 
 transforms:
+    - gecko_taskgraph.transforms.release:run_on_releases
     - gecko_taskgraph.transforms.release_deps:transforms
     - gecko_taskgraph.transforms.resolve_landoscript_keyed_by:transforms
     - gecko_taskgraph.transforms.task:transforms
@@ -12,6 +13,7 @@ transforms:
 task-defaults:
     description: Release Promotion version tag for buildN
     run-on-projects: []
+    run-on-releases: []
     shipping-phase: promote
     worker-type: tree
     worker:
