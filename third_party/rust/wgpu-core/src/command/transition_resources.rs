@@ -12,42 +12,6 @@ use crate::{
     track::ResourceUsageCompatibilityError,
 };
 
-impl CommandEncoder {
-    pub fn transition_resources(
-        self: &Arc<Self>,
-        buffer_transitions: impl Iterator<Item = wgt::BufferTransition<Arc<Buffer>>>,
-        texture_transitions: impl Iterator<Item = wgt::TextureTransition<Arc<Texture>>>,
-    ) -> Result<(), EncoderStateError> {
-        profiling::scope!("CommandEncoder::transition_resources");
-
-        // Lock command encoder for recording
-        let mut cmd_buf_data = self.data.lock();
-        cmd_buf_data.push_with(|| -> Result<_, TransitionResourcesError> {
-            Ok(ArcCommand::TransitionResources {
-                buffer_transitions: buffer_transitions
-                    .map(|t| {
-                        t.buffer.check_is_valid()?;
-                        Ok(wgt::BufferTransition {
-                            buffer: t.buffer,
-                            state: t.state,
-                        })
-                    })
-                    .collect::<Result<_, TransitionResourcesError>>()?,
-                texture_transitions: texture_transitions
-                    .map(|t| {
-                        t.texture.check_valid()?;
-                        Ok(wgt::TextureTransition {
-                            texture: t.texture,
-                            selector: t.selector,
-                            state: t.state,
-                        })
-                    })
-                    .collect::<Result<_, TransitionResourcesError>>()?,
-            })
-        })
-    }
-}
-
 impl Global {
     pub fn command_encoder_transition_resources(
         &self,
@@ -55,32 +19,34 @@ impl Global {
         buffer_transitions: impl Iterator<Item = wgt::BufferTransition<BufferId>>,
         texture_transitions: impl Iterator<Item = wgt::TextureTransition<TextureId>>,
     ) -> Result<(), EncoderStateError> {
+        profiling::scope!("CommandEncoder::transition_resources");
+
         let hub = &self.hub;
 
+        // Lock command encoder for recording
         let cmd_enc = hub.command_encoders.get(command_encoder_id);
-        let buffer_transitions = buffer_transitions
-            .map(|t| {
-                let buffer = hub.buffers.get(t.buffer);
-                wgt::BufferTransition {
-                    buffer,
-                    state: t.state,
-                }
+        let mut cmd_buf_data = cmd_enc.data.lock();
+        cmd_buf_data.push_with(|| -> Result<_, TransitionResourcesError> {
+            Ok(ArcCommand::TransitionResources {
+                buffer_transitions: buffer_transitions
+                    .map(|t| {
+                        Ok(wgt::BufferTransition {
+                            buffer: self.resolve_buffer_id(t.buffer)?,
+                            state: t.state,
+                        })
+                    })
+                    .collect::<Result<_, TransitionResourcesError>>()?,
+                texture_transitions: texture_transitions
+                    .map(|t| {
+                        Ok(wgt::TextureTransition {
+                            texture: self.resolve_texture_id(t.texture)?,
+                            selector: t.selector,
+                            state: t.state,
+                        })
+                    })
+                    .collect::<Result<_, TransitionResourcesError>>()?,
             })
-            .collect::<Vec<_>>();
-        let texture_transitions = texture_transitions
-            .map(|t| {
-                let texture = hub.textures.get(t.texture);
-                wgt::TextureTransition {
-                    texture,
-                    selector: t.selector,
-                    state: t.state,
-                }
-            })
-            .collect::<Vec<_>>();
-        cmd_enc.transition_resources(
-            buffer_transitions.into_iter(),
-            texture_transitions.into_iter(),
-        )
+        })
     }
 }
 

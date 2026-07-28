@@ -1,9 +1,6 @@
 use {
     self::reader::ProcfsAuxvIter,
-    super::{
-        Pid,
-        process_inspection::{self, ProcessInspector},
-    },
+    super::{Pid, process_inspection::ProcessInspector},
     crate::serializers::*,
     error_graph::WriteErrorList,
     failspot::failspot,
@@ -147,7 +144,12 @@ impl AuxvDumpInfo {
 #[derive(Debug, Error, serde::Serialize)]
 pub enum AuxvError {
     #[error("Failed to open file {0}")]
-    OpenError(String, #[source] process_inspection::Error),
+    OpenError(
+        String,
+        #[source]
+        #[serde(serialize_with = "serialize_io_error")]
+        std::io::Error,
+    ),
     #[error("No auxv entry found for PID {0}")]
     NoAuxvEntryFound(Pid),
     #[error("Invalid auxv format (should not hit EOF before AT_NULL)")]

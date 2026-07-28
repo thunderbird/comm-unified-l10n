@@ -6,6 +6,7 @@
 
 use std::{
     cell::RefCell,
+    collections::HashSet,
     fmt::{self, Debug, Display, Formatter},
     rc::Rc,
     str::from_utf8,
@@ -13,8 +14,7 @@ use std::{
 };
 
 use neqo_common::{Bytes, Encoder, Header, MessageType, Role, qdebug, qtrace};
-use neqo_transport::{AppError, Connection, DatagramTracking, StreamId, streams::SendGroupId};
-use rustc_hash::FxHashSet as HashSet;
+use neqo_transport::{AppError, Connection, DatagramTracking, StreamId};
 
 use crate::{
     CloseType, Error, Http3StreamType, HttpRecvStream, Priority, ReceiveOutput, RecvStream, Res,
@@ -60,7 +60,6 @@ pub(crate) struct Session {
     /// Corresponds to the `:protocol` pseudo-header in the HTTP EXTENDED
     /// CONNECT request.
     protocol: Box<dyn Protocol>,
-    draining: bool,
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -120,7 +119,6 @@ impl Session {
             state: State::Negotiating,
             events,
             protocol,
-            draining: false,
         }
     }
 
@@ -150,19 +148,7 @@ impl Session {
             state: State::Active,
             events,
             protocol,
-            draining: false,
         })
-    }
-
-    /// Returns the type of this extended CONNECT session.
-    pub(crate) fn connect_type(&self) -> ExtendedConnectType {
-        self.protocol.connect_type()
-    }
-
-    /// Mark session as draining. Returns `true` if this was the first call
-    /// (i.e. the session was not already draining).
-    pub(crate) const fn set_draining(&mut self) -> bool {
-        !std::mem::replace(&mut self.draining, true)
     }
 
     /// # Errors
@@ -296,8 +282,6 @@ impl Session {
                         );
                         State::Done
                     } else {
-                        self.protocol.process_response_headers(&headers);
-
                         self.events.session_start(
                             self.protocol.connect_type(),
                             self.id,
@@ -448,10 +432,6 @@ impl Session {
         }
     }
 
-    pub(crate) fn validate_send_group(&self, group_id: SendGroupId) -> bool {
-        self.protocol.validate_send_group(group_id)
-    }
-
     fn has_data_to_send(&self) -> bool {
         self.control_stream_send.has_data_to_send()
     }
@@ -464,18 +444,6 @@ impl Session {
 impl Stream for Rc<RefCell<Session>> {
     fn stream_type(&self) -> Http3StreamType {
         Http3StreamType::ExtendedConnect
-    }
-
-    fn session_protocol(&self) -> Option<String> {
-        self.borrow().protocol.protocol().map(ToString::to_string)
-    }
-
-    fn register_send_group(&mut self, id: SendGroupId) -> Res<()> {
-        self.borrow_mut().protocol.register_send_group(id)
-    }
-
-    fn validate_send_group(&self, group_id: SendGroupId) -> bool {
-        self.borrow().protocol.validate_send_group(group_id)
     }
 }
 
@@ -607,20 +575,6 @@ pub(crate) trait Protocol: Debug + Display {
 
     fn take_sub_streams(&mut self) -> (HashSet<StreamId>, HashSet<StreamId>) {
         (HashSet::default(), HashSet::default())
-    }
-
-    fn process_response_headers(&mut self, _headers: &[Header]) {}
-
-    fn protocol(&self) -> Option<&str> {
-        None
-    }
-
-    fn register_send_group(&mut self, _id: SendGroupId) -> Res<()> {
-        Err(Error::InvalidStreamId)
-    }
-
-    fn validate_send_group(&self, _group_id: SendGroupId) -> bool {
-        false
     }
 
     fn write_datagram_prefix(&self, encoder: &mut Encoder);

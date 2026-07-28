@@ -294,12 +294,11 @@ impl<A: hal::Api> Example<A> {
         dbg!(&surface_caps.formats);
         let surface_format = if surface_caps
             .formats
-            .iter()
-            .any(|fc| fc.format == wgpu_types::TextureFormat::Rgba8Unorm)
+            .contains(&wgpu_types::TextureFormat::Rgba8Unorm)
         {
             wgpu_types::TextureFormat::Rgba8Unorm
         } else {
-            surface_caps.formats.first().unwrap().format
+            *surface_caps.formats.first().unwrap()
         };
         let surface_config = hal::SurfaceConfiguration {
             maximum_frame_latency: DESIRED_MAX_LATENCY
@@ -308,7 +307,6 @@ impl<A: hal::Api> Example<A> {
             present_mode: wgpu_types::PresentMode::Fifo,
             composite_alpha_mode: wgpu_types::CompositeAlphaMode::Opaque,
             format: surface_format,
-            color_space: wgpu_types::SurfaceColorSpace::Srgb,
             extent: wgpu_types::Extent3d {
                 width: window_size.0,
                 height: window_size.1,

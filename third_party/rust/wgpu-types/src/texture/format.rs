@@ -924,8 +924,7 @@ impl TextureFormat {
         // Flags
         let basic =
             TextureUsages::COPY_SRC | TextureUsages::COPY_DST | TextureUsages::TEXTURE_BINDING;
-        let attachment =
-            basic | TextureUsages::RENDER_ATTACHMENT | TextureUsages::TRANSIENT_ATTACHMENT;
+        let attachment = basic | TextureUsages::RENDER_ATTACHMENT | TextureUsages::TRANSIENT;
         let storage = basic | TextureUsages::STORAGE_BINDING;
         let binding = TextureUsages::TEXTURE_BINDING;
         let all_flags = attachment | storage | binding;

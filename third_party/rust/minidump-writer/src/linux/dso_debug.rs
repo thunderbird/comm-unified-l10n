@@ -99,6 +99,7 @@ pub struct RDebug {
 pub fn write_dso_debug_stream(
     process_inspector: &ProcessInspector,
     buffer: &mut Buffer,
+    blamed_thread: i32,
     auxv: &AuxvDumpInfo,
 ) -> Result<MDRawDirectory> {
     let phnum_max =
@@ -108,7 +109,12 @@ pub fn write_dso_debug_stream(
         .get_program_header_address()
         .ok_or(SectionDsoDebugError::CouldNotFind("AT_PHDR in auxv"))? as usize;
 
-    let ph = MinidumpWriter::copy_from_process(process_inspector, phdr, SIZEOF_PHDR * phnum_max)?;
+    let ph = MinidumpWriter::copy_from_process(
+        process_inspector,
+        blamed_thread,
+        phdr,
+        SIZEOF_PHDR * phnum_max,
+    )?;
     let program_headers;
     #[cfg(target_pointer_width = "64")]
     {
@@ -156,6 +162,7 @@ pub fn write_dso_debug_stream(
     loop {
         let dyn_data = MinidumpWriter::copy_from_process(
             process_inspector,
+            blamed_thread,
             dyn_addr as usize + dynamic_length,
             dyn_size,
         )?;
@@ -184,6 +191,7 @@ pub fn write_dso_debug_stream(
 
     let debug_entry_data = MinidumpWriter::copy_from_process(
         process_inspector,
+        blamed_thread,
         r_debug,
         std::mem::size_of::<RDebug>(),
     )?;
@@ -199,6 +207,7 @@ pub fn write_dso_debug_stream(
     while curr_map != 0 {
         let link_map_data = MinidumpWriter::copy_from_process(
             process_inspector,
+            blamed_thread,
             curr_map,
             std::mem::size_of::<LinkMap>(),
         )?;
@@ -223,8 +232,12 @@ pub fn write_dso_debug_stream(
         for (idx, map) in dso_vec.iter().enumerate() {
             let mut filename = String::new();
             if map.l_name > 0 {
-                let filename_data =
-                    MinidumpWriter::copy_from_process(process_inspector, map.l_name, 256)?;
+                let filename_data = MinidumpWriter::copy_from_process(
+                    process_inspector,
+                    blamed_thread,
+                    map.l_name,
+                    256,
+                )?;
 
                 // C - string is NULL-terminated
                 if let Some(name) = filename_data.splitn(2, |x| *x == b'\0').next() {
@@ -259,8 +272,12 @@ pub fn write_dso_debug_stream(
     };
 
     dirent.location.data_size += dynamic_length as u32;
-    let dso_debug_data =
-        MinidumpWriter::copy_from_process(process_inspector, dyn_addr as usize, dynamic_length)?;
+    let dso_debug_data = MinidumpWriter::copy_from_process(
+        process_inspector,
+        blamed_thread,
+        dyn_addr as usize,
+        dynamic_length,
+    )?;
     MemoryArrayWriter::write_bytes(buffer, &dso_debug_data);
 
     Ok(dirent)

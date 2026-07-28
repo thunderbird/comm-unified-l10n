@@ -4,7 +4,6 @@ use core::mem;
 use crate::id::{Id, Marker};
 use crate::resource::ResourceType;
 use crate::{Epoch, Index};
-use parking_lot::Mutex;
 
 /// An entry in a `Storage::map` table.
 #[derive(Debug)]
@@ -34,14 +33,6 @@ impl<T: StorageItem> StorageItem for Arc<T> {
     type Marker = T::Marker;
 }
 
-impl<T: ResourceType> ResourceType for Mutex<T> {
-    const TYPE: &'static str = T::TYPE;
-}
-
-impl<T: StorageItem> StorageItem for Mutex<T> {
-    type Marker = T::Marker;
-}
-
 #[macro_export]
 macro_rules! impl_storage_item {
     ($ty:ident) => {
@@ -65,6 +56,7 @@ where
     T: StorageItem,
 {
     pub(crate) map: Vec<Element<T>>,
+    kind: &'static str,
 }
 
 impl<T> Storage<T>
@@ -72,7 +64,10 @@ where
     T: StorageItem,
 {
     pub(crate) fn new() -> Self {
-        Self { map: Vec::new() }
+        Self {
+            map: Vec::new(),
+            kind: T::TYPE,
+        }
     }
 }
 
@@ -89,9 +84,11 @@ where
         match mem::replace(&mut self.map[index], Element::Occupied(value, epoch)) {
             Element::Vacant => {}
             Element::Occupied(_, storage_epoch) => {
-                panic!(
-                    "Cannot insert {id:?}, found existing resource {other:?}",
-                    other = Id::<T::Marker>::zip(index as Index, storage_epoch),
+                assert_ne!(
+                    epoch,
+                    storage_epoch,
+                    "Index {index:?} of {} is already occupied",
+                    T::TYPE
                 );
             }
         }
@@ -99,24 +96,19 @@ where
 
     pub(crate) fn remove(&mut self, id: Id<T::Marker>) -> T {
         let (index, epoch) = id.unzip();
-        let stored = self.map.get_mut(index as usize);
-        match stored.map(|stored| mem::replace(stored, Element::Vacant)) {
-            Some(Element::Occupied(value, storage_epoch)) => {
-                assert_eq!(
-                    epoch,
-                    storage_epoch,
-                    "Cannot remove {id:?}, found other resource {other:?}",
-                    other = Id::<T::Marker>::zip(index, storage_epoch),
-                );
+        let stored = self
+            .map
+            .get_mut(index as usize)
+            .unwrap_or_else(|| panic!("{}[{:?}] does not exist", self.kind, id));
+        match mem::replace(stored, Element::Vacant) {
+            Element::Occupied(value, storage_epoch) => {
+                assert_eq!(epoch, storage_epoch, "id epoch mismatch");
                 value
             }
-            None | Some(Element::Vacant) => {
-                panic!("Cannot remove non-existent resource {id:?}");
-            }
+            Element::Vacant => panic!("Cannot remove a vacant resource"),
         }
     }
 
-    #[allow(dead_code)]
     pub(crate) fn iter(&self) -> impl Iterator<Item = (Id<T::Marker>, &T)> {
         self.map
             .iter()
@@ -140,86 +132,13 @@ where
         let (index, epoch) = id.unzip();
         let (result, storage_epoch) = match self.map.get(index as usize) {
             Some(&Element::Occupied(ref v, epoch)) => (v.clone(), epoch),
-            None | Some(&Element::Vacant) => {
-                panic!("Cannot get non-existent resource {id:?}");
-            }
+            None | Some(&Element::Vacant) => panic!("{}[{:?}] does not exist", self.kind, id),
         };
         assert_eq!(
-            epoch,
-            storage_epoch,
-            "Cannot get {id:?}, found other resource {other:?}",
-            other = Id::<T::Marker>::zip(index, storage_epoch),
+            epoch, storage_epoch,
+            "{}[{:?}] is no longer alive",
+            self.kind, id
         );
         result
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[derive(Clone, Debug)]
-    struct TestItem;
-
-    impl ResourceType for TestItem {
-        const TYPE: &'static str = "TestItem";
-    }
-
-    impl StorageItem for TestItem {
-        type Marker = ();
-    }
-
-    fn id(index: Index, epoch: Epoch) -> Id<()> {
-        Id::zip(index, epoch)
-    }
-
-    #[test]
-    #[should_panic(
-        expected = "Cannot insert UntypedId(0,1), found existing resource UntypedId(0,1)"
-    )]
-    fn insert_occupied_same_epoch() {
-        let mut storage = Storage::new();
-        storage.insert(id(0, 1), TestItem);
-        storage.insert(id(0, 1), TestItem);
-    }
-
-    #[test]
-    #[should_panic(
-        expected = "Cannot insert UntypedId(0,2), found existing resource UntypedId(0,1)"
-    )]
-    fn insert_occupied_different_epoch() {
-        let mut storage = Storage::new();
-        storage.insert(id(0, 1), TestItem);
-        storage.insert(id(0, 2), TestItem);
-    }
-
-    #[test]
-    #[should_panic(expected = "Cannot remove UntypedId(0,2), found other resource UntypedId(0,1)")]
-    fn remove_epoch_mismatch() {
-        let mut storage = Storage::new();
-        storage.insert(id(0, 1), TestItem);
-        storage.remove(id(0, 2));
-    }
-
-    #[test]
-    #[should_panic(expected = "Cannot remove non-existent resource UntypedId(0,1)")]
-    fn remove_vacant() {
-        let mut storage = Storage::<TestItem>::new();
-        storage.remove(id(0, 1));
-    }
-
-    #[test]
-    #[should_panic(expected = "Cannot get non-existent resource UntypedId(0,1)")]
-    fn get_vacant() {
-        let storage = Storage::<TestItem>::new();
-        storage.get(id(0, 1));
-    }
-
-    #[test]
-    #[should_panic(expected = "Cannot get UntypedId(0,2), found other resource UntypedId(0,1)")]
-    fn get_epoch_mismatch() {
-        let mut storage = Storage::new();
-        storage.insert(id(0, 1), TestItem);
-        storage.get(id(0, 2));
     }
 }

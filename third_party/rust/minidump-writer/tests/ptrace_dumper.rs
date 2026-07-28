@@ -5,13 +5,15 @@ use {
     common::*,
     error_graph::ErrorList,
     minidump_writer::minidump_writer::MinidumpWriterConfig,
+    nix::{
+        sys::mman::{MapFlags, ProtFlags, mmap},
+        sys::signal::Signal,
+    },
     std::{
         convert::TryInto,
-        ffi::c_void,
         io::{BufRead, BufReader},
         mem::size_of,
         os::unix::process::ExitStatusExt,
-        ptr,
     },
 };
 
@@ -163,7 +165,7 @@ fn thread_list_from_parent() {
     let waitres = child.wait().expect("Failed to wait for child");
     let status = waitres.signal().expect("Child did not die due to signal");
     assert_eq!(waitres.code(), None);
-    assert_eq!(status, libc::SIGKILL);
+    assert_eq!(status, Signal::SIGKILL as i32);
 
     // We clean up the child process before checking the final result
     // TODO: I currently know of no way to write the thread_id into the registers using Rust,
@@ -186,10 +188,9 @@ fn linux_gate_mapping_id() {
 
 #[test]
 fn merges_mappings() {
-    let page_size = unsafe { libc::sysconf(libc::_SC_PAGESIZE) };
-    assert!(page_size > 0);
-    let page_size = usize::try_from(page_size).unwrap();
-    let map_size = 3 * page_size;
+    let page_size = nix::unistd::sysconf(nix::unistd::SysconfVar::PAGE_SIZE).unwrap();
+    let page_size = std::num::NonZeroUsize::new(page_size.unwrap() as usize).unwrap();
+    let map_size = std::num::NonZeroUsize::new(3 * page_size.get()).unwrap();
 
     let path: String = if let Ok(p) = std::env::var("TEST_HELPER") {
         p
@@ -201,31 +202,30 @@ fn merges_mappings() {
     // mmap two segments out of the helper binary, one
     // enclosed in the other, but with different protections.
     let mapped_mem = unsafe {
-        let ptr = libc::mmap(
-            ptr::null_mut(),
+        mmap(
+            None,
             map_size,
-            libc::PROT_READ,
-            libc::MAP_SHARED,
-            std::os::fd::AsRawFd::as_raw_fd(&file),
+            ProtFlags::PROT_READ,
+            MapFlags::MAP_SHARED,
+            &file,
             0,
-        );
-        assert!(ptr != libc::MAP_FAILED);
-        ptr
+        )
+        .unwrap()
     };
 
-    let mapped = mapped_mem as usize;
+    let mapped = mapped_mem.as_ptr() as usize;
 
     // Carve a page out of the first mapping with different permissions.
     let _inside_mapping = unsafe {
-        libc::mmap(
-            (mapped + 2 * page_size) as *mut c_void,
+        mmap(
+            std::num::NonZeroUsize::new(mapped + 2 * page_size.get()),
             page_size,
-            libc::PROT_NONE,
-            libc::MAP_SHARED | libc::MAP_FIXED,
-            std::os::fd::AsRawFd::as_raw_fd(&file),
+            ProtFlags::PROT_NONE,
+            MapFlags::MAP_SHARED | MapFlags::MAP_FIXED,
+            &file,
             // Map a different offset just to
             // better test real-world conditions.
-            page_size.try_into().unwrap(),
+            page_size.get().try_into().unwrap(), // try_into() in order to work for 32 and 64 bit
         )
     };
 
@@ -392,5 +392,5 @@ fn sanitizes_stack_copies() {
     let waitres = child.wait().expect("Failed to wait for child");
     let status = waitres.signal().expect("Child did not die due to signal");
     assert_eq!(waitres.code(), None);
-    assert_eq!(status, libc::SIGKILL);
+    assert_eq!(status, Signal::SIGKILL as i32);
 }

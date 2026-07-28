@@ -21,7 +21,7 @@ use crate::{
 };
 
 /// Configuration options for the dot backend
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Default)]
 pub struct Options {
     /// Only emit function bodies
     pub cfg_only: bool,

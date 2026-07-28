@@ -13,7 +13,10 @@ mod linux {
             LINUX_GATE_LIBRARY_NAME,
             minidump_writer::{MinidumpWriter, MinidumpWriterConfig},
         },
-        std::ptr,
+        nix::{
+            sys::mman::{MapFlags, ProtFlags, mmap_anonymous},
+            unistd::getppid,
+        },
     };
 
     macro_rules! test {
@@ -33,15 +36,12 @@ mod linux {
         __result
     }});
 
-    fn getppid() -> libc::pid_t {
-        unsafe { libc::getppid() }
-    }
-
     fn test_setup() -> Result<()> {
         let ppid = getppid();
         fail_on_soft_error!(
             soft_errors,
-            MinidumpWriterConfig::new(ppid, ppid).build_for_testing(&mut soft_errors)?
+            MinidumpWriterConfig::new(ppid.as_raw(), ppid.as_raw())
+                .build_for_testing(&mut soft_errors)?
         );
         Ok(())
     }
@@ -50,11 +50,17 @@ mod linux {
         let ppid = getppid();
         let dumper = fail_on_soft_error!(
             soft_errors,
-            MinidumpWriterConfig::new(ppid, ppid).build_for_testing(&mut soft_errors)?
+            MinidumpWriterConfig::new(ppid.as_raw(), ppid.as_raw())
+                .build_for_testing(&mut soft_errors)?
         );
         test!(!dumper.threads.is_empty(), "No threads");
         test!(
-            dumper.threads.iter().filter(|x| x.tid == ppid).count() == 1,
+            dumper
+                .threads
+                .iter()
+                .filter(|x| x.tid == ppid.as_raw())
+                .count()
+                == 1,
             "Thread found multiple times"
         );
 
@@ -72,8 +78,8 @@ mod linux {
     fn test_copy_from_process(stack_var: usize, heap_var: usize) -> Result<()> {
         use minidump_writer::process_reader::ProcessReader;
 
-        let ppid = getppid();
-        let dumper = fail_on_soft_error!(
+        let ppid = getppid().as_raw();
+        let mut dumper = fail_on_soft_error!(
             soft_errors,
             MinidumpWriterConfig::new(ppid, ppid).build_for_testing(&mut soft_errors)?
         );
@@ -84,7 +90,7 @@ mod linux {
         let expected_stack = 0x11223344usize.to_ne_bytes();
         let expected_heap = 0x55667788usize.to_ne_bytes();
 
-        let validate = |reader: ProcessReader| -> Result<()> {
+        let validate = |reader: &ProcessReader| -> Result<()> {
             let mut val = [0u8; std::mem::size_of::<usize>()];
             let read = reader.read(stack_var, &mut val)?;
             assert_eq!(read, val.len());
@@ -99,25 +105,33 @@ mod linux {
 
         // virtual mem
         {
-            validate(ProcessReader::for_virtual_mem(&dumper.process_inspector))
+            dumper.process_inspector.force_pr_virtual_mem();
+            validate(dumper.process_inspector.process_reader())
                 .map_err(|err| format!("failed to validate memory: {err}"))?;
         }
 
         // file
         {
-            let reader = ProcessReader::for_file(&dumper.process_inspector)
+            dumper
+                .process_inspector
+                .force_pr_file()
                 .map_err(|err| format!("failed to open `/proc/{ppid}/mem`: {err}"))?;
-            validate(reader).map_err(|err| format!("failed to validate memory: {err}"))?;
+            validate(dumper.process_inspector.process_reader())
+                .map_err(|err| format!("failed to validate memory: {err}"))?;
         }
 
         // ptrace
         {
-            validate(ProcessReader::for_ptrace(&dumper.process_inspector))
+            dumper.process_inspector.force_pr_ptrace();
+            validate(dumper.process_inspector.process_reader())
                 .map_err(|err| format!("failed to validate memory: {err}"))?;
         }
 
+        dumper.process_inspector.force_pr_reset();
+
         let stack_res = MinidumpWriter::copy_from_process(
             &dumper.process_inspector,
+            ppid,
             stack_var,
             std::mem::size_of::<usize>(),
         )?;
@@ -126,6 +140,7 @@ mod linux {
 
         let heap_res = MinidumpWriter::copy_from_process(
             &dumper.process_inspector,
+            ppid,
             heap_var,
             std::mem::size_of::<usize>(),
         )?;
@@ -142,7 +157,8 @@ mod linux {
 
         let dumper = fail_on_soft_error!(
             soft_errors,
-            MinidumpWriterConfig::new(ppid, ppid).build_for_testing(&mut soft_errors)?
+            MinidumpWriterConfig::new(ppid.as_raw(), ppid.as_raw())
+                .build_for_testing(&mut soft_errors)?
         );
         dumper
             .find_mapping(addr1)
@@ -157,7 +173,7 @@ mod linux {
     }
 
     fn test_file_id() -> Result<()> {
-        let ppid = getppid();
+        let ppid = getppid().as_raw();
         let exe_link = format!("/proc/{ppid}/exe");
         let exe_name = std::fs::read_link(exe_link)?.into_os_string();
 
@@ -187,7 +203,8 @@ mod linux {
         // Now check that PtraceDumper interpreted the mappings properly.
         let dumper = fail_on_soft_error!(
             soft_errors,
-            MinidumpWriterConfig::new(getppid(), getppid()).build_for_testing(&mut soft_errors)?
+            MinidumpWriterConfig::new(getppid().as_raw(), getppid().as_raw())
+                .build_for_testing(&mut soft_errors)?
         );
         let mut mapping_count = 0;
         for map in &dumper.mappings {
@@ -209,7 +226,7 @@ mod linux {
     }
 
     fn test_linux_gate_mapping_id() -> Result<()> {
-        let ppid = getppid();
+        let ppid = getppid().as_raw();
         let mut dumper = fail_on_soft_error!(
             soft_errors,
             MinidumpWriterConfig::new(ppid, ppid).build_for_testing(&mut soft_errors)?
@@ -232,7 +249,7 @@ mod linux {
     }
 
     fn test_mappings_include_linux_gate() -> Result<()> {
-        let ppid = getppid();
+        let ppid = getppid().as_raw();
         let dumper = fail_on_soft_error!(
             soft_errors,
             MinidumpWriterConfig::new(ppid, ppid).build_for_testing(&mut soft_errors)?
@@ -299,33 +316,28 @@ mod linux {
     }
 
     fn spawn_mmap_wait() -> Result<()> {
-        let page_size = unsafe { libc::sysconf(libc::_SC_PAGESIZE) };
-        assert!(page_size > 0);
-        let memory_size = std::num::NonZeroUsize::new(page_size as usize).unwrap();
+        let page_size = nix::unistd::sysconf(nix::unistd::SysconfVar::PAGE_SIZE).unwrap();
+        let memory_size = std::num::NonZeroUsize::new(page_size.unwrap() as usize).unwrap();
         // Get some memory to be mapped by the child-process
         let mapped_mem = unsafe {
-            let ptr = libc::mmap(
-                ptr::null_mut(),
-                memory_size.into(),
-                libc::PROT_READ | libc::PROT_WRITE,
-                libc::MAP_PRIVATE | libc::MAP_ANONYMOUS,
-                -1,
-                0,
-            );
-            assert!(ptr != libc::MAP_FAILED);
-            ptr
+            mmap_anonymous(
+                None,
+                memory_size,
+                ProtFlags::PROT_READ | ProtFlags::PROT_WRITE,
+                MapFlags::MAP_PRIVATE | MapFlags::MAP_ANON,
+            )
+            .unwrap()
         };
-        println!("{} {}", mapped_mem as usize, memory_size);
+
+        println!("{} {}", mapped_mem.as_ptr() as usize, memory_size);
         loop {
             std::thread::park();
         }
     }
 
     fn spawn_alloc_wait() -> Result<()> {
-        let page_size = unsafe { libc::sysconf(libc::_SC_PAGESIZE) };
-        assert!(page_size > 0);
-
-        let memory_size = page_size as usize;
+        let page_size = nix::unistd::sysconf(nix::unistd::SysconfVar::PAGE_SIZE).unwrap();
+        let memory_size = page_size.unwrap() as usize;
 
         let mut values = Vec::<u8>::with_capacity(memory_size);
         for idx in 0..memory_size {

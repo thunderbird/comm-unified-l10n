@@ -102,7 +102,7 @@ impl Dispatch {
             CreateShaderModuleError::Validation(naga::error::ShaderError {
                 source: src,
                 label: None,
-                inner,
+                inner: Box::new(inner),
             })
         })?;
         let hal_shader = hal::ShaderInput::Naga(hal::NagaShader {

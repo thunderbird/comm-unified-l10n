@@ -13,9 +13,7 @@ use std::{
     time::{Duration, Instant},
 };
 
-use neqo_common::{
-    Buffer, Encoder, Tos, datagram, hex::Hex, qdebug, qinfo, qlog::Qlog, qtrace, qwarn,
-};
+use neqo_common::{Buffer, Encoder, Tos, datagram, hex, qdebug, qinfo, qlog::Qlog, qtrace, qwarn};
 use nss::random;
 
 use crate::{
@@ -395,12 +393,6 @@ impl Paths {
                 true
             }
         });
-    }
-
-    /// The number of connection IDs that have been retired locally but whose
-    /// `RETIRE_CONNECTION_ID` frames have not yet been ACK'ed.
-    pub(crate) const fn retire_queue_len(&self) -> usize {
-        self.to_retire.len()
     }
 
     /// Write out any `RETIRE_CONNECTION_ID` frames that are outstanding.
@@ -862,10 +854,7 @@ impl Path {
         }
         // Send PATH_RESPONSE.
         let resp_sent = if let Some(challenge) = self.challenge.take() {
-            qtrace!(
-                "[{self}] Responding to path challenge {}",
-                Hex::new(challenge)
-            );
+            qtrace!("[{self}] Responding to path challenge {}", hex(challenge));
             builder.encode_frame(FrameType::PathResponse, |b| {
                 b.encode(&challenge[..]);
             });

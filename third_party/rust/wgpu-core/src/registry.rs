@@ -3,20 +3,12 @@ use alloc::sync::Arc;
 use crate::{
     id::Id,
     identity::IdentityManager,
-    lock::{
-        rank::{self, LockRank},
-        RwLock, RwLockReadGuard,
-    },
+    lock::{rank, RwLock, RwLockReadGuard},
     storage::{Element, Storage, StorageItem},
 };
 
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
 pub struct RegistryReport {
-    /// Count of IDs allocated by [`IdentityManager`]
-    ///
-    /// This may be inconsistent with other fields of the report if
-    /// IDs are allocated or released concurrently with report
-    /// generation.
     pub num_allocated: usize,
     pub num_kept_from_user: usize,
     pub num_released_from_user: usize,
@@ -49,13 +41,9 @@ pub(crate) struct Registry<T: StorageItem> {
 
 impl<T: StorageItem> Registry<T> {
     pub(crate) fn new() -> Self {
-        Self::with_rank(rank::HUB_OTHER)
-    }
-
-    pub(crate) fn with_rank(rank: LockRank) -> Self {
         Self {
             identity: Arc::new(IdentityManager::new()),
-            storage: RwLock::new(rank, Storage::new()),
+            storage: RwLock::new(rank::REGISTRY_STORAGE, Storage::new()),
         }
     }
 }
@@ -106,18 +94,12 @@ impl<T: StorageItem> Registry<T> {
     }
 
     pub(crate) fn generate_report(&self) -> RegistryReport {
+        let storage = self.storage.read();
         let mut report = RegistryReport {
             element_size: size_of::<T>(),
             ..Default::default()
         };
-
-        // Acquiring the identity values lock while holding the storage lock
-        // would require adding an edge in the lock graph, and would still not
-        // ensure a consistent report, because the storage lock is not otherwise
-        // acquired when managing IDs.
         report.num_allocated = self.identity.values.lock().count();
-
-        let storage = self.storage.read();
         for element in storage.map.iter() {
             match *element {
                 Element::Occupied(..) => report.num_kept_from_user += 1,
@@ -142,9 +124,7 @@ mod tests {
 
     struct TestData;
     struct TestDataId;
-    impl Marker for TestDataId {
-        const TYPE: &'static str = "TestData";
-    }
+    impl Marker for TestDataId {}
 
     impl ResourceType for TestData {
         const TYPE: &'static str = "TestData";

@@ -160,7 +160,7 @@ impl TimestampNormalizer {
                 TimestampNormalizerInitError::ValidateWgsl(naga::error::ShaderError {
                     source: preprocessed_src.clone(),
                     label: None,
-                    inner,
+                    inner: Box::new(inner),
                 })
             })?;
             let hal_shader = hal::ShaderInput::Naga(hal::NagaShader {

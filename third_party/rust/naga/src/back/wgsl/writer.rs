@@ -78,7 +78,6 @@ bitflags::bitflags! {
     }
 }
 
-#[expect(missing_debug_implementations, reason = "would be way too verbose?")]
 pub struct Writer<W> {
     out: W,
     flags: WriterFlags,

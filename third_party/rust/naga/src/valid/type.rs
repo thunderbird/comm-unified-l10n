@@ -309,6 +309,8 @@ impl super::Validator {
                         });
                     }
 
+                    immediates_compatibility = Err(ImmediateError::InvalidScalar(scalar));
+
                     true
                 }
                 _ => scalar.width == 4,

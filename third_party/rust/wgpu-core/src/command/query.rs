@@ -12,8 +12,7 @@ use crate::{
         Buffer, DestroyedResourceError, InvalidResourceError, MissingBufferUsageError,
         ParentDevice, QuerySet, RawResourceAccess, Trackable,
     },
-    snatch::SnatchGuard,
-    track::{QuerySetTracker, TrackerIndex},
+    track::{StatelessTracker, TrackerIndex},
     FastHashMap,
 };
 use thiserror::Error;
@@ -89,11 +88,7 @@ impl QueryResetMap {
         mem::replace(&mut vec_pair.0[query as usize], true)
     }
 
-    pub fn reset_queries(
-        &mut self,
-        raw_encoder: &mut dyn hal::DynCommandEncoder,
-        snatch_guard: &SnatchGuard<'_>,
-    ) -> Result<(), DestroyedResourceError> {
+    pub fn reset_queries(&mut self, raw_encoder: &mut dyn hal::DynCommandEncoder) {
         for (_, (state, query_set)) in self.map.drain() {
             debug_assert_eq!(state.len(), query_set.desc.count as usize);
 
@@ -108,10 +103,7 @@ impl QueryResetMap {
                     // We've hit the end of a run, dispatch a reset
                     (Some(start), false) => {
                         run_start = None;
-                        unsafe {
-                            raw_encoder
-                                .reset_queries(query_set.try_raw(snatch_guard)?, start..idx as u32)
-                        };
+                        unsafe { raw_encoder.reset_queries(query_set.raw(), start..idx as u32) };
                     }
                     // We're starting a run
                     (None, true) => {
@@ -122,7 +114,6 @@ impl QueryResetMap {
                 }
             }
         }
-        Ok(())
     }
 }
 
@@ -203,15 +194,12 @@ pub enum QueryUseError {
     },
     #[error("A query of type {query_type:?} was not ended before the encoder was finished")]
     MissingEnd { query_type: SimplifiedQueryType },
-    #[error(transparent)]
-    DestroyedResource(#[from] DestroyedResourceError),
 }
 
 impl WebGpuError for QueryUseError {
     fn webgpu_error_type(&self) -> ErrorType {
         match self {
             Self::Device(e) => e.webgpu_error_type(),
-            Self::DestroyedResource(e) => e.webgpu_error_type(),
             Self::OutOfBounds { .. }
             | Self::UsedTwiceInsideRenderpass { .. }
             | Self::AlreadyStarted { .. }
@@ -298,7 +286,6 @@ impl QuerySet {
         raw_encoder: &mut dyn hal::DynCommandEncoder,
         query_index: u32,
         reset_state: Option<&mut QueryResetMap>,
-        snatch_guard: &SnatchGuard<'_>,
         query_set_writes: &mut QuerySetWrites,
     ) -> Result<(), QueryUseError> {
         let needs_reset = reset_state.is_none();
@@ -307,10 +294,9 @@ impl QuerySet {
         unsafe {
             // If we don't have a reset state tracker which can defer resets, we must reset now.
             if needs_reset {
-                raw_encoder
-                    .reset_queries(self.try_raw(snatch_guard)?, query_index..(query_index + 1));
+                raw_encoder.reset_queries(self.raw(), query_index..(query_index + 1));
             }
-            raw_encoder.write_timestamp(self.try_raw(snatch_guard)?, query_index);
+            raw_encoder.write_timestamp(self.raw(), query_index);
         }
 
         record_query_write(query_set_writes, self, query_index);
@@ -321,11 +307,10 @@ impl QuerySet {
 pub(super) fn validate_and_begin_occlusion_query(
     query_set: Arc<QuerySet>,
     raw_encoder: &mut dyn hal::DynCommandEncoder,
-    tracker: &mut QuerySetTracker,
+    tracker: &mut StatelessTracker<QuerySet>,
     query_index: u32,
     reset_state: Option<&mut QueryResetMap>,
     active_query: &mut Option<(Arc<QuerySet>, u32)>,
-    snatch_guard: &SnatchGuard<'_>,
 ) -> Result<(), QueryUseError> {
     let needs_reset = reset_state.is_none();
     query_set.validate_query(SimplifiedQueryType::Occlusion, query_index, reset_state)?;
@@ -343,12 +328,9 @@ pub(super) fn validate_and_begin_occlusion_query(
     unsafe {
         // If we don't have a reset state tracker which can defer resets, we must reset now.
         if needs_reset {
-            raw_encoder.reset_queries(
-                query_set.try_raw(snatch_guard)?,
-                query_index..(query_index + 1),
-            );
+            raw_encoder.reset_queries(query_set.raw(), query_index..(query_index + 1));
         }
-        raw_encoder.begin_query(query_set.try_raw(snatch_guard)?, query_index);
+        raw_encoder.begin_query(query_set.raw(), query_index);
     }
 
     Ok(())
@@ -357,11 +339,10 @@ pub(super) fn validate_and_begin_occlusion_query(
 pub(super) fn end_occlusion_query(
     raw_encoder: &mut dyn hal::DynCommandEncoder,
     active_query: &mut Option<(Arc<QuerySet>, u32)>,
-    snatch_guard: &SnatchGuard<'_>,
     query_set_writes: &mut QuerySetWrites,
 ) -> Result<(), QueryUseError> {
     if let Some((query_set, query_index)) = active_query.take() {
-        unsafe { raw_encoder.end_query(query_set.try_raw(snatch_guard)?, query_index) };
+        unsafe { raw_encoder.end_query(query_set.raw(), query_index) };
         record_query_write(query_set_writes, &query_set, query_index);
         Ok(())
     } else {
@@ -372,12 +353,11 @@ pub(super) fn end_occlusion_query(
 pub(super) fn validate_and_begin_pipeline_statistics_query(
     query_set: Arc<QuerySet>,
     raw_encoder: &mut dyn hal::DynCommandEncoder,
-    tracker: &mut QuerySetTracker,
+    tracker: &mut StatelessTracker<QuerySet>,
     device: &Arc<Device>,
     query_index: u32,
     reset_state: Option<&mut QueryResetMap>,
     active_query: &mut Option<(Arc<QuerySet>, u32)>,
-    snatch_guard: &SnatchGuard<'_>,
 ) -> Result<(), QueryUseError> {
     query_set.same_device(device)?;
 
@@ -401,12 +381,9 @@ pub(super) fn validate_and_begin_pipeline_statistics_query(
     unsafe {
         // If we don't have a reset state tracker which can defer resets, we must reset now.
         if needs_reset {
-            raw_encoder.reset_queries(
-                query_set.try_raw(snatch_guard)?,
-                query_index..(query_index + 1),
-            );
+            raw_encoder.reset_queries(query_set.raw(), query_index..(query_index + 1));
         }
-        raw_encoder.begin_query(query_set.try_raw(snatch_guard)?, query_index);
+        raw_encoder.begin_query(query_set.raw(), query_index);
     }
 
     Ok(())
@@ -415,56 +392,14 @@ pub(super) fn validate_and_begin_pipeline_statistics_query(
 pub(super) fn end_pipeline_statistics_query(
     raw_encoder: &mut dyn hal::DynCommandEncoder,
     active_query: &mut Option<(Arc<QuerySet>, u32)>,
-    snatch_guard: &SnatchGuard<'_>,
     query_set_writes: &mut QuerySetWrites,
 ) -> Result<(), QueryUseError> {
     if let Some((query_set, query_index)) = active_query.take() {
-        unsafe { raw_encoder.end_query(query_set.try_raw(snatch_guard)?, query_index) };
+        unsafe { raw_encoder.end_query(query_set.raw(), query_index) };
         record_query_write(query_set_writes, &query_set, query_index);
         Ok(())
     } else {
         Err(QueryUseError::AlreadyStopped)
-    }
-}
-
-impl super::CommandEncoder {
-    pub fn write_timestamp(
-        self: &Arc<Self>,
-        query_set: Arc<QuerySet>,
-        query_index: u32,
-    ) -> Result<(), EncoderStateError> {
-        let mut cmd_buf_data = self.data.lock();
-
-        cmd_buf_data.push_with(|| -> Result<_, QueryError> {
-            query_set.check_is_valid()?;
-            Ok(ArcCommand::WriteTimestamp {
-                query_set,
-                query_index,
-            })
-        })
-    }
-
-    pub fn resolve_query_set(
-        self: &Arc<Self>,
-        query_set: Arc<QuerySet>,
-        start_query: u32,
-        query_count: u32,
-        destination: Arc<Buffer>,
-        destination_offset: BufferAddress,
-    ) -> Result<(), EncoderStateError> {
-        let mut cmd_buf_data = self.data.lock();
-
-        cmd_buf_data.push_with(|| -> Result<_, QueryError> {
-            query_set.check_is_valid()?;
-            destination.check_is_valid()?;
-            Ok(ArcCommand::ResolveQuerySet {
-                query_set,
-                start_query,
-                query_count,
-                destination,
-                destination_offset,
-            })
-        })
     }
 }
 
@@ -478,7 +413,14 @@ impl Global {
         let hub = &self.hub;
 
         let cmd_enc = hub.command_encoders.get(command_encoder_id);
-        cmd_enc.write_timestamp(hub.query_sets.get(query_set_id), query_index)
+        let mut cmd_buf_data = cmd_enc.data.lock();
+
+        cmd_buf_data.push_with(|| -> Result<_, QueryError> {
+            Ok(ArcCommand::WriteTimestamp {
+                query_set: self.resolve_query_set(query_set_id)?,
+                query_index,
+            })
+        })
     }
 
     pub fn command_encoder_resolve_query_set(
@@ -493,14 +435,17 @@ impl Global {
         let hub = &self.hub;
 
         let cmd_enc = hub.command_encoders.get(command_encoder_id);
+        let mut cmd_buf_data = cmd_enc.data.lock();
 
-        cmd_enc.resolve_query_set(
-            hub.query_sets.get(query_set_id),
-            start_query,
-            query_count,
-            hub.buffers.get(destination),
-            destination_offset,
-        )
+        cmd_buf_data.push_with(|| -> Result<_, QueryError> {
+            Ok(ArcCommand::ResolveQuerySet {
+                query_set: self.resolve_query_set(query_set_id)?,
+                start_query,
+                query_count,
+                destination: self.resolve_buffer_id(destination)?,
+                destination_offset,
+            })
+        })
     }
 }
 
@@ -519,7 +464,6 @@ pub(super) fn write_timestamp(
         state.raw_encoder,
         query_index,
         None,
-        state.snatch_guard,
         state.query_set_writes,
     )?;
 
@@ -619,7 +563,7 @@ pub(super) fn resolve_query_set(
     if all_written {
         unsafe {
             raw_encoder.copy_query_results(
-                query_set.try_raw(state.snatch_guard)?,
+                query_set.raw(),
                 start_query..end_query,
                 raw_dst_buffer,
                 destination_offset,
