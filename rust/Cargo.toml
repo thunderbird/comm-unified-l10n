@@ -40,7 +40,7 @@ uniffi = { version = "0.31" }
 uniffi_bindgen = { version = "0.31" }
 uniffi_pipeline = { version = "0.31" }
 rusqlite = { version = "0.37" }
-glean = { version = "=67.3.2" }
+glean = { version = "=68.0.1" }
 
 [target."cfg(windows)".dependencies.scopeguard]
 version = "1"
@@ -231,7 +231,7 @@ base64_21 = { package = "base64", path = "../../build/rust/base64" }
 wasi_0_11 = { package = "wasi", path = "../../build/rust/wasi" }
 itertools = { path = "../../build/rust/itertools" }
 backtrace = { path = "../../build/rust/backtrace" }
-bindgen_0_72 = { package = "bindgen", git = "https://github.com/rust-lang/rust-bindgen", rev = "9366e0af8da529c958b4cd4fcbe492d951c86f5c" }
+bindgen_0_72 = { package = "bindgen", git = "https://github.com/glandium/rust-bindgen", rev = "5274da5a06411accb266c10819b989ac25a81b7d" }
 bindgen = { path = "../../build/rust/bindgen" }
 icu_collator = { path = "../../third_party/rust/icu_collator" }
 icu_collator_data = { path = "../../third_party/rust/icu_collator_data" }
@@ -281,6 +281,7 @@ harfbuzz-traits = { git = "https://github.com/hsivonen/rust-harfbuzz", rev = "9d
 encoding_rs = { git = "https://github.com/hsivonen/encoding_rs", rev = "1236d1bc423e6ba35a06485f74a6304db2d703b5" }
 objc = { git = "https://github.com/glandium/rust-objc", rev = "4de89f5aa9851ceca4d40e7ac1e2759410c04324" }
 allocator-api2 = { git = "https://github.com/glandium/allocator-api2", rev = "ad5f3d56a5a4519eff52af4ff85293431466ef5c" }
+ads-client = { path = "../../third_party/application-services/components/ads-client" }
 context_id = { path = "../../third_party/application-services/components/context_id" }
 error-support = { path = "../../third_party/application-services/components/support/error" }
 filter_adult = { path = "../../third_party/application-services/components/filter_adult" }
@@ -295,8 +296,12 @@ tracing-support = { path = "../../third_party/application-services/components/su
 viaduct = { path = "../../third_party/application-services/components/viaduct" }
 webext-storage = { path = "../../third_party/application-services/components/webext-storage" }
 logins = { path = "../../third_party/application-services/components/logins" }
+autofill = { path = "../../third_party/application-services/components/autofill" }
 init_rust_components = { path = "../../third_party/application-services/components/init_rust_components" }
 breach-alerts = { path = "../../third_party/application-services/components/breach-alerts" }
-ohttp = { git = "https://github.com/martinthomson/ohttp", revision = "324f876e79394c9b815dcacda3fd4f48f105fdf2" }
+ohttp = { git = "https://github.com/martinthomson/ohttp", rev = "600931b5a1e947776cbaad931ed78f1e89005352" }
 zip = { path = "../../third_party/rust/zip" }
 libcrux-traits = { path = "../../build/rust/libcrux-traits" }
+
+[patch."https://github.com/libjxl/jxl-rs"]
+jxl_simd = { path = "../../third_party/rust/jxl_simd" }
