@@ -1,5 +1,8 @@
 # comm-unified-l10n
 
+**This repository is now deprecated. thunderbird-l10n-source now pulls from
+[thunderbird-desktop](https://github.com/thunderbird/thunderbird-desktop) rather than comm-unified-l10n.**
+
 A minimal mirror of hg.mozilla.org/comm-unified used for localization cross-channel.
 
 * https://hg.mozilla.org/comm-unified --> https://github.com/thunderbird/comm-unified-l10n
