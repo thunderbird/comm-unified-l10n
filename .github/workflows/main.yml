@@ -1,9 +1,9 @@
 name: mirror
 
-on:
-    workflow_dispatch:
-    schedule:
-        - cron: "30 11 * * *"  # Run at 3:03am daily
+#on:
+#    workflow_dispatch:
+#    schedule:
+#        - cron: "30 11 * * *"  # Run at 3:03am daily
 
 jobs:
     mirror-hgmo:
